@@ -4,6 +4,10 @@ import { Routes, Route, Link, Outlet, useNavigate, Navigate } from 'react-router
 import AdminDashboard from './pages/AdminDashboard';
 import Courses from './pages/Courses';
 import Users from './pages/Users';
+import Branches from './pages/Branches';
+import Instructors from './pages/Instructors';
+import CourseSessions from './pages/CourseSessions';
+import Enrollments from './pages/Enrollments';
 import Login from './pages/Login';
 import { withAdminGuard } from './auth/AdminGuard';
 import { useAdminAuth } from './auth/AdminAuthContext';
@@ -35,6 +39,10 @@ const AdminLayout = () => {
   const navItems = [
     { label: 'Dashboard', to: '/dashboard', roles: ['super_admin', 'branch_admin', 'instructor'] },
     { label: 'Courses', to: '/courses', roles: ['super_admin', 'branch_admin'] },
+    { label: 'Sessions', to: '/sessions', roles: ['super_admin', 'branch_admin', 'instructor'] },
+    { label: 'Enrollments', to: '/enrollments', roles: ['super_admin', 'branch_admin'] },
+    { label: 'Branches', to: '/branches', roles: ['super_admin'] },
+    { label: 'Instructors', to: '/instructors', roles: ['super_admin', 'branch_admin'] },
     { label: 'Users', to: '/users', roles: ['super_admin'] },
   ];
 
@@ -88,6 +96,22 @@ const GuardedCourses = withAdminGuard(Courses, {
   allowedRoles: ['super_admin', 'branch_admin'],
 });
 
+const GuardedSessions = withAdminGuard(CourseSessions, {
+  allowedRoles: ['super_admin', 'branch_admin', 'instructor'],
+});
+
+const GuardedEnrollments = withAdminGuard(Enrollments, {
+  allowedRoles: ['super_admin', 'branch_admin'],
+});
+
+const GuardedBranches = withAdminGuard(Branches, {
+  allowedRoles: ['super_admin'],
+});
+
+const GuardedInstructors = withAdminGuard(Instructors, {
+  allowedRoles: ['super_admin', 'branch_admin'],
+});
+
 const GuardedUsers = withAdminGuard(Users, {
   allowedRoles: ['super_admin'],
 });
@@ -100,6 +124,10 @@ function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<AdminDashboard />} />
         <Route path="/courses" element={<GuardedCourses />} />
+        <Route path="/sessions" element={<GuardedSessions />} />
+        <Route path="/enrollments" element={<GuardedEnrollments />} />
+        <Route path="/branches" element={<GuardedBranches />} />
+        <Route path="/instructors" element={<GuardedInstructors />} />
         <Route path="/users" element={<GuardedUsers />} />
       </Route>
     </Routes>
