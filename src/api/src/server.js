@@ -6,30 +6,30 @@ const db = require('./db');
 
 dotenv.config();
 
+const adminAuthRoutes = require('./admin/auth.routes');
+
 const app = express();
 const port = process.env.PORT || 4000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const allowedOrigins = [
-  process.env.CORS_ORIGIN_LIFF,
-  process.env.CORS_ORIGIN_ADMIN,
-].filter(Boolean);
+const allowedOrigins = [process.env.CORS_ORIGIN_LIFF, process.env.CORS_ORIGIN_ADMIN].filter(Boolean);
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
       console.warn('Blocked by CORS:', origin);
-      callback(null, false);
-    }
-  },
-}));
+      return callback(null, false);
+    },
+    credentials: true,
+  })
+);
 
-// Health check
-app.get('/health', async (req, res) => {
+app.get('/health', async (_req, res) => {
   try {
     await db.query('SELECT 1');
     res.json({ status: 'ok', db: 'connected' });
@@ -39,14 +39,13 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Simple endpoints for demo
+app.use('/admin/auth', adminAuthRoutes);
 
-// List courses
-app.get('/courses', async (req, res) => {
+app.get('/courses', async (_req, res) => {
   try {
     const result = await db.query(`
-      SELECT c.*, 
-             b.name AS branch_name, 
+      SELECT c.*,
+             b.name AS branch_name,
              i.name AS instructor_name
       FROM courses c
       LEFT JOIN branches b ON c.branch_id = b.id
@@ -61,7 +60,6 @@ app.get('/courses', async (req, res) => {
   }
 });
 
-// Create dummy course (admin use)
 app.post('/courses', async (req, res) => {
   const { title, description, capacity, is_free, price_cents, access_times } = req.body;
   try {
@@ -78,8 +76,7 @@ app.post('/courses', async (req, res) => {
   }
 });
 
-// Basic users list for admin
-app.get('/admin/users', async (req, res) => {
+app.get('/admin/users', async (_req, res) => {
   try {
     const result = await db.query('SELECT * FROM users ORDER BY created_at DESC LIMIT 100');
     res.json(result.rows);
@@ -89,7 +86,6 @@ app.get('/admin/users', async (req, res) => {
   }
 });
 
-// Placeholder: create user / login via Line (mock)
 app.post('/auth/line-login', async (req, res) => {
   const { line_user_id, full_name, email, phone } = req.body;
   if (!line_user_id) {
@@ -97,16 +93,14 @@ app.post('/auth/line-login', async (req, res) => {
   }
   try {
     let result = await db.query('SELECT * FROM users WHERE line_user_id = $1', [line_user_id]);
-    let user;
-    if (result.rows.length === 0) {
+    let user = result.rows[0];
+    if (!user) {
       result = await db.query(
         `INSERT INTO users (line_user_id, full_name, email, phone)
          VALUES ($1, $2, $3, $4)
          RETURNING *`,
         [line_user_id, full_name || null, email || null, phone || null]
       );
-      user = result.rows[0];
-    } else {
       user = result.rows[0];
     }
     res.json({ user });
@@ -116,7 +110,6 @@ app.post('/auth/line-login', async (req, res) => {
   }
 });
 
-// Placeholder: create order (no real Omise yet)
 app.post('/orders', async (req, res) => {
   const { user_id, course_id } = req.body;
   if (!user_id || !course_id) {
@@ -143,7 +136,6 @@ app.post('/orders', async (req, res) => {
   }
 });
 
-// Placeholder: list orders for user
 app.get('/users/:userId/orders', async (req, res) => {
   const userId = req.params.userId;
   try {
@@ -162,10 +154,8 @@ app.get('/users/:userId/orders', async (req, res) => {
   }
 });
 
-// Placeholder: Omise webhook endpoint (no verification yet)
 app.post('/payments/omise-webhook', async (req, res) => {
   console.log('Received Omise webhook mock:', req.body);
-  // TODO: implement real Omise webhook handling
   res.json({ received: true });
 });
 

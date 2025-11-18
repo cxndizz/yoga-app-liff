@@ -82,16 +82,20 @@ project-root/
 
 2. ค่าใน `.env.example` ถูกตั้งมาให้ใช้กับ Docker Compose แล้ว:
 
-   ```env
-   PORT=4000
-   DATABASE_URL=postgres://appuser:applocalpass@db:5432/appdb
-   OMISE_PUBLIC_KEY=omise_public_key_here
-   OMISE_SECRET_KEY=omise_secret_key_here
-   CORS_ORIGIN_LIFF=http://localhost:3000
-   CORS_ORIGIN_ADMIN=http://localhost:3001
-   ```
+  ```env
+  PORT=4000
+  DATABASE_URL=postgres://appuser:applocalpass@db:5432/appdb
+  OMISE_PUBLIC_KEY=omise_public_key_here
+  OMISE_SECRET_KEY=omise_secret_key_here
+  CORS_ORIGIN_LIFF=http://localhost:3000
+  CORS_ORIGIN_ADMIN=http://localhost:3001
+  JWT_ACCESS_SECRET=dev-access-secret
+  JWT_REFRESH_SECRET=dev-refresh-secret
+  ACCESS_TOKEN_TTL=15m
+  REFRESH_TOKEN_TTL=7d
+  ```
 
-   ภายหลัง คุณสามารถอัปเดต OMISE keys เป็นค่า test จริงจาก Omise ได้
+  ภายหลัง คุณสามารถอัปเดต OMISE keys เป็นค่า test จริงจาก Omise ได้ รวมถึงตั้งค่า secret/token ttl ให้เหมาะกับ production. ค่าเริ่มต้นมีการ seed ผู้ใช้หลังบ้านเอาไว้คือ `admin@yoga.local / Admin123!` (role = `super_admin`) เพื่อให้ทดสอบ flow ได้ทันที
 
 ---
 
@@ -235,13 +239,16 @@ https://random-id.ngrok.io
 สิ่งที่โปรเจกต์นี้เตรียมให้:
 
 - โครง Express API:
-  - `/health` – เช็คว่า API + DB ทำงานหรือไม่  
-  - `/courses` (GET) – ดึงคอร์สจาก DB  
-  - `/courses` (POST) – สร้างคอร์ส (ใช้ใน admin)  
-  - `/admin/users` – ดึง user list  
-  - `/auth/line-login` – mock endpoint สำหรับ Login ด้วย Line ID  
-  - `/orders` – mock endpoint สำหรับสร้างออเดอร์  
-  - `/users/:userId/orders` – ดึงประวัติการสั่งซื้อของ user  
+  - `/health` – เช็คว่า API + DB ทำงานหรือไม่
+  - `/courses` (GET) – ดึงคอร์สจาก DB
+  - `/courses` (POST) – สร้างคอร์ส (ใช้ใน admin)
+  - `/admin/users` – ดึง user list
+  - `/admin/auth/login` – Login สำหรับหลังบ้านด้วย email/password (response มี role + permissions)
+  - `/admin/auth/refresh` – ขอ access token ใหม่จาก refresh token
+  - `/admin/auth/logout` – เคลียร์สถานะฝั่ง client (stateless)
+  - `/auth/line-login` – mock endpoint สำหรับ Login ด้วย Line ID
+  - `/orders` – mock endpoint สำหรับสร้างออเดอร์
+  - `/users/:userId/orders` – ดึงประวัติการสั่งซื้อของ user
   - `/payments/omise-webhook` – mock endpoint สำหรับรับ webhook จาก Omise
 
 - โครง React:
