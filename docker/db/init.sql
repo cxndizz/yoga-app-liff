@@ -7,6 +7,24 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS admin_users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  full_name VARCHAR(255),
+  password_hash TEXT NOT NULL,
+  role VARCHAR(50) NOT NULL DEFAULT 'staff',
+  permissions TEXT[] DEFAULT ARRAY[]::TEXT[],
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  last_login_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+INSERT INTO admin_users (email, full_name, password_hash, role, permissions)
+SELECT 'admin@yoga.local', 'Default Admin',
+       'f06db095439d2679fde2f373031ba1aa:f1187743adaa9c286e1bb0625dbea07e806fcf931cd7e10274c2db1b83cb6952c102eaa653edb4ac9141a6c5c7f29944b59e93bd86379fbe19b03ef8997459a8',
+       'super_admin', ARRAY['*']::TEXT[]
+WHERE NOT EXISTS (SELECT 1 FROM admin_users WHERE email = 'admin@yoga.local');
+
 CREATE TABLE IF NOT EXISTS branches (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
