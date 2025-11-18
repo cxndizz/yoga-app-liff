@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import Courses from './pages/Courses';
 import Users from './pages/Users';
 import Login from './pages/Login';
+import { withAdminGuard } from './auth/AdminGuard';
 
 const AdminLayout = () => (
   <div style={{ display: 'flex', fontFamily: 'system-ui, sans-serif', minHeight: '100vh' }}>
@@ -21,11 +22,15 @@ const AdminLayout = () => (
   </div>
 );
 
+const GuardedAdminLayout = withAdminGuard(AdminLayout, {
+  allowedRoles: ['super_admin', 'admin', 'staff'],
+});
+
 function App() {
   return (
     <Routes>
       <Route path="/admin/login" element={<Login />} />
-      <Route element={<AdminLayout />}>
+      <Route element={<GuardedAdminLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/admin" element={<Dashboard />} />
         <Route path="/courses" element={<Courses />} />

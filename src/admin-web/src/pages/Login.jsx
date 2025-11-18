@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { getSessionSnapshot, persistSession } from '../auth/session';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -20,8 +21,8 @@ function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const hasToken = Boolean(window.localStorage.getItem('adminAccessToken'));
-    if (hasToken) {
+    const { accessToken } = getSessionSnapshot();
+    if (accessToken) {
       navigate('/', { replace: true });
     }
   }, [navigate]);
@@ -62,14 +63,9 @@ function Login() {
         password: form.password,
       });
       const { accessToken, refreshToken, user } = response.data || {};
+      persistSession({ accessToken, refreshToken, user });
       if (accessToken) {
-        window.localStorage.setItem('adminAccessToken', accessToken);
-      }
-      if (refreshToken) {
-        window.localStorage.setItem('adminRefreshToken', refreshToken);
-      }
-      if (user) {
-        window.localStorage.setItem('adminUser', JSON.stringify(user));
+        axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
       }
       const redirect = searchParams.get('redirect') || '/';
       navigate(redirect, { replace: true });
