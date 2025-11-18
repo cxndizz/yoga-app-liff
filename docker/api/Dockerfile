@@ -11,6 +11,9 @@ RUN npm install
 # Copy source code
 COPY src ./src
 
+# Copy database migrations
+COPY ../../docker/db/migrations /docker/db/migrations
+
 # Copy entrypoint script with absolute path
 COPY docker-entrypoint.sh /app/entrypoint.sh
 
