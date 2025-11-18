@@ -54,7 +54,7 @@ services:
     depends_on:
       - api
     ports:
-      - "3001:3000"
+      - "3001:3001"
 
 volumes:
   db_data:
