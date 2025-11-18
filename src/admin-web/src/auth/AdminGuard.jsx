@@ -160,6 +160,7 @@ const useAdminAuthorization = (allowedRoles) => {
     return () => {
       isMounted = false;
       isValidatingRef.current = false;
+      hasValidatedRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
