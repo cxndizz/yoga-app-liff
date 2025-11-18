@@ -12,6 +12,11 @@ pool.on('error', (err) => {
   process.exit(-1);
 });
 
+const query = (text, params) => pool.query(text, params);
+const close = () => pool.end();
+
 module.exports = {
-  query: (text, params) => pool.query(text, params),
+  query,
+  close,
+  pool,
 };
