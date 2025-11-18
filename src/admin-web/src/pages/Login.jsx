@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { getSessionSnapshot, persistSession } from '../auth/session';
+import { getSessionSnapshot } from '../auth/session';
+import { useAdminAuth } from '../auth/AdminAuthContext';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -15,6 +16,7 @@ const emailRegex = /[^\s@]+@[^\s@]+\.[^\s@]+/;
 function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { setSession, accessToken: existingToken } = useAdminAuth();
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
@@ -22,10 +24,10 @@ function Login() {
 
   useEffect(() => {
     const { accessToken } = getSessionSnapshot();
-    if (accessToken) {
+    if (accessToken || existingToken) {
       navigate('/', { replace: true });
     }
-  }, [navigate]);
+  }, [existingToken, navigate]);
 
   const validate = () => {
     const nextErrors = {};
@@ -63,7 +65,7 @@ function Login() {
         password: form.password,
       });
       const { accessToken, refreshToken, user } = response.data || {};
-      persistSession({ accessToken, refreshToken, user });
+      setSession({ accessToken, refreshToken, user });
       if (accessToken) {
         axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
       }

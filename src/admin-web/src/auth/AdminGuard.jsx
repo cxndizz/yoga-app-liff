@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { clearSession, getSessionSnapshot, persistSession } from './session';
+import { getSessionSnapshot, persistSession } from './session';
 import { decodeJwtPayload, isTokenExpired, shouldRefreshToken } from './tokenUtils';
+import { useAdminAuth } from './AdminAuthContext';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -40,15 +41,21 @@ const redirectToLogin = (navigate, location) => {
   navigate(url, { replace: true });
 };
 
-const handleUnauthorized = (navigate, location) => {
+const handleUnauthorized = (navigate, location, clearSession) => {
   clearSession();
   setAxiosAuthHeader(null);
   redirectToLogin(navigate, location);
 };
 
+const fetchCurrentAdmin = async () => {
+  const response = await axios.get(`${apiBase}/admin/auth/me`);
+  return response.data?.user || null;
+};
+
 const useAdminAuthorization = (allowedRoles) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { accessToken, refreshToken, user, setSession, clearSession } = useAdminAuth();
   const [state, setState] = useState({ status: 'checking', user: null });
 
   useEffect(() => {
@@ -56,26 +63,33 @@ const useAdminAuthorization = (allowedRoles) => {
 
     const validateSession = async () => {
       setState({ status: 'checking', user: null });
-      const { accessToken, refreshToken, user } = getSessionSnapshot();
-      if (!accessToken || !refreshToken) {
-        handleUnauthorized(navigate, location);
+      const snapshot = getSessionSnapshot();
+      const initialAccessToken = accessToken || snapshot.accessToken;
+      const initialRefreshToken = refreshToken || snapshot.refreshToken;
+      const initialUser = user || snapshot.user;
+
+      if (!initialAccessToken || !initialRefreshToken) {
+        handleUnauthorized(navigate, location, clearSession);
         return;
       }
 
-      let currentAccessToken = accessToken;
-      let currentUser = user;
-      let payload = decodeJwtPayload(accessToken);
+      let currentAccessToken = initialAccessToken;
+      let currentRefreshToken = initialRefreshToken;
+      let currentUser = initialUser;
+      let payload = decodeJwtPayload(initialAccessToken);
 
       try {
         if (!payload || isTokenExpired(payload)) {
-          const refreshed = await requestRefresh(refreshToken);
+          const refreshed = await requestRefresh(initialRefreshToken);
           currentAccessToken = refreshed.accessToken;
+          currentRefreshToken = refreshed.refreshToken || currentRefreshToken;
           currentUser = refreshed.user;
           payload = decodeJwtPayload(refreshed.accessToken);
         } else if (shouldRefreshToken(payload)) {
           try {
-            const refreshed = await requestRefresh(refreshToken);
+            const refreshed = await requestRefresh(initialRefreshToken);
             currentAccessToken = refreshed.accessToken;
+            currentRefreshToken = refreshed.refreshToken || currentRefreshToken;
             currentUser = refreshed.user;
             payload = decodeJwtPayload(refreshed.accessToken);
           } catch (refreshError) {
@@ -84,27 +98,39 @@ const useAdminAuthorization = (allowedRoles) => {
         }
       } catch (error) {
         console.warn('Session validation failed', error);
-        handleUnauthorized(navigate, location);
+        handleUnauthorized(navigate, location, clearSession);
         return;
       }
 
       const resolvedUser = resolveUserFromPayload(payload, currentUser);
       if (!currentAccessToken || !resolvedUser) {
-        handleUnauthorized(navigate, location);
+        handleUnauthorized(navigate, location, clearSession);
         return;
-      }
-
-      if (Array.isArray(allowedRoles) && allowedRoles.length > 0) {
-        if (!allowedRoles.includes(resolvedUser.role)) {
-          handleUnauthorized(navigate, location);
-          return;
-        }
       }
 
       setAxiosAuthHeader(currentAccessToken);
 
+      let syncedUser = resolvedUser;
+      try {
+        const latestUser = await fetchCurrentAdmin();
+        if (latestUser) {
+          syncedUser = latestUser;
+        }
+      } catch (error) {
+        console.warn('Unable to fetch current admin profile', error);
+      }
+
+      if (Array.isArray(allowedRoles) && allowedRoles.length > 0) {
+        if (!allowedRoles.includes(syncedUser.role)) {
+          handleUnauthorized(navigate, location, clearSession);
+          return;
+        }
+      }
+
+      setSession({ accessToken: currentAccessToken, refreshToken: currentRefreshToken, user: syncedUser });
+
       if (isMounted) {
-        setState({ status: 'authorized', user: resolvedUser });
+        setState({ status: 'authorized', user: syncedUser });
       }
     };
 
@@ -113,7 +139,7 @@ const useAdminAuthorization = (allowedRoles) => {
     return () => {
       isMounted = false;
     };
-  }, [allowedRoles, location.pathname, location.search, navigate]);
+  }, [accessToken, allowedRoles, clearSession, location.pathname, location.search, navigate, refreshToken, setSession, user]);
 
   return state;
 };

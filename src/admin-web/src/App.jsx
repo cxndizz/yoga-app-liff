@@ -1,80 +1,44 @@
 import React from 'react';
 import axios from 'axios';
-import { Routes, Route, Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, Outlet, useNavigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Courses from './pages/Courses';
 import Users from './pages/Users';
 import Login from './pages/Login';
 import { withAdminGuard } from './auth/AdminGuard';
+import { useAdminAuth } from './auth/AdminAuthContext';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
-const readStoredAdmin = () => {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-  try {
-    const raw = window.localStorage.getItem('adminUser');
-    return raw ? JSON.parse(raw) : null;
-  } catch (error) {
-    console.warn('Failed to parse admin user from storage', error);
-    return null;
-  }
-};
-
 const AdminLayout = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [isCheckingSession, setIsCheckingSession] = React.useState(true);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
-  const [adminUser, setAdminUser] = React.useState(() => readStoredAdmin());
-
-  React.useEffect(() => {
-    const token = window.localStorage.getItem('adminAccessToken');
-    if (!token) {
-      const redirectTarget = encodeURIComponent(`${location.pathname}${location.search}` || '/');
-      navigate(`/admin/login?redirect=${redirectTarget}`, { replace: true });
-      return;
-    }
-    setAdminUser(readStoredAdmin());
-    setIsCheckingSession(false);
-  }, [navigate, location.pathname, location.search]);
-
-  React.useEffect(() => {
-    const handleStorageChange = () => {
-      setAdminUser(readStoredAdmin());
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  const { user: adminUser, role, refreshToken, clearSession } = useAdminAuth();
 
   const handleLogout = async () => {
     if (isLoggingOut) {
       return;
     }
     setIsLoggingOut(true);
-    const refreshToken = window.localStorage.getItem('adminRefreshToken');
     try {
       await axios.post(`${apiBase}/admin/auth/logout`, refreshToken ? { refreshToken } : {});
     } catch (error) {
       console.error('Failed to log out admin', error);
     } finally {
-      window.localStorage.removeItem('adminAccessToken');
-      window.localStorage.removeItem('adminRefreshToken');
-      window.localStorage.removeItem('adminUser');
-      setAdminUser(null);
+      clearSession();
+      delete axios.defaults.headers.common.Authorization;
       setIsLoggingOut(false);
       navigate('/admin/login', { replace: true });
     }
   };
 
-  if (isCheckingSession) {
-    return (
-      <div style={{ display: 'flex', fontFamily: 'system-ui, sans-serif', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: '#111827' }}>กำลังตรวจสอบสิทธิ์การเข้าใช้งาน...</p>
-      </div>
-    );
-  }
+  const navItems = [
+    { label: 'Dashboard', to: '/', roles: ['super_admin', 'branch_admin', 'instructor'] },
+    { label: 'Courses', to: '/courses', roles: ['super_admin', 'branch_admin'] },
+    { label: 'Users', to: '/users', roles: ['super_admin'] },
+  ];
+
+  const visibleNavItems = navItems.filter((item) => !item.roles || item.roles.includes(role));
 
   return (
     <div style={{ display: 'flex', fontFamily: 'system-ui, sans-serif', minHeight: '100vh' }}>
@@ -86,9 +50,11 @@ const AdminLayout = () => {
           )}
         </div>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <Link to="/" style={{ color: '#fff', textDecoration: 'none' }}>Dashboard</Link>
-          <Link to="/courses" style={{ color: '#fff', textDecoration: 'none' }}>Courses</Link>
-          <Link to="/users" style={{ color: '#fff', textDecoration: 'none' }}>Users</Link>
+          {visibleNavItems.map((item) => (
+            <Link key={item.to} to={item.to} style={{ color: '#fff', textDecoration: 'none' }}>
+              {item.label}
+            </Link>
+          ))}
         </nav>
         <button
           type="button"
@@ -115,7 +81,15 @@ const AdminLayout = () => {
 };
 
 const GuardedAdminLayout = withAdminGuard(AdminLayout, {
-  allowedRoles: ['super_admin', 'admin', 'staff'],
+  allowedRoles: ['super_admin', 'branch_admin', 'instructor'],
+});
+
+const GuardedCourses = withAdminGuard(Courses, {
+  allowedRoles: ['super_admin', 'branch_admin'],
+});
+
+const GuardedUsers = withAdminGuard(Users, {
+  allowedRoles: ['super_admin'],
 });
 
 function App() {
@@ -125,8 +99,8 @@ function App() {
       <Route element={<GuardedAdminLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/admin" element={<Dashboard />} />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/users" element={<Users />} />
+        <Route path="/courses" element={<GuardedCourses />} />
+        <Route path="/users" element={<GuardedUsers />} />
       </Route>
     </Routes>
   );

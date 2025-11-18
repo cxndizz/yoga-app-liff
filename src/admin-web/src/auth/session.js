@@ -8,14 +8,26 @@ export const persistSession = ({ accessToken, refreshToken, user }) => {
   const win = getWindow();
   if (!win) return;
 
-  if (accessToken) {
-    win.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  if (typeof accessToken !== 'undefined') {
+    if (accessToken) {
+      win.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+    } else {
+      win.localStorage.removeItem(ACCESS_TOKEN_KEY);
+    }
   }
-  if (refreshToken) {
-    win.localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  if (typeof refreshToken !== 'undefined') {
+    if (refreshToken) {
+      win.localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    } else {
+      win.localStorage.removeItem(REFRESH_TOKEN_KEY);
+    }
   }
-  if (user) {
-    win.localStorage.setItem(USER_KEY, JSON.stringify(user));
+  if (typeof user !== 'undefined') {
+    if (user) {
+      win.localStorage.setItem(USER_KEY, JSON.stringify(user));
+    } else {
+      win.localStorage.removeItem(USER_KEY);
+    }
   }
 };
 
