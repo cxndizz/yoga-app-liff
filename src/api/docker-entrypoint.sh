@@ -14,7 +14,7 @@ fi
 
 # Run DB migration
 echo "📦 Running database migrations..."
-node src/api/src/scripts/runMigration.js
+node src/scripts/runMigration.js
 echo "✅ Migration completed"
 
 # Seed admin user
