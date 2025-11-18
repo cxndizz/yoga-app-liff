@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import KpiCard from '../components/dashboard/KpiCard';
+import TrendChart from '../components/dashboard/TrendChart';
 import styles from './AdminDashboard.module.css';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
@@ -99,6 +100,7 @@ function RecentActivity({ events = [] }) {
 
 function AdminDashboard() {
   const { data, loading, error, refetch } = useAdminDashboardData();
+  const [trendRange, setTrendRange] = useState('weekly');
 
   const kpis = data?.kpis || {};
   const charts = data?.charts || {};
@@ -138,10 +140,59 @@ function AdminDashboard() {
   const membersTrend = charts.newMembersByDay || [];
   const topCourses = charts.topCourses || [];
 
-  const maxRevenue = useMemo(
-    () => ordersTrend.reduce((max, day) => Math.max(max, day.revenueCents || 0), 0),
-    [ordersTrend]
-  );
+  const sortedOrdersTrend = useMemo(() => {
+    return [...ordersTrend].sort((a, b) => {
+      const dateA = new Date(a?.date || 0).getTime();
+      const dateB = new Date(b?.date || 0).getTime();
+      return dateA - dateB;
+    });
+  }, [ordersTrend]);
+
+  const weeklyTrend = useMemo(() => {
+    return sortedOrdersTrend
+      .slice(-7)
+      .map((item) => {
+        const date = item?.date ? new Date(item.date) : null;
+        if (!date || Number.isNaN(date.getTime())) {
+          return null;
+        }
+        return {
+          timestamp: date.getTime(),
+          dateLabel: date.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' }),
+          revenue: (item.revenueCents || 0) / 100,
+          orders: Number(item.ordersCount ?? item.orders ?? 0) || 0,
+        };
+      })
+      .filter(Boolean);
+  }, [sortedOrdersTrend]);
+
+  const monthlyTrend = useMemo(() => {
+    const bucket = new Map();
+    sortedOrdersTrend.forEach((item) => {
+      const date = item?.date ? new Date(item.date) : null;
+      if (!date || Number.isNaN(date.getTime())) {
+        return;
+      }
+      const key = `${date.getFullYear()}-${date.getMonth()}`;
+      if (!bucket.has(key)) {
+        bucket.set(key, {
+          timestamp: new Date(date.getFullYear(), date.getMonth(), 1).getTime(),
+          dateLabel: date.toLocaleDateString('th-TH', { month: 'short', year: 'numeric' }),
+          revenue: 0,
+          orders: 0,
+        });
+      }
+      const entry = bucket.get(key);
+      entry.revenue += (item.revenueCents || 0) / 100;
+      entry.orders += Number(item.ordersCount ?? item.orders ?? 0) || 0;
+    });
+    return Array.from(bucket.values())
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .slice(-6);
+  }, [sortedOrdersTrend]);
+
+  const activeTrendDataset = trendRange === 'weekly' ? weeklyTrend : monthlyTrend;
+  const trendSubtitle = trendRange === 'weekly' ? 'ยอดขาย 7 วันล่าสุด' : 'ยอดขาย 6 เดือนล่าสุด';
 
   const maxNewMembers = useMemo(
     () => membersTrend.reduce((max, day) => Math.max(max, day.newMembers || 0), 0),
@@ -149,16 +200,21 @@ function AdminDashboard() {
   );
 
   const recentEvents = useMemo(() => {
-    return ordersTrend
+    return sortedOrdersTrend
       .slice(-5)
       .reverse()
       .map((item, index) => ({
         id: `${item.date}-${index}`,
         title: `ยอดขายวันที่ ${formatDateLabel(item.date)}`,
-        meta: `${item.ordersCount} orders`,
+        meta: `${item.ordersCount ?? item.orders ?? 0} orders`,
         amount: formatCurrency(item.revenueCents),
       }));
-  }, [ordersTrend]);
+  }, [sortedOrdersTrend]);
+
+  const trendToggleClass = (value) =>
+    [styles.toggleButton, trendRange === value ? styles.toggleButtonActive : '']
+      .filter(Boolean)
+      .join(' ');
 
   return (
     <section className={styles.page}>
@@ -182,32 +238,33 @@ function AdminDashboard() {
       </div>
 
       <div className={styles.chartGrid}>
-        <article className={styles.chartCard}>
-          <header className={styles.cardHeader}>
-            <div>
-              <p className={styles.cardEyebrow}>ยอดขาย 7 วันล่าสุด</p>
-              <h3 className={styles.cardTitle}>Orders Trend</h3>
+        <TrendChart
+          title="Orders Trend"
+          subtitle={trendSubtitle}
+          dataset={activeTrendDataset}
+          loading={loading}
+          emptyText="ยังไม่มีข้อมูลคำสั่งซื้อ"
+          actions={
+            <div className={styles.toggleGroup} role="group" aria-label="ช่วงเวลา">
+              <button
+                type="button"
+                className={trendToggleClass('weekly')}
+                onClick={() => setTrendRange('weekly')}
+                disabled={loading}
+              >
+                7 วัน
+              </button>
+              <button
+                type="button"
+                className={trendToggleClass('monthly')}
+                onClick={() => setTrendRange('monthly')}
+                disabled={loading}
+              >
+                6 เดือน
+              </button>
             </div>
-          </header>
-          <div className={styles.trendChart}>
-            {ordersTrend.length === 0 && <p className={styles.emptyState}>ยังไม่มีข้อมูลคำสั่งซื้อ</p>}
-            {ordersTrend.map((day) => {
-              const revenuePercent = maxRevenue > 0 ? ((day.revenueCents || 0) / maxRevenue) * 100 : 0;
-              return (
-                <div key={day.date} className={styles.barRow}>
-                  <span className={styles.barLabel}>{formatDateLabel(day.date)}</span>
-                  <div className={styles.barTrack}>
-                    <div
-                      className={styles.barFill}
-                      style={{ width: `${revenuePercent}%` }}
-                    />
-                  </div>
-                  <span className={styles.barValue}>{formatCurrency(day.revenueCents)}</span>
-                </div>
-              );
-            })}
-          </div>
-        </article>
+          }
+        />
 
         <article className={styles.chartCard}>
           <header className={styles.cardHeader}>
