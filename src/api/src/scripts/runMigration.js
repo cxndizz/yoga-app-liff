@@ -8,8 +8,18 @@ async function runMigration() {
 
     const MIGRATION_FILE = '001_add_missing_tables.sql';
     const migrationCandidates = [
-      path.join(__dirname, '../../../docker/db/migrations', MIGRATION_FILE),
-      path.join(__dirname, '../migrations', MIGRATION_FILE)
+      // When the project is copied to /app (Docker image)
+      path.resolve(__dirname, '../../docker/db/migrations', MIGRATION_FILE),
+      // When the source lives under /app/src (some local setups)
+      path.resolve(__dirname, '../../../docker/db/migrations', MIGRATION_FILE),
+      // When running directly from the repository root (e.g. /workspace/yoga-app-liff)
+      path.resolve(__dirname, '../../../../docker/db/migrations', MIGRATION_FILE),
+      // Fallback to local migrations folder inside the API project
+      path.resolve(__dirname, '../migrations', MIGRATION_FILE),
+      path.resolve(__dirname, '../../migrations', MIGRATION_FILE),
+      // As a last resort, try resolving from the current working directory
+      path.resolve(process.cwd(), 'docker/db/migrations', MIGRATION_FILE),
+      path.resolve(process.cwd(), 'src/api/migrations', MIGRATION_FILE)
     ];
 
     const migrationPath = migrationCandidates.find(candidate => fs.existsSync(candidate));
