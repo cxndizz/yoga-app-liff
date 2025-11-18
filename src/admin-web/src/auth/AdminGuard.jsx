@@ -55,11 +55,17 @@ const fetchCurrentAdmin = async () => {
 const useAdminAuthorization = (allowedRoles) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { accessToken, refreshToken, user, setSession, clearSession } = useAdminAuth();
+  const { setSession, clearSession } = useAdminAuth();
   const [state, setState] = useState({ status: 'checking', user: null });
   const isValidatingRef = React.useRef(false);
+  const hasValidatedRef = React.useRef(false);
 
   useEffect(() => {
+    // Only validate once per component lifecycle
+    if (hasValidatedRef.current) {
+      return;
+    }
+
     let isMounted = true;
 
     const validateSession = async () => {
@@ -69,12 +75,13 @@ const useAdminAuthorization = (allowedRoles) => {
       }
 
       isValidatingRef.current = true;
+      hasValidatedRef.current = true;
       setState({ status: 'checking', user: null });
 
       const snapshot = getSessionSnapshot();
-      const initialAccessToken = accessToken || snapshot.accessToken;
-      const initialRefreshToken = refreshToken || snapshot.refreshToken;
-      const initialUser = user || snapshot.user;
+      const initialAccessToken = snapshot.accessToken;
+      const initialRefreshToken = snapshot.refreshToken;
+      const initialUser = snapshot.user;
 
       if (!initialAccessToken || !initialRefreshToken) {
         isValidatingRef.current = false;
@@ -154,7 +161,8 @@ const useAdminAuthorization = (allowedRoles) => {
       isMounted = false;
       isValidatingRef.current = false;
     };
-  }, [accessToken, refreshToken, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return state;
 };
