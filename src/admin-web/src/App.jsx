@@ -44,7 +44,7 @@ const AdminLayout = () => {
     <div style={{ display: 'flex', fontFamily: 'system-ui, sans-serif', minHeight: '100vh' }}>
       <aside style={{ width: '240px', background: '#111827', color: '#fff', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div>
-          <h2 style={{ marginBottom: '4px' }}>NeedHome Admin</h2>
+          <h2 style={{ marginBottom: '4px' }}> Admin</h2>
           {adminUser && (
             <p style={{ margin: 0, fontSize: '14px', color: '#cbd5f5' }}>สวัสดี, {adminUser.fullName || adminUser.email}</p>
           )}

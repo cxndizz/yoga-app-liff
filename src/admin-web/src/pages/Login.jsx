@@ -88,7 +88,7 @@ function Login() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
       <div style={{ width: '100%', maxWidth: '420px', background: '#fff', padding: '40px', borderRadius: '16px', boxShadow: '0 20px 60px rgba(15, 23, 42, 0.25)' }}>
         <div style={{ marginBottom: '32px', textAlign: 'center' }}>
-          <h1 style={{ margin: '0 0 8px', fontSize: '28px', color: '#111827', fontWeight: '700' }}>NeedHome Admin</h1>
+          <h1 style={{ margin: '0 0 8px', fontSize: '28px', color: '#111827', fontWeight: '700' }}> Admin</h1>
           <p style={{ margin: 0, color: '#6b7280', fontSize: '15px' }}>เข้าสู่ระบบเพื่อจัดการคอร์สและสมาชิก</p>
         </div>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
