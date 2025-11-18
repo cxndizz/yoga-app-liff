@@ -12,6 +12,11 @@ if [ "${DB_WAIT_SKIP:-false}" != "true" ]; then
   echo "✅ Database is ready"
 fi
 
+# Run DB migration
+echo "📦 Running database migrations..."
+node src/api/src/scripts/runMigration.js
+echo "✅ Migration completed"
+
 # Seed admin user
 echo "🌱 Running admin user seed..."
 npm run seed:admin

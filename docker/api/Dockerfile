@@ -20,5 +20,4 @@ RUN chmod +x /app/entrypoint.sh && \
 
 EXPOSE 4000
 
-# Use the entrypoint script
 CMD ["/app/entrypoint.sh"]
