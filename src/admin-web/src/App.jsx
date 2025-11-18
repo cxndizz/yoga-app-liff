@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Courses from './pages/Courses';
 import Users from './pages/Users';
 import Login from './pages/Login';
+import { withAdminGuard } from './auth/AdminGuard';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -113,11 +114,15 @@ const AdminLayout = () => {
   );
 };
 
+const GuardedAdminLayout = withAdminGuard(AdminLayout, {
+  allowedRoles: ['super_admin', 'admin', 'staff'],
+});
+
 function App() {
   return (
     <Routes>
       <Route path="/admin/login" element={<Login />} />
-      <Route element={<AdminLayout />}>
+      <Route element={<GuardedAdminLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/admin" element={<Dashboard />} />
         <Route path="/courses" element={<Courses />} />
