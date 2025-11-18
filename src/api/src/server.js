@@ -8,6 +8,7 @@ const { requireAdminAuth } = require('./middleware/adminAuth');
 dotenv.config();
 
 const adminAuthRoutes = require('./admin/auth.routes');
+const adminDashboardRoutes = require('./routes/adminDashboard');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -41,6 +42,7 @@ app.get('/health', async (_req, res) => {
 });
 
 app.use('/admin/auth', adminAuthRoutes);
+app.use('/api/admin/dashboard', adminDashboardRoutes);
 
 app.get('/courses', async (_req, res) => {
   try {

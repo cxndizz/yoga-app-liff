@@ -167,6 +167,38 @@ Docker Compose จะรัน service ดังนี้:
 - **liff-web** (React Vite): `localhost:3000`
 - **admin-web** (React Vite): `localhost:3001`
 
+### 4.0.1 Admin Dashboard API Response Shape
+
+ฝั่งหลังบ้านสามารถดึงข้อมูลสรุปแดชบอร์ดผ่าน `GET /api/admin/dashboard` (แนบ `Authorization: Bearer <admin_access_token>`). เซิร์ฟเวอร์จะรวมผลลัพธ์จาก SQL aggregation หลายคำสั่งแล้วคืนค่าโครงสร้างดังนี้:
+
+```json
+{
+  "kpis": {
+    "totalSalesCents": 1250000,
+    "totalOrders": 42,
+    "paidOrdersToday": 3,
+    "newMembers30d": 18,
+    "averageOrderValueCents": 29750
+  },
+  "charts": {
+    "ordersByDay": [
+      { "date": "2024-06-10", "revenueCents": 120000, "ordersCount": 2 },
+      { "date": "2024-06-11", "revenueCents": 450000, "ordersCount": 5 }
+    ],
+    "newMembersByDay": [
+      { "date": "2024-06-10", "newMembers": 1 },
+      { "date": "2024-06-11", "newMembers": 3 }
+    ],
+    "topCourses": [
+      { "courseId": 7, "title": "Yin Yoga", "ordersCount": 8, "revenueCents": 520000 }
+    ]
+  },
+  "generatedAt": "2024-06-11T08:30:00.000Z"
+}
+```
+
+ข้อมูล `kpis` คือค่ารวม เช่น ยอดขายรวม (อิง `payments` ที่ `status = 'successful'`) หรือจำนวนสมาชิกใหม่ 30 วันย้อนหลัง ส่วน `charts` ใช้ป้อนให้กราฟ/ตารางเชิงเวลา เช่น ยอดสั่งซื้อรายวัน, สมาชิกใหม่รายวัน และคอร์สยอดนิยม 5 อันดับแรก โดย API จะ refresh ข้อมูลทุกครั้งที่เรียก จึงสามารถใช้แสดง Dashboard แบบ real-time ได้ทันที
+
 ### 4.1 ทดสอบเบื้องต้น
 
 1. เปิดเบราว์เซอร์ไปที่:
