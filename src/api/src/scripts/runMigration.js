@@ -6,7 +6,20 @@ async function runMigration() {
   try {
     console.log('Starting database migration...');
 
-    const migrationPath = path.join(__dirname, '../../../docker/db/migrations/001_add_missing_tables.sql');
+    const MIGRATION_FILE = '001_add_missing_tables.sql';
+    const migrationCandidates = [
+      path.join(__dirname, '../../../docker/db/migrations', MIGRATION_FILE),
+      path.join(__dirname, '../migrations', MIGRATION_FILE)
+    ];
+
+    const migrationPath = migrationCandidates.find(candidate => fs.existsSync(candidate));
+
+    if (!migrationPath) {
+      throw new Error(`Migration file not found. Looked for: ${migrationCandidates.join(', ')}`);
+    }
+
+    console.log(`Using migration file: ${migrationPath}`);
+
     const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
 
     console.log('Running migration script...');
