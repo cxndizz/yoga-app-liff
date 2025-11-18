@@ -1,10 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import axios from 'axios';
+import React, { useEffect, useMemo, useState } from 'react';
 import KpiCard from '../components/dashboard/KpiCard';
 import TrendChart from '../components/dashboard/TrendChart';
+import useDashboardData from '../hooks/useDashboardData';
 import styles from './AdminDashboard.module.css';
-
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
 const formatCurrency = (cents) => {
   if (typeof cents !== 'number') return '—';
@@ -22,27 +20,6 @@ const formatDateLabel = (isoDate) => {
     return '—';
   }
   return date.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
-};
-
-const useAdminDashboardData = () => {
-  const [state, setState] = useState({ data: null, loading: true, error: null });
-
-  const fetchData = useCallback(async () => {
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-    try {
-      const response = await axios.get(`${apiBase}/api/admin/dashboard`);
-      setState({ data: response.data, loading: false, error: null });
-    } catch (error) {
-      console.error('Failed to load admin dashboard', error);
-      setState({ data: null, loading: false, error: error.message || 'ไม่สามารถโหลดข้อมูลได้' });
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  return { ...state, refetch: fetchData };
 };
 
 function TrendList({ title, subtitle, data = [], metricKey, formatter }) {
@@ -99,11 +76,34 @@ function RecentActivity({ events = [] }) {
 }
 
 function AdminDashboard() {
-  const { data, loading, error, refetch } = useAdminDashboardData();
+  const { data, loading, error, refresh, lastUpdated } = useDashboardData();
   const [trendRange, setTrendRange] = useState('weekly');
+  const [toastMessage, setToastMessage] = useState(null);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    setToastMessage(`โหลดข้อมูลไม่สำเร็จ: ${error}`);
+  }, [error]);
+
+  useEffect(() => {
+    if (!toastMessage) {
+      return undefined;
+    }
+    const timer = setTimeout(() => setToastMessage(null), 6000);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
 
   const kpis = data?.kpis || {};
   const charts = data?.charts || {};
+
+  const lastUpdatedLabel = lastUpdated
+    ? lastUpdated.toLocaleString('th-TH', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      })
+    : 'ยังไม่เคยอัปเดต';
 
   const kpiCards = useMemo(
     () => [
@@ -224,9 +224,12 @@ function AdminDashboard() {
           <h1 className={styles.pageTitle}>Admin Dashboard</h1>
           <p className={styles.pageSubtitle}>ติดตามยอดขายและสมาชิกแบบเรียลไทม์</p>
         </div>
-        <button type="button" className={styles.refreshButton} onClick={refetch} disabled={loading}>
-          {loading ? 'กำลังรีเฟรช…' : 'รีเฟรชข้อมูล'}
-        </button>
+        <div className={styles.refreshMeta}>
+          <p className={styles.lastUpdated}>อัปเดตล่าสุดเมื่อ {lastUpdatedLabel}</p>
+          <button type="button" className={styles.refreshButton} onClick={refresh} disabled={loading}>
+            {loading ? 'กำลังรีเฟรช…' : 'Refresh now'}
+          </button>
+        </div>
       </header>
 
       {error && <div className={styles.errorBanner}>เกิดข้อผิดพลาด: {error}</div>}
@@ -303,6 +306,20 @@ function AdminDashboard() {
 
         <RecentActivity events={recentEvents} />
       </div>
+
+      {toastMessage && (
+        <div className={styles.toast} role="status" aria-live="polite">
+          <span>{toastMessage}</span>
+          <button
+            type="button"
+            className={styles.toastDismiss}
+            onClick={() => setToastMessage(null)}
+            aria-label="ปิดการแจ้งเตือน"
+          >
+            ×
+          </button>
+        </div>
+      )}
     </section>
   );
 }
