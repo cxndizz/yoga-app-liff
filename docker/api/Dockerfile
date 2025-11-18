@@ -11,13 +11,14 @@ RUN npm install
 # Copy source code
 COPY src ./src
 
-# Copy entrypoint script
-COPY docker-entrypoint.sh ./docker-entrypoint.sh
+# Copy entrypoint script with absolute path
+COPY docker-entrypoint.sh /app/entrypoint.sh
 
-# Make entrypoint executable
-RUN chmod +x ./docker-entrypoint.sh
+# Make entrypoint executable and ensure correct line endings
+RUN chmod +x /app/entrypoint.sh && \
+    sed -i 's/\r$//' /app/entrypoint.sh
 
 EXPOSE 4000
 
 # Use the entrypoint script
-CMD ["./docker-entrypoint.sh"]
+CMD ["/app/entrypoint.sh"]
