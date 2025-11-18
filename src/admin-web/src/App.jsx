@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios';
-import { Routes, Route, Link, Outlet, useNavigate } from 'react-router-dom';
-import Dashboard from './pages/Dashboard';
+import { Routes, Route, Link, Outlet, useNavigate, Navigate } from 'react-router-dom';
+import AdminDashboard from './pages/AdminDashboard';
 import Courses from './pages/Courses';
 import Users from './pages/Users';
 import Login from './pages/Login';
@@ -33,7 +33,7 @@ const AdminLayout = () => {
   };
 
   const navItems = [
-    { label: 'Dashboard', to: '/', roles: ['super_admin', 'branch_admin', 'instructor'] },
+    { label: 'Dashboard', to: '/admin/dashboard', roles: ['super_admin', 'branch_admin', 'instructor'] },
     { label: 'Courses', to: '/courses', roles: ['super_admin', 'branch_admin'] },
     { label: 'Users', to: '/users', roles: ['super_admin'] },
   ];
@@ -97,8 +97,9 @@ function App() {
     <Routes>
       <Route path="/admin/login" element={<Login />} />
       <Route element={<GuardedAdminLayout />}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/admin" element={<Dashboard />} />
+        <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/courses" element={<GuardedCourses />} />
         <Route path="/users" element={<GuardedUsers />} />
       </Route>
