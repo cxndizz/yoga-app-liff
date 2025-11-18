@@ -37,7 +37,7 @@ const resolveUserFromPayload = (payload, fallbackUser) => {
 
 const redirectToLogin = (navigate, location) => {
   const redirectPath = `${location.pathname}${location.search}`;
-  const url = `/admin/login?redirect=${encodeURIComponent(redirectPath)}`;
+  const url = `/login?redirect=${encodeURIComponent(redirectPath)}`;
   navigate(url, { replace: true });
 };
 
@@ -149,8 +149,31 @@ const AdminGuard = ({ allowedRoles, children }) => {
 
   if (state.status === 'checking') {
     return (
-      <div style={{ padding: '48px', textAlign: 'center', fontFamily: 'system-ui, sans-serif' }}>
-        กำลังตรวจสอบสิทธิ์การใช้งาน...
+      <div style={{ 
+        padding: '48px', 
+        textAlign: 'center', 
+        fontFamily: 'system-ui, sans-serif',
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          border: '4px solid #e5e7eb',
+          borderTopColor: '#667eea',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+        <p style={{ margin: 0, color: '#6b7280', fontSize: '15px' }}>กำลังตรวจสอบสิทธิ์การใช้งาน...</p>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }

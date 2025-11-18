@@ -28,12 +28,12 @@ const AdminLayout = () => {
       clearSession();
       delete axios.defaults.headers.common.Authorization;
       setIsLoggingOut(false);
-      navigate('/admin/login', { replace: true });
+      navigate('/login', { replace: true });
     }
   };
 
   const navItems = [
-    { label: 'Dashboard', to: '/admin/dashboard', roles: ['super_admin', 'branch_admin', 'instructor'] },
+    { label: 'Dashboard', to: '/dashboard', roles: ['super_admin', 'branch_admin', 'instructor'] },
     { label: 'Courses', to: '/courses', roles: ['super_admin', 'branch_admin'] },
     { label: 'Users', to: '/users', roles: ['super_admin'] },
   ];
@@ -95,11 +95,10 @@ const GuardedUsers = withAdminGuard(Users, {
 function App() {
   return (
     <Routes>
-      <Route path="/admin/login" element={<Login />} />
+      <Route path="/login" element={<Login />} />
       <Route element={<GuardedAdminLayout />}>
-        <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<AdminDashboard />} />
         <Route path="/courses" element={<GuardedCourses />} />
         <Route path="/users" element={<GuardedUsers />} />
       </Route>
