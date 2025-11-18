@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: yoga_lineoa_db
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: applocalpass
+      POSTGRES_DB: appdb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  api:
+    build:
+      context: ./src/api
+      dockerfile: ../../docker/api/Dockerfile
+    container_name: yoga_lineoa_api
+    env_file:
+      - ./src/api/.env.example
+    environment:
+      DATABASE_URL: postgres://appuser:applocalpass@db:5432/appdb
+    depends_on:
+      - db
+    ports:
+      - "4000:4000"
+
+  liff-web:
+    build:
+      context: ./src/liff-web
+      dockerfile: ../../docker/liff-web/Dockerfile
+    container_name: yoga_lineoa_liff_web
+    env_file:
+      - ./src/liff-web/.env.example
+    environment:
+      VITE_API_BASE_URL: http://api:4000
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
+
+  admin-web:
+    build:
+      context: ./src/admin-web
+      dockerfile: ../../docker/admin-web/Dockerfile
+    container_name: yoga_lineoa_admin_web
+    env_file:
+      - ./src/admin-web/.env.example
+    environment:
+      VITE_API_BASE_URL: http://api:4000
+    depends_on:
+      - api
+    ports:
+      - "3001:3000"
+
+volumes:
+  db_data:
