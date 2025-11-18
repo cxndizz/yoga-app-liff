@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const db = require('./db');
+const { requireAdminAuth } = require('./middleware/adminAuth');
 
 dotenv.config();
 
@@ -60,7 +61,7 @@ app.get('/courses', async (_req, res) => {
   }
 });
 
-app.post('/courses', async (req, res) => {
+app.post('/courses', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   const { title, description, capacity, is_free, price_cents, access_times } = req.body;
   try {
     const result = await db.query(
@@ -76,7 +77,7 @@ app.post('/courses', async (req, res) => {
   }
 });
 
-app.get('/admin/users', async (_req, res) => {
+app.get('/admin/users', requireAdminAuth(['super_admin']), async (_req, res) => {
   try {
     const result = await db.query('SELECT * FROM users ORDER BY created_at DESC LIMIT 100');
     res.json(result.rows);

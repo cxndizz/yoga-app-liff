@@ -1,4 +1,4 @@
-const { login, refreshSession, logout, AuthError } = require('./auth.service');
+const { login, refreshSession, logout, getUserProfile, AuthError } = require('./auth.service');
 const { ValidationError, validateLoginPayload, validateRefreshPayload } = require('./auth.validator');
 
 const formatResponse = (result) => ({
@@ -52,8 +52,18 @@ const logoutAdmin = async (req, res) => {
   }
 };
 
+const getCurrentAdmin = async (req, res) => {
+  try {
+    const user = await getUserProfile(req.admin?.id);
+    return res.json({ user });
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
+
 module.exports = {
   loginAdmin,
   refreshAdminSession,
   logoutAdmin,
+  getCurrentAdmin,
 };

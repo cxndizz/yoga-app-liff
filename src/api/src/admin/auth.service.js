@@ -5,8 +5,8 @@ const { signJwt, verifyJwt, verifyPassword, parseDuration } = require('../utils/
 
 const ROLE_PERMISSIONS = {
   super_admin: ['*'],
-  admin: ['courses:read', 'courses:write', 'users:read', 'orders:read', 'payments:read'],
-  staff: ['courses:read', 'users:read'],
+  branch_admin: ['courses:read', 'courses:write', 'users:read', 'orders:read', 'payments:read'],
+  instructor: ['courses:read', 'users:read'],
 };
 
 class AuthError extends Error {
@@ -185,10 +185,22 @@ const logout = async (refreshToken) => {
   return { success: true };
 };
 
+const getUserProfile = async (userId) => {
+  if (!userId) {
+    throw new AuthError('User is not available');
+  }
+  const user = await findUserById(userId);
+  if (!user || user.is_active === false) {
+    throw new AuthError('User is not available', 404);
+  }
+  return buildUserPayload(user);
+};
+
 module.exports = {
   login,
   refreshSession,
   logout,
+  getUserProfile,
   AuthError,
   accessTokenExpiresIn,
   refreshTokenExpiresIn,
