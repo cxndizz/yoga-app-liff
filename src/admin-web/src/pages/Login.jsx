@@ -71,8 +71,9 @@ function Login() {
       if (user) {
         window.localStorage.setItem('adminUser', JSON.stringify(user));
       }
-      const redirect = searchParams.get('redirect') || '/';
-      navigate(redirect, { replace: true });
+      const redirectParam = searchParams.get('redirect');
+      const redirectTarget = redirectParam ? decodeURIComponent(redirectParam) : '/';
+      navigate(redirectTarget, { replace: true });
     } catch (error) {
       const message = error.response?.data?.message || 'ไม่สามารถเข้าสู่ระบบได้ กรุณาลองใหม่อีกครั้ง';
       setServerError(message);

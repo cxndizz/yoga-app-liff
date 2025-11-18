@@ -1,4 +1,4 @@
-const { login, refreshSession, AuthError } = require('./auth.service');
+const { login, refreshSession, logout, AuthError } = require('./auth.service');
 const { ValidationError, validateLoginPayload, validateRefreshPayload } = require('./auth.validator');
 
 const formatResponse = (result) => ({
@@ -42,8 +42,14 @@ const refreshAdminSession = async (req, res) => {
   }
 };
 
-const logoutAdmin = async (_req, res) => {
-  return res.status(204).send();
+const logoutAdmin = async (req, res) => {
+  try {
+    const refreshToken = validateRefreshPayload(req.body);
+    await logout(refreshToken);
+    return res.json({ success: true });
+  } catch (error) {
+    return handleError(error, res);
+  }
 };
 
 module.exports = {
