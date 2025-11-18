@@ -109,6 +109,19 @@ project-root/
 
   ภายหลัง คุณสามารถอัปเดต OMISE keys เป็นค่า test จริงจาก Omise ได้ รวมถึงตั้งค่า secret/token ttl ให้เหมาะกับ production. ค่าเริ่มต้นมีการ seed ผู้ใช้หลังบ้านเอาไว้คือ `admin@yoga.local / Admin123!` (role = `super_admin`) เพื่อให้ทดสอบ flow ได้ทันที
 
+  #### Seed / อัปเดตบัญชีแอดมิน
+
+  หากคุณต้องการสร้างหรืออัปเดตบัญชีแอดมินด้วยตัวเอง สามารถใช้สคริปต์ seed ได้ดังนี้
+
+  ```bash
+  cd src/api
+  npm run seed:admin -- --email=admin@yoga.local --password=Admin123! --name="Default Admin" --role=super_admin
+  ```
+
+  * ไม่ใส่พารามิเตอร์จะ fallback เป็นค่าด้านบน
+  * สามารถกำหนด `--permissions=courses:read,courses:write` หรือใช้ env `SEED_ADMIN_*` ได้
+  * รันซ้ำเท่าไรก็ได้ สคริปต์จะ upsert ให้ (อัปเดตรหัสผ่าน/สิทธิ์ให้ตรงกับค่าที่ส่งเข้าไป)
+
 ---
 
 ### 3.2 LIFF Frontend (`src/liff-web`)
