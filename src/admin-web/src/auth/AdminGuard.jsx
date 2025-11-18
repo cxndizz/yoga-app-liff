@@ -57,18 +57,27 @@ const useAdminAuthorization = (allowedRoles) => {
   const location = useLocation();
   const { accessToken, refreshToken, user, setSession, clearSession } = useAdminAuth();
   const [state, setState] = useState({ status: 'checking', user: null });
+  const isValidatingRef = React.useRef(false);
 
   useEffect(() => {
     let isMounted = true;
 
     const validateSession = async () => {
+      // Prevent multiple concurrent validation attempts
+      if (isValidatingRef.current) {
+        return;
+      }
+
+      isValidatingRef.current = true;
       setState({ status: 'checking', user: null });
+
       const snapshot = getSessionSnapshot();
       const initialAccessToken = accessToken || snapshot.accessToken;
       const initialRefreshToken = refreshToken || snapshot.refreshToken;
       const initialUser = user || snapshot.user;
 
       if (!initialAccessToken || !initialRefreshToken) {
+        isValidatingRef.current = false;
         handleUnauthorized(navigate, location, clearSession);
         return;
       }
@@ -98,12 +107,14 @@ const useAdminAuthorization = (allowedRoles) => {
         }
       } catch (error) {
         console.warn('Session validation failed', error);
+        isValidatingRef.current = false;
         handleUnauthorized(navigate, location, clearSession);
         return;
       }
 
       const resolvedUser = resolveUserFromPayload(payload, currentUser);
       if (!currentAccessToken || !resolvedUser) {
+        isValidatingRef.current = false;
         handleUnauthorized(navigate, location, clearSession);
         return;
       }
@@ -122,6 +133,7 @@ const useAdminAuthorization = (allowedRoles) => {
 
       if (Array.isArray(allowedRoles) && allowedRoles.length > 0) {
         if (!allowedRoles.includes(syncedUser.role)) {
+          isValidatingRef.current = false;
           handleUnauthorized(navigate, location, clearSession);
           return;
         }
@@ -132,14 +144,17 @@ const useAdminAuthorization = (allowedRoles) => {
       if (isMounted) {
         setState({ status: 'authorized', user: syncedUser });
       }
+
+      isValidatingRef.current = false;
     };
 
     validateSession();
 
     return () => {
       isMounted = false;
+      isValidatingRef.current = false;
     };
-  }, [accessToken, allowedRoles, clearSession, location.pathname, location.search, navigate, refreshToken, setSession, user]);
+  }, [accessToken, refreshToken, user]);
 
   return state;
 };
