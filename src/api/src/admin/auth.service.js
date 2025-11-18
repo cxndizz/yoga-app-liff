@@ -44,6 +44,37 @@ const buildUserPayload = (user) => ({
   permissions: mapPermissions(user),
 });
 
+const revokedRefreshTokens = new Map();
+
+const cleanupRevokedTokens = () => {
+  const now = Date.now();
+  for (const [token, expiresAt] of revokedRefreshTokens.entries()) {
+    if (expiresAt <= now) {
+      revokedRefreshTokens.delete(token);
+    }
+  }
+};
+
+const isRefreshTokenRevoked = (token) => {
+  cleanupRevokedTokens();
+  if (!revokedRefreshTokens.has(token)) {
+    return false;
+  }
+  const expiresAt = revokedRefreshTokens.get(token);
+  if (expiresAt <= Date.now()) {
+    revokedRefreshTokens.delete(token);
+    return false;
+  }
+  return true;
+};
+
+const revokeRefreshToken = (token, expiresAtSeconds) => {
+  const fallbackExpiry = Date.now() + refreshTokenExpiresIn * 1000;
+  const expiresAtMs = Number(expiresAtSeconds) * 1000;
+  const validExpiry = Number.isFinite(expiresAtMs) && expiresAtMs > Date.now() ? expiresAtMs : fallbackExpiry;
+  revokedRefreshTokens.set(token, validExpiry);
+};
+
 const issueTokens = (userPayload) => ({
   accessToken: signJwt(
     {
@@ -113,6 +144,10 @@ const refreshSession = async (refreshToken) => {
     throw new AuthError('Invalid token type');
   }
 
+  if (isRefreshTokenRevoked(refreshToken)) {
+    throw new AuthError('Refresh token has been revoked');
+  }
+
   const userId = Number(decoded.sub);
   if (!userId) {
     throw new AuthError('User is not available');
@@ -133,9 +168,27 @@ const refreshSession = async (refreshToken) => {
   };
 };
 
+const logout = async (refreshToken) => {
+  let decoded;
+  try {
+    decoded = verifyJwt(refreshToken, refreshSecret);
+  } catch (error) {
+    throw new AuthError('Refresh token is invalid or expired');
+  }
+
+  if (decoded.tokenType !== 'refresh') {
+    throw new AuthError('Invalid token type');
+  }
+
+  revokeRefreshToken(refreshToken, decoded.exp);
+
+  return { success: true };
+};
+
 module.exports = {
   login,
   refreshSession,
+  logout,
   AuthError,
   accessTokenExpiresIn,
   refreshTokenExpiresIn,
