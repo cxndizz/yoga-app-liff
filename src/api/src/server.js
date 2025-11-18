@@ -9,6 +9,13 @@ dotenv.config();
 
 const adminAuthRoutes = require('./admin/auth.routes');
 const adminDashboardRoutes = require('./routes/adminDashboard');
+const branchesRoutes = require('./routes/branches');
+const instructorsRoutes = require('./routes/instructors');
+const coursesRoutes = require('./routes/courses');
+const courseSessionsRoutes = require('./routes/courseSessions');
+const customersRoutes = require('./routes/customers');
+const contentRoutes = require('./routes/content');
+const settingsRoutes = require('./routes/settings');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -43,6 +50,13 @@ app.get('/health', async (_req, res) => {
 
 app.use('/admin/auth', adminAuthRoutes);
 app.use('/api/admin/dashboard', adminDashboardRoutes);
+app.use('/api/admin/branches', branchesRoutes);
+app.use('/api/admin/instructors', instructorsRoutes);
+app.use('/api/admin/courses', coursesRoutes);
+app.use('/api/admin/course-sessions', courseSessionsRoutes);
+app.use('/api/admin/customers', customersRoutes);
+app.use('/api/admin/content', contentRoutes);
+app.use('/api/admin/settings', settingsRoutes);
 
 app.get('/courses', async (_req, res) => {
   try {
