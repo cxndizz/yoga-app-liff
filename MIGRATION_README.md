@@ -11,8 +11,16 @@
 
 ### วิธีที่ 1: รันผ่าน Node.js Script (แนะนำ)
 
+**ขั้นตอนที่ 1: ติดตั้ง Dependencies (ถ้ายังไม่เคยติดตั้ง)**
+
 ```bash
 cd src/api
+npm install
+```
+
+**ขั้นตอนที่ 2: รัน Migration Script**
+
+```bash
 node src/scripts/runMigration.js
 ```
 
