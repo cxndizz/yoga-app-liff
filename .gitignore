@@ -1,3 +1,13 @@
 node_modules
+.cache
+dist
+.next
+.turbo
+.vercel
+.nuxt
+.output
+.angular
+.svelte-kit
+.solid
 .env
 .DS_Store
