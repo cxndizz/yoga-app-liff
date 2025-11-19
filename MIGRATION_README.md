@@ -7,6 +7,7 @@
 2. ตาราง `course_sessions` ไม่มีในฐานข้อมูล
 3. คอลัมน์ `status` ไม่มีในตาราง `courses`
 4. ตาราง `branches` ขาดคอลัมน์ที่จำเป็น (`map_url`, `is_active`, `address`, `phone`, `created_at`, `updated_at`)
+5. ตาราง `instructors` ขาดคอลัมน์ที่จำเป็น (`email`, `phone`, `specialties`, `is_active`, `created_at`, `updated_at`)
 
 ## วิธีรัน Migration
 
@@ -26,12 +27,16 @@ Script นี้จะ:
 
 ```bash
 psql -U your_db_user -d your_db_name -f docker/db/migrations/001_add_missing_tables.sql
+psql -U your_db_user -d your_db_name -f docker/db/migrations/002_fix_branches_schema.sql
+psql -U your_db_user -d your_db_name -f docker/db/migrations/003_fix_instructors_schema.sql
 ```
 
 ### วิธีที่ 3: รันผ่าน Docker (ถ้าใช้ Docker)
 
 ```bash
 docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations/001_add_missing_tables.sql
+docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations/002_fix_branches_schema.sql
+docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations/003_fix_instructors_schema.sql
 ```
 
 ## การตรวจสอบหลังรัน Migration
@@ -61,6 +66,16 @@ SELECT column_name, data_type
 FROM information_schema.columns
 WHERE table_name = 'branches'
   AND column_name IN ('address', 'phone', 'map_url', 'is_active', 'created_at', 'updated_at')
+ORDER BY column_name;
+```
+
+ตรวจสอบว่าตาราง instructors มีคอลัมน์ที่จำเป็นครบหรือไม่:
+
+```sql
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'instructors'
+  AND column_name IN ('email', 'phone', 'specialties', 'is_active', 'created_at', 'updated_at')
 ORDER BY column_name;
 ```
 

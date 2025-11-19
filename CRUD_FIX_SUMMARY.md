@@ -20,6 +20,19 @@ STATEMENT: INSERT INTO branches (name, address, phone, map_url, is_active) VALUE
 ### 2. Migration Runner ไม่สมบูรณ์
 **ปัญหา:** `src/api/src/scripts/runMigration.js` รันเฉพาะไฟล์ `001_add_missing_tables.sql` เท่านั้น ทำให้ migration ใหม่ไม่ถูกรัน
 
+### 3. Schema Mismatch - instructors table
+**ปัญหา:** Database production ที่ใช้งานจริงถูกสร้างก่อนเพิ่มคอลัมน์ `email`, `phone`, `specialties`, `is_active`, `created_at`, `updated_at`
+
+**Error ที่เกิดขึ้น:**
+```
+ERROR:  column "email" of relation "instructors" does not exist
+STATEMENT: INSERT INTO instructors (name, bio, avatar_url, email, phone, specialties, is_active) VALUES (...)
+```
+
+**สาเหตุ:**
+- API (`src/api/src/routes/instructors.js`) และหน้า Admin (`src/admin-web/src/pages/Instructors.jsx`) ส่งค่าคอลัมน์เหล่านี้ทุกครั้งที่สร้าง/แก้ไขผู้สอน
+- ตาราง `instructors` ที่มีอยู่จริงยังเป็นเวอร์ชันเก่า ทำให้ INSERT/UPDATE ล้มเหลว
+
 ## ✅ การแก้ไข
 
 ### 1. สร้าง Migration File ใหม่
@@ -42,6 +55,14 @@ STATEMENT: INSERT INTO branches (name, address, phone, map_url, is_active) VALUE
 - ข้ามการรัน migration ที่เคยรันไปแล้ว
 - ใช้ transaction เพื่อความปลอดภัย (BEGIN/COMMIT/ROLLBACK)
 - ตรวจสอบ schema หลังรัน migration
+
+### 3. เพิ่ม migration สำหรับ instructors
+เพิ่มไฟล์ `003_fix_instructors_schema.sql` ทั้งใน `/docker/db/migrations` และ `/src/api/migrations`
+
+**สิ่งที่ migration ทำ:**
+- เพิ่มคอลัมน์ `email`, `phone`, `specialties`, `is_active`, `created_at`, `updated_at` หากหายไป
+- บังคับค่า default (empty array / TRUE / NOW) และเติมค่าที่ขาดให้ row เก่า
+- ตรวจสอบซ้ำอีกครั้ง หากยังขาดคอลัมน์จะ RAISE EXCEPTION ทันที
 
 ## 📊 สถานะ CRUD Operations
 
@@ -123,11 +144,12 @@ docker compose logs -f yoga_lineoa_api
 ```
 Starting database migrations...
 Using migrations directory: /app/docker/db/migrations
-Found 2 migration file(s)
+Found 3 migration file(s)
 ⏭️  Skipping 001_add_missing_tables.sql (already applied)
+⏭️  Skipping 002_fix_branches_schema.sql (already applied)
 
-🔄 Running migration: 002_fix_branches_schema.sql
-✅ Successfully applied: 002_fix_branches_schema.sql
+🔄 Running migration: 003_fix_instructors_schema.sql
+✅ Successfully applied: 003_fix_instructors_schema.sql
 
 ✅ All migrations completed successfully!
 
@@ -170,6 +192,8 @@ Existing tables:
 1. **Migration Files:**
    - `/docker/db/migrations/002_fix_branches_schema.sql` (ใหม่)
    - `/src/api/migrations/002_fix_branches_schema.sql` (ใหม่)
+   - `/docker/db/migrations/003_fix_instructors_schema.sql` (ใหม่)
+   - `/src/api/migrations/003_fix_instructors_schema.sql` (ใหม่)
 
 2. **Migration Runner:**
    - `/src/api/src/scripts/runMigration.js` (แก้ไข)
