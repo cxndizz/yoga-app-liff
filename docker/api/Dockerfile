@@ -11,6 +11,9 @@ RUN npm install
 # Copy source code
 COPY src ./src
 
+# Copy SQL migration scripts so the API container can run them on startup
+COPY migrations ./src/migrations
+
 # Copy entrypoint script with absolute path
 COPY docker-entrypoint.sh /app/entrypoint.sh
 
