@@ -154,51 +154,35 @@ function Instructors() {
   };
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>กำลังโหลด...</div>;
+    return <div className="page">กำลังโหลด...</div>;
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ margin: 0 }}>จัดการผู้สอน</h1>
+    <div className="page">
+      <div className="page__header">
+        <h1 className="page__title">จัดการผู้สอน</h1>
         <button
           onClick={() => setShowForm(true)}
-          style={{
-            background: '#2563eb',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '10px 20px',
-            cursor: 'pointer'
-          }}
+          className="btn btn--primary"
         >
           เพิ่มผู้สอนใหม่
         </button>
       </div>
 
       {showForm && (
-        <div style={{
-          background: '#fff',
-          border: '1px solid #e5e7eb',
-          borderRadius: '8px',
-          padding: '20px',
-          marginBottom: '20px'
-        }}>
-          <h2 style={{ marginTop: 0 }}>{editingInstructor ? 'แก้ไขผู้สอน' : 'เพิ่มผู้สอนใหม่'}</h2>
+        <div className="page-card">
+          <div className="page-card__header">
+            <h2 className="page-card__title">{editingInstructor ? 'แก้ไขผู้สอน' : 'เพิ่มผู้สอนใหม่'}</h2>
+          </div>
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>ชื่อผู้สอน *</label>
+            <div className="field">
+              <label className="field__label">ชื่อผู้สอน *</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px'
-                }}
+                className="input"
               />
             </div>
 
@@ -249,14 +233,7 @@ function Instructors() {
                   <button
                     type="button"
                     onClick={handleRemoveAvatar}
-                    style={{
-                      border: 'none',
-                      borderRadius: '6px',
-                      padding: '6px 10px',
-                      background: '#fee2e2',
-                      color: '#b91c1c',
-                      cursor: 'pointer'
-                    }}
+                    className="btn btn--danger btn--small"
                   >
                     ลบรูป
                   </button>
@@ -264,68 +241,48 @@ function Instructors() {
               )}
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>ประวัติ/ความเชี่ยวชาญ</label>
+            <div className="field">
+              <label className="field__label">ประวัติ/ความเชี่ยวชาญ</label>
               <textarea
                 value={formData.bio}
                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                 rows={3}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px'
-                }}
+                className="textarea"
               />
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>อีเมล</label>
+            <div className="field">
+              <label className="field__label">อีเมล</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px'
-                }}
+                className="input"
               />
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>เบอร์โทร</label>
+            <div className="field">
+              <label className="field__label">เบอร์โทร</label>
               <input
                 type="text"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px'
-                }}
+                className="input"
               />
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>ความเชี่ยวชาญ (คั่นด้วยเครื่องหมายจุลภาค)</label>
+            <div className="field">
+              <label className="field__label">ความเชี่ยวชาญ (คั่นด้วยเครื่องหมายจุลภาค)</label>
               <input
                 type="text"
                 value={formData.specialties}
                 onChange={(e) => setFormData({ ...formData, specialties: e.target.value })}
                 placeholder="Hatha Yoga, Vinyasa, Meditation"
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px'
-                }}
+                className="input"
               />
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
+            <div className="field">
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input
                   type="checkbox"
@@ -336,32 +293,19 @@ function Instructors() {
               </label>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div className="page__actions">
               <button
                 type="submit"
                 disabled={avatarProcessing}
-                style={{
-                  background: avatarProcessing ? '#9ca3af' : '#2563eb',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  cursor: avatarProcessing ? 'not-allowed' : 'pointer'
-                }}
+                className="btn btn--primary"
+                style={avatarProcessing ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
               >
                 {avatarProcessing ? 'กำลังแปลงรูป...' : 'บันทึก'}
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                style={{
-                  background: '#6b7280',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  cursor: 'pointer'
-                }}
+                className="btn btn--ghost"
               >
                 ยกเลิก
               </button>
@@ -370,30 +314,30 @@ function Instructors() {
         </div>
       )}
 
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead style={{ background: '#f9fafb' }}>
+      <div className="table-wrapper">
+        <table className="table">
+          <thead>
             <tr>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>รูป</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>ชื่อผู้สอน</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>อีเมล</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>เบอร์โทร</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>ความเชี่ยวชาญ</th>
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>สถานะ</th>
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>จัดการ</th>
+              <th>รูป</th>
+              <th>ชื่อผู้สอน</th>
+              <th>อีเมล</th>
+              <th>เบอร์โทร</th>
+              <th>ความเชี่ยวชาญ</th>
+              <th style={{ textAlign: 'center' }}>สถานะ</th>
+              <th style={{ textAlign: 'center' }}>จัดการ</th>
             </tr>
           </thead>
           <tbody>
             {visibleInstructors.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
-                  ไม่มีข้อมูลผู้สอน
+                <td colSpan={7}>
+                  <div className="empty-state">ไม่มีข้อมูลผู้สอน</div>
                 </td>
               </tr>
             ) : (
               visibleInstructors.map((instructor) => (
                 <tr key={instructor.id}>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                  <td>
                     {instructor.avatar_url ? (
                       <img
                         src={instructor.avatar_url}
@@ -415,19 +359,19 @@ function Instructors() {
                       </div>
                     )}
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{instructor.name}</td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                  <td>{instructor.name}</td>
+                  <td>
                     {instructor.email || '-'}
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                  <td>
                     {instructor.phone || '-'}
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                  <td>
                     {instructor.specialties && instructor.specialties.length > 0
                       ? instructor.specialties.join(', ')
                       : '-'}
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <td style={{ textAlign: 'center' }}>
                     <span style={{
                       padding: '4px 12px',
                       borderRadius: '12px',
@@ -438,31 +382,17 @@ function Instructors() {
                       {instructor.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                     </span>
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <td style={{ textAlign: 'center' }}>
                     <button
                       onClick={() => handleEdit(instructor)}
-                      style={{
-                        background: '#f59e0b',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '6px 12px',
-                        cursor: 'pointer',
-                        marginRight: '8px'
-                      }}
+                      className="btn btn--primary btn--small"
+                      style={{ marginRight: '8px' }}
                     >
                       แก้ไข
                     </button>
                     <button
                       onClick={() => handleDelete(instructor.id)}
-                      style={{
-                        background: '#dc2626',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '6px 12px',
-                        cursor: 'pointer'
-                      }}
+                      className="btn btn--danger btn--small"
                     >
                       ปิดใช้งาน
                     </button>

@@ -175,11 +175,14 @@ textarea {
 }
 
 .admin-shell__overlay {
-  display: none;
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.6);
   z-index: 15;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  pointer-events: none;
 }
 
 .page {
@@ -527,6 +530,21 @@ textarea {
   color: var(--color-muted);
 }
 
+@media (max-width: 480px) {
+  .login-screen {
+    padding: 16px;
+  }
+
+  .login-panel {
+    padding: 28px 20px;
+    border-radius: 20px;
+  }
+
+  .login-panel h1 {
+    font-size: 24px !important;
+  }
+}
+
 @media (max-width: 960px) {
   .admin-sidebar {
     position: fixed;
@@ -542,19 +560,51 @@ textarea {
     transform: translateX(0);
   }
 
+  .admin-shell--sidebar-open .admin-shell__overlay {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
   .sidebar-toggle {
     display: inline-flex;
     align-items: center;
     gap: 8px;
   }
 
-  .admin-shell__overlay {
-    display: block;
-  }
-
   .admin-shell__topbar {
     position: sticky;
     top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-wrapper {
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+  }
+
+  .table {
+    min-width: 600px;
+  }
+
+  .form-grid--two {
+    grid-template-columns: 1fr;
+  }
+
+  .page__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page__actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .page__actions .btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -570,6 +620,11 @@ textarea {
     padding: 18px;
   }
 
+  .admin-shell__content {
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+
   .page__header {
     flex-direction: column;
   }
@@ -582,5 +637,37 @@ textarea {
   .sidebar-toggle {
     width: 100%;
     justify-content: center;
+    min-height: 44px;
+    padding: 12px 18px;
+  }
+
+  .table {
+    font-size: 13px;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 8px;
+  }
+
+  .table-pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .table-pagination__controls {
+    justify-content: center;
+  }
+
+  .admin-shell__topbar {
+    padding: 12px 16px;
+  }
+
+  .admin-shell__topbar h2 {
+    font-size: 13px;
+  }
+
+  .admin-shell__topbar strong {
+    font-size: 14px;
   }
 }

@@ -221,47 +221,29 @@ function Courses() {
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '8px' }}>จัดการคอร์ส</h1>
-        <p style={{ color: '#6b7280', margin: 0 }}>สร้างและจัดการคอร์สเรียนทั้งหมด</p>
+    <div className="page">
+      <div className="page__header">
+        <div>
+          <h1 className="page__title">จัดการคอร์ส</h1>
+          <p className="page__subtitle">สร้างและจัดการคอร์สเรียนทั้งหมด</p>
+        </div>
       </div>
 
       {error && (
-        <div style={{
-          background: '#fee2e2',
-          border: '1px solid #fecaca',
-          color: '#991b1b',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          marginBottom: '16px',
-        }}>
+        <div className="page-alert page-alert--error">
           {error}
         </div>
       )}
 
       {success && (
-        <div style={{
-          background: '#d1fae5',
-          border: '1px solid #a7f3d0',
-          color: '#065f46',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          marginBottom: '16px',
-        }}>
+        <div className="page-alert page-alert--success">
           {success}
         </div>
       )}
 
-      <div style={{
-        background: '#fff',
-        borderRadius: '12px',
-        padding: '24px',
-        marginBottom: '32px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
+      <div className="page-card">
+        <div className="page-card__header">
+          <h2 className="page-card__title">
             {editingCourse ? 'แก้ไขคอร์ส' : 'สร้างคอร์สใหม่'}
           </h2>
         </div>
@@ -279,62 +261,45 @@ function Courses() {
             กำลังแก้ไขคอร์ส: <strong>{editingCourse.title}</strong> (#{editingCourse.id})
           </div>
         )}
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontWeight: '500', fontSize: '14px' }}>ชื่อคอร์ส *</span>
+        <form onSubmit={handleSubmit} className="form-grid" style={{ marginTop: '16px' }}>
+          <div className="form-grid form-grid--two">
+            <div className="field">
+              <label className="field__label">ชื่อคอร์ส *</label>
               <input
                 type="text"
+                className="input"
                 placeholder="เช่น Yoga for Beginners"
                 value={form.title}
                 onChange={handleInputChange('title')}
                 disabled={submitting}
                 required
-                style={{
-                  padding: '10px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '15px',
-                }}
               />
-            </label>
+            </div>
 
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontWeight: '500', fontSize: '14px' }}>จำนวนที่รับ (Capacity)</span>
+            <div className="field">
+              <label className="field__label">จำนวนที่รับ (Capacity)</label>
               <input
                 type="number"
+                className="input"
                 min="0"
                 value={form.capacity}
                 onChange={handleInputChange('capacity')}
                 disabled={submitting}
-                style={{
-                  padding: '10px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '15px',
-                }}
               />
-            </label>
+            </div>
           </div>
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontWeight: '500', fontSize: '14px' }}>รายละเอียด</span>
+          <div className="field">
+            <label className="field__label">รายละเอียด</label>
             <textarea
+              className="textarea"
               placeholder="อธิบายเกี่ยวกับคอร์สนี้..."
               value={form.description}
               onChange={handleInputChange('description')}
               disabled={submitting}
               rows="4"
-              style={{
-                padding: '10px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                fontSize: '15px',
-                fontFamily: 'inherit',
-                resize: 'vertical',
-              }}
             />
-          </label>
+          </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'stretch' }}>
             <label style={{
@@ -412,7 +377,7 @@ function Courses() {
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+          <div className="form-grid form-grid--two">
             <label style={{
               display: 'flex',
               alignItems: 'center',
@@ -433,57 +398,38 @@ function Courses() {
             </label>
 
             {!form.is_free && (
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <span style={{ fontWeight: '500', fontSize: '14px' }}>ราคา (บาท)</span>
+              <div className="field">
+                <label className="field__label">ราคา (บาท)</label>
                 <input
                   type="number"
+                  className="input"
                   min="0"
                   step="1"
                   value={form.price_cents / 100}
                   onChange={(e) => setForm(prev => ({ ...prev, price_cents: Number(e.target.value) * 100 }))}
                   disabled={submitting}
-                  style={{
-                    padding: '10px 12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '15px',
-                  }}
                 />
-              </label>
+              </div>
             )}
 
-            <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontWeight: '500', fontSize: '14px' }}>เข้าได้กี่ครั้ง</span>
+            <div className="field">
+              <label className="field__label">เข้าได้กี่ครั้ง</label>
               <input
                 type="number"
+                className="input"
                 min="1"
                 value={form.access_times}
                 onChange={handleInputChange('access_times')}
                 disabled={submitting}
-                style={{
-                  padding: '10px 12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '15px',
-                }}
               />
-            </label>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="page__actions">
             <button
               type="submit"
+              className="btn btn--primary"
               disabled={submitting || imageProcessing}
-              style={{
-                background: submitting || imageProcessing ? '#9ca3af' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '12px 24px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: submitting || imageProcessing ? 'not-allowed' : 'pointer',
-              }}
             >
               {submitting
                 ? (editingCourse ? 'กำลังบันทึก...' : 'กำลังสร้าง...')
@@ -496,16 +442,9 @@ function Courses() {
             {editingCourse && (
               <button
                 type="button"
+                className="btn btn--ghost"
                 onClick={handleCancelEdit}
                 disabled={submitting}
-                style={{
-                  border: '1px solid #d1d5db',
-                  background: '#fff',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  fontSize: '15px',
-                  cursor: submitting ? 'not-allowed' : 'pointer'
-                }}
               >
                 ยกเลิกการแก้ไข
               </button>
@@ -514,40 +453,31 @@ function Courses() {
         </form>
       </div>
 
-      <div style={{
-        background: '#fff',
-        borderRadius: '12px',
-        padding: '24px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      }}>
-        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px' }}>รายการคอร์สทั้งหมด</h2>
-        
+      <div className="page-card">
+        <h2 className="page-card__title" style={{ marginBottom: '16px' }}>รายการคอร์สทั้งหมด</h2>
+
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+          <div className="empty-state">
             กำลังโหลด...
           </div>
         ) : courses.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+          <div className="empty-state">
             ยังไม่มีคอร์สในระบบ
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              fontSize: '14px',
-            }}>
+          <div className="table-wrapper">
+            <table className="table">
               <thead>
-                <tr style={{ borderBottom: '2px solid #e5e7eb', textAlign: 'left' }}>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ID</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>รูป</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ชื่อคอร์ส</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>รายละเอียด</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ประเภท</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151', textAlign: 'right' }}>ราคา</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151', textAlign: 'center' }}>ที่รับ</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151', textAlign: 'center' }}>เข้าได้</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151', textAlign: 'center' }}>จัดการ</th>
+                <tr>
+                  <th>ID</th>
+                  <th>รูป</th>
+                  <th>ชื่อคอร์ส</th>
+                  <th>รายละเอียด</th>
+                  <th>ประเภท</th>
+                  <th style={{ textAlign: 'right' }}>ราคา</th>
+                  <th style={{ textAlign: 'center' }}>ที่รับ</th>
+                  <th style={{ textAlign: 'center' }}>เข้าได้</th>
+                  <th style={{ textAlign: 'center' }}>จัดการ</th>
                 </tr>
               </thead>
               <tbody>
@@ -598,36 +528,20 @@ function Courses() {
                     </td>
                     <td style={{ padding: '12px 8px', textAlign: 'center' }}>{course.capacity}</td>
                     <td style={{ padding: '12px 8px', textAlign: 'center' }}>{course.access_times} ครั้ง</td>
-                    <td style={{ padding: '12px 8px', textAlign: 'center' }}>
+                    <td>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
                         <button
                           type="button"
+                          className="btn btn--ghost btn--small"
                           onClick={() => handleEditCourse(course)}
-                          style={{
-                            border: '1px solid #c7d2fe',
-                            background: '#eef2ff',
-                            color: '#3730a3',
-                            borderRadius: '6px',
-                            padding: '6px 12px',
-                            cursor: 'pointer',
-                            fontSize: '13px'
-                          }}
                         >
                           แก้ไข
                         </button>
                         <button
                           type="button"
+                          className="btn btn--danger btn--small"
                           onClick={() => handleDeleteCourse(course)}
                           disabled={deletingCourseId === course.id}
-                          style={{
-                            border: '1px solid #fecaca',
-                            background: deletingCourseId === course.id ? '#fecaca' : '#fee2e2',
-                            color: '#991b1b',
-                            borderRadius: '6px',
-                            padding: '6px 12px',
-                            cursor: deletingCourseId === course.id ? 'not-allowed' : 'pointer',
-                            fontSize: '13px'
-                          }}
                         >
                           {deletingCourseId === course.id ? 'กำลังลบ...' : 'ลบ'}
                         </button>

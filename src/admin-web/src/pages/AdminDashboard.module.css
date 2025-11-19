@@ -383,6 +383,21 @@
     align-items: flex-start;
   }
 
+  .refreshButton {
+    width: 100%;
+    padding: 14px 28px;
+  }
+
+  .kpiGrid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .chartGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
   .barRow {
     grid-template-columns: 60px 1fr;
     grid-template-rows: auto auto;
@@ -391,5 +406,71 @@
   .barValue {
     grid-column: 1 / -1;
     text-align: left;
+    margin-top: 4px;
+  }
+
+  .sessionItem {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sessionTimeTag {
+    align-self: stretch;
+    text-align: center;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .toggleGroup {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .toggleButton {
+    flex: 1;
+    padding: 10px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    gap: 20px;
+  }
+
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .card,
+  .chartCard {
+    padding: 16px;
+  }
+
+  .sessionTitle {
+    font-size: 0.95rem;
+  }
+
+  .sessionMeta {
+    font-size: 0.8rem;
+  }
+
+  .activityItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .activityAmount {
+    align-self: flex-end;
   }
 }
