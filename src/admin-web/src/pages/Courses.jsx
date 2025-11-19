@@ -4,25 +4,29 @@ import { convertImageFileToWebP } from '../utils/image';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
+const defaultFormValues = {
+  title: '',
+  description: '',
+  capacity: 10,
+  is_free: false,
+  price_cents: 0,
+  access_times: 1,
+  cover_image_url: '',
+};
+
 function Courses() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    capacity: 10,
-    is_free: false,
-    price_cents: 0,
-    access_times: 1,
-    cover_image_url: '',
-  });
+  const [form, setForm] = useState(() => ({ ...defaultFormValues }));
   const [coverPreview, setCoverPreview] = useState('');
   const [coverMeta, setCoverMeta] = useState(null);
   const [imageProcessing, setImageProcessing] = useState(false);
   const [coverInputKey, setCoverInputKey] = useState(0);
+  const [editingCourse, setEditingCourse] = useState(null);
+  const [deletingCourseId, setDeletingCourseId] = useState(null);
 
   useEffect(() => {
     fetchCourses();
@@ -45,7 +49,7 @@ function Courses() {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${apiBase}/courses`);
+      const res = await axios.get(`${apiBase}/api/admin/courses`);
       setCourses(res.data || []);
       setError('');
     } catch (err) {
@@ -69,7 +73,7 @@ function Courses() {
     setSuccess('');
 
     try {
-      await axios.post(`${apiBase}/courses`, {
+      const payload = {
         ...form,
         title: form.title.trim(),
         description: form.description.trim(),
@@ -77,28 +81,77 @@ function Courses() {
         price_cents: form.is_free ? 0 : Number(form.price_cents),
         access_times: Number(form.access_times),
         cover_image_url: form.cover_image_url || null,
-      });
+      };
 
-      setForm({
-        title: '',
-        description: '',
-        capacity: 10,
-        is_free: false,
-        price_cents: 0,
-        access_times: 1,
-        cover_image_url: '',
-      });
-      setCoverPreview('');
-      setCoverMeta(null);
-      setCoverInputKey((prev) => prev + 1);
+      if (editingCourse) {
+        await axios.put(`${apiBase}/api/admin/courses/${editingCourse.id}`, payload);
+        setSuccess('อัปเดตคอร์สสำเร็จ');
+      } else {
+        await axios.post(`${apiBase}/api/admin/courses`, payload);
+        setSuccess('สร้างคอร์สสำเร็จ');
+      }
 
-      setSuccess('สร้างคอร์สสำเร็จ');
+      resetForm();
       await fetchCourses();
     } catch (err) {
       console.error('Error creating course:', err);
-      setError(err.response?.data?.message || 'ไม่สามารถสร้างคอร์สได้');
+      setError(err.response?.data?.message || 'ไม่สามารถบันทึกคอร์สได้');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setForm({ ...defaultFormValues });
+    setCoverPreview('');
+    setCoverMeta(null);
+    setCoverInputKey((prev) => prev + 1);
+    setEditingCourse(null);
+  };
+
+  const handleEditCourse = (course) => {
+    setEditingCourse(course);
+    setForm({
+      title: course.title || '',
+      description: course.description || '',
+      capacity: typeof course.capacity === 'number' ? course.capacity : defaultFormValues.capacity,
+      is_free: !!course.is_free,
+      price_cents: course.price_cents || 0,
+      access_times: typeof course.access_times === 'number' ? course.access_times : defaultFormValues.access_times,
+      cover_image_url: course.cover_image_url || '',
+    });
+    setCoverPreview(course.cover_image_url || '');
+    setCoverMeta(null);
+    setSuccess('');
+    setError('');
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    resetForm();
+  };
+
+  const handleDeleteCourse = async (course) => {
+    if (!confirm(`ยืนยันการลบคอร์ส "${course.title}" ?`)) {
+      return;
+    }
+    setDeletingCourseId(course.id);
+    setError('');
+    setSuccess('');
+    try {
+      await axios.delete(`${apiBase}/api/admin/courses/${course.id}`);
+      setSuccess('ลบคอร์สสำเร็จ');
+      if (editingCourse?.id === course.id) {
+        resetForm();
+      }
+      await fetchCourses();
+    } catch (err) {
+      console.error('Error deleting course:', err);
+      setError(err.response?.data?.message || 'ไม่สามารถลบคอร์สได้');
+    } finally {
+      setDeletingCourseId(null);
     }
   };
 
@@ -196,8 +249,26 @@ function Courses() {
         marginBottom: '32px',
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
       }}>
-        <h2 style={{ fontSize: '20px', fontWeight: '600', marginBottom: '16px' }}>สร้างคอร์สใหม่</h2>
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>
+            {editingCourse ? 'แก้ไขคอร์ส' : 'สร้างคอร์สใหม่'}
+          </h2>
+        </div>
+        {editingCourse && (
+          <div style={{
+            marginTop: '12px',
+            marginBottom: '8px',
+            background: '#eef2ff',
+            border: '1px solid #c7d2fe',
+            color: '#3730a3',
+            padding: '10px 14px',
+            borderRadius: '10px',
+            fontSize: '14px'
+          }}>
+            กำลังแก้ไขคอร์ส: <strong>{editingCourse.title}</strong> (#{editingCourse.id})
+          </div>
+        )}
+        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px', marginTop: '16px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <span style={{ fontWeight: '500', fontSize: '14px' }}>ชื่อคอร์ส *</span>
@@ -388,23 +459,47 @@ function Courses() {
             </label>
           </div>
 
-          <button
-            type="submit"
-            disabled={submitting || imageProcessing}
-            style={{
-              background: submitting || imageProcessing ? '#9ca3af' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '12px 24px',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: submitting || imageProcessing ? 'not-allowed' : 'pointer',
-              width: 'fit-content',
-            }}
-          >
-            {submitting ? 'กำลังสร้าง...' : imageProcessing ? 'กำลังแปลงรูป...' : 'สร้างคอร์ส'}
-          </button>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="submit"
+              disabled={submitting || imageProcessing}
+              style={{
+                background: submitting || imageProcessing ? '#9ca3af' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: submitting || imageProcessing ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {submitting
+                ? (editingCourse ? 'กำลังบันทึก...' : 'กำลังสร้าง...')
+                : imageProcessing
+                  ? 'กำลังแปลงรูป...'
+                  : editingCourse
+                    ? 'บันทึกการแก้ไข'
+                    : 'สร้างคอร์ส'}
+            </button>
+            {editingCourse && (
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                disabled={submitting}
+                style={{
+                  border: '1px solid #d1d5db',
+                  background: '#fff',
+                  borderRadius: '8px',
+                  padding: '10px 20px',
+                  fontSize: '15px',
+                  cursor: submitting ? 'not-allowed' : 'pointer'
+                }}
+              >
+                ยกเลิกการแก้ไข
+              </button>
+            )}
+          </div>
         </form>
       </div>
 
@@ -436,12 +531,12 @@ function Courses() {
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ID</th>
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>รูป</th>
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ชื่อคอร์ส</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ผู้สอน</th>
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>รายละเอียด</th>
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ประเภท</th>
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151', textAlign: 'right' }}>ราคา</th>
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151', textAlign: 'center' }}>ที่รับ</th>
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151', textAlign: 'center' }}>เข้าได้</th>
+                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151', textAlign: 'center' }}>จัดการ</th>
                 </tr>
               </thead>
               <tbody>
@@ -472,23 +567,6 @@ function Courses() {
                       )}
                     </td>
                     <td style={{ padding: '12px 8px', fontWeight: '500' }}>{course.title}</td>
-                    <td style={{ padding: '12px 8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {course.instructor_avatar && (
-                          <img
-                            src={course.instructor_avatar}
-                            alt={course.instructor_name || 'instructor'}
-                            style={{ width: '32px', height: '32px', borderRadius: '999px', objectFit: 'cover' }}
-                          />
-                        )}
-                        <div>
-                          <div style={{ fontWeight: 500 }}>{course.instructor_name || '-'}</div>
-                          {course.branch_name && (
-                            <span style={{ fontSize: '12px', color: '#6b7280' }}>{course.branch_name}</span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
                     <td style={{ padding: '12px 8px', color: '#6b7280', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {course.description || '-'}
                     </td>
@@ -509,6 +587,41 @@ function Courses() {
                     </td>
                     <td style={{ padding: '12px 8px', textAlign: 'center' }}>{course.capacity}</td>
                     <td style={{ padding: '12px 8px', textAlign: 'center' }}>{course.access_times} ครั้ง</td>
+                    <td style={{ padding: '12px 8px', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleEditCourse(course)}
+                          style={{
+                            border: '1px solid #c7d2fe',
+                            background: '#eef2ff',
+                            color: '#3730a3',
+                            borderRadius: '6px',
+                            padding: '6px 12px',
+                            cursor: 'pointer',
+                            fontSize: '13px'
+                          }}
+                        >
+                          แก้ไข
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCourse(course)}
+                          disabled={deletingCourseId === course.id}
+                          style={{
+                            border: '1px solid #fecaca',
+                            background: deletingCourseId === course.id ? '#fecaca' : '#fee2e2',
+                            color: '#991b1b',
+                            borderRadius: '6px',
+                            padding: '6px 12px',
+                            cursor: deletingCourseId === course.id ? 'not-allowed' : 'pointer',
+                            fontSize: '13px'
+                          }}
+                        >
+                          {deletingCourseId === course.id ? 'กำลังลบ...' : 'ลบ'}
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
