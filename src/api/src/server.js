@@ -39,7 +39,7 @@ app.use(
   })
 );
 
-app.get('/health', async (_req, res) => {
+app.post('/health', async (_req, res) => {
   try {
     await db.query('SELECT 1');
     res.json({ status: 'ok', db: 'connected' });
@@ -60,8 +60,9 @@ app.use('/api/admin/customers', customersRoutes);
 app.use('/api/admin/content', contentRoutes);
 app.use('/api/admin/settings', settingsRoutes);
 
-app.get('/courses', async (_req, res) => {
+app.post('/courses/list', async (req, res) => {
   try {
+    const { limit = 50 } = req.body || {};
     const result = await db.query(`
       SELECT c.*,
              b.name AS branch_name,
@@ -71,8 +72,8 @@ app.get('/courses', async (_req, res) => {
       LEFT JOIN branches b ON c.branch_id = b.id
       LEFT JOIN instructors i ON c.instructor_id = i.id
       ORDER BY c.created_at DESC
-      LIMIT 50
-    `);
+      LIMIT $1
+    `, [limit]);
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching courses', err);
@@ -104,9 +105,10 @@ app.post('/courses', requireAdminAuth(['super_admin', 'branch_admin']), async (r
   }
 });
 
-app.get('/admin/users', requireAdminAuth(['super_admin']), async (_req, res) => {
+app.post('/admin/users/list', requireAdminAuth(['super_admin']), async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM users ORDER BY created_at DESC LIMIT 100');
+    const { limit = 100 } = req.body || {};
+    const result = await db.query('SELECT * FROM users ORDER BY created_at DESC LIMIT $1', [limit]);
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching users', err);
@@ -164,8 +166,11 @@ app.post('/orders', async (req, res) => {
   }
 });
 
-app.get('/users/:userId/orders', async (req, res) => {
-  const userId = req.params.userId;
+app.post('/users/orders', async (req, res) => {
+  const { user_id } = req.body || {};
+  if (!user_id) {
+    return res.status(400).json({ message: 'user_id is required' });
+  }
   try {
     const result = await db.query(
       `SELECT o.*, c.title AS course_title
@@ -173,7 +178,7 @@ app.get('/users/:userId/orders', async (req, res) => {
        LEFT JOIN courses c ON o.course_id = c.id
        WHERE o.user_id = $1
        ORDER BY o.created_at DESC`,
-      [userId]
+      [user_id]
     );
     res.json(result.rows);
   } catch (err) {

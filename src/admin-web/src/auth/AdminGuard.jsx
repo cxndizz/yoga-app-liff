@@ -48,7 +48,7 @@ const handleUnauthorized = (navigate, location, clearSession) => {
 };
 
 const fetchCurrentAdmin = async () => {
-  const response = await axios.get(`${apiBase}/admin/auth/me`);
+  const response = await axios.post(`${apiBase}/admin/auth/me`);
   return response.data?.user || null;
 };
 

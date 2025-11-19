@@ -40,7 +40,7 @@ function Instructors() {
   const fetchInstructors = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${apiBase}/api/admin/instructors`);
+      const response = await axios.post(`${apiBase}/api/admin/instructors/list`, {});
       setInstructors(response.data);
     } catch (error) {
       console.error('Error fetching instructors:', error);
@@ -87,7 +87,10 @@ function Instructors() {
       };
 
       if (editingInstructor) {
-        await axios.put(`${apiBase}/api/admin/instructors/${editingInstructor.id}`, payload);
+        await axios.post(`${apiBase}/api/admin/instructors/update`, {
+          id: editingInstructor.id,
+          ...payload,
+        });
         alert('อัพเดทผู้สอนสำเร็จ');
       } else {
         await axios.post(`${apiBase}/api/admin/instructors`, payload);
@@ -124,7 +127,7 @@ function Instructors() {
       return;
     }
     try {
-      await axios.delete(`${apiBase}/api/admin/instructors/${instructorId}`);
+      await axios.post(`${apiBase}/api/admin/instructors/delete`, { id: instructorId });
       alert('ปิดการใช้งานผู้สอนสำเร็จ');
       fetchInstructors();
     } catch (error) {

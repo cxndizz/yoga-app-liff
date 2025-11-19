@@ -3,10 +3,20 @@ const router = express.Router();
 const db = require('../db');
 const { requireAdminAuth } = require('../middleware/adminAuth');
 
-// Get all courses
-router.get('/', async (req, res) => {
+const normalizeBoolean = (value) => value === true || value === 'true';
+
+// List courses
+router.post('/list', async (req, res) => {
   try {
-    const { status, branch_id, instructor_id, is_free, search, limit = 50 } = req.query;
+    const {
+      status,
+      branch_id,
+      instructor_id,
+      is_free,
+      search,
+      limit = 50
+    } = req.body || {};
+
     let query = `
       SELECT c.*,
              b.name AS branch_name,
@@ -35,8 +45,8 @@ router.get('/', async (req, res) => {
       query += ` AND c.instructor_id = $${params.length}`;
     }
 
-    if (is_free !== undefined) {
-      params.push(is_free === 'true');
+    if (is_free !== undefined && is_free !== null) {
+      params.push(normalizeBoolean(is_free));
       query += ` AND c.is_free = $${params.length}`;
     }
 
@@ -45,11 +55,11 @@ router.get('/', async (req, res) => {
       query += ` AND (c.title ILIKE $${params.length} OR c.description ILIKE $${params.length})`;
     }
 
-    query += ' ORDER BY c.created_at DESC';
-
     if (limit) {
-      params.push(parseInt(limit));
-      query += ` LIMIT $${params.length}`;
+      params.push(parseInt(limit, 10));
+      query += ` ORDER BY c.created_at DESC LIMIT $${params.length}`;
+    } else {
+      query += ' ORDER BY c.created_at DESC';
     }
 
     const result = await db.query(query, params);
@@ -60,10 +70,14 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single course by ID
-router.get('/:id', async (req, res) => {
+// Course detail
+router.post('/detail', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'course id is required' });
+    }
+
     const result = await db.query(
       `SELECT c.*,
               b.name AS branch_name,
@@ -124,21 +138,9 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
        RETURNING *`,
       [
-        title,
-        description || null,
-        branch_id || null,
-        instructor_id || null,
-        capacity,
-        is_free,
-        is_free ? 0 : price_cents,
-        cover_image_url || null,
-        access_times,
-        channel,
-        status,
-        duration_minutes || null,
-        level || null,
-        tags,
-        is_featured
+        title, description || null, branch_id || null, instructor_id || null, capacity,
+        is_free, price_cents, cover_image_url || null, access_times, channel,
+        status, duration_minutes || null, level || null, tags, is_featured
       ]
     );
 
@@ -150,10 +152,10 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
 });
 
 // Update course
-router.put('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+router.post('/update', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
     const {
+      id,
       title,
       description,
       branch_id,
@@ -169,9 +171,12 @@ router.put('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
       level,
       tags,
       is_featured
-    } = req.body;
+    } = req.body || {};
 
-    // Check if course exists
+    if (!id) {
+      return res.status(400).json({ message: 'course id is required' });
+    }
+
     const checkResult = await db.query('SELECT id FROM courses WHERE id = $1', [id]);
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: 'Course not found' });
@@ -212,23 +217,24 @@ router.put('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
 });
 
 // Delete course
-router.delete('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
+router.post('/delete', requireAdminAuth(['super_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'course id is required' });
+    }
 
-    // Check if course has enrollments
     const enrollmentsResult = await db.query(
       'SELECT COUNT(*) as count FROM course_enrollments WHERE course_id = $1',
       [id]
     );
 
-    if (parseInt(enrollmentsResult.rows[0].count) > 0) {
+    if (parseInt(enrollmentsResult.rows[0].count, 10) > 0) {
       return res.status(400).json({
         message: 'Cannot delete course with existing enrollments. Consider changing the status to "hidden" instead.'
       });
     }
 
-    // Delete course (this will cascade delete sessions and enrollments if any)
     await db.query('DELETE FROM courses WHERE id = $1', [id]);
     res.json({ message: 'Course deleted successfully' });
   } catch (err) {
@@ -237,10 +243,13 @@ router.delete('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
   }
 });
 
-// Get course statistics
-router.get('/:id/stats', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Course statistics
+router.post('/stats', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'course id is required' });
+    }
 
     const result = await db.query(
       `SELECT
@@ -269,10 +278,13 @@ router.get('/:id/stats', requireAdminAuth(['super_admin', 'branch_admin']), asyn
   }
 });
 
-// Get course enrollments
-router.get('/:id/enrollments', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Course enrollments
+router.post('/enrollments', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'course id is required' });
+    }
 
     const result = await db.query(
       `SELECT

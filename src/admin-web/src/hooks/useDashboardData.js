@@ -31,9 +31,11 @@ const useDashboardData = ({ autoRefreshMs = DEFAULT_INTERVAL } = {}) => {
       abortControllerRef.current = controller;
 
       try {
-        const response = await axios.get(`${apiBase}/api/admin/dashboard`, {
-          signal: controller.signal,
-        });
+        const response = await axios.post(
+          `${apiBase}/api/admin/dashboard`,
+          {},
+          { signal: controller.signal }
+        );
         if (!isMountedRef.current) return;
         setData(response.data);
         setLastUpdated(new Date());
