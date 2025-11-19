@@ -30,38 +30,19 @@ function TablePagination({
   };
 
   return (
-    <div
-      style={{
-        marginTop: '16px',
-        padding: '12px 16px',
-        borderRadius: '12px',
-        border: '1px solid #e5e7eb',
-        background: '#f8fafc',
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: '12px',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}
-    >
-      <div style={{ fontSize: '14px', color: '#475569' }}>
+    <div className="table-pagination">
+      <div className="table-pagination__info">
         แสดง {startItem.toLocaleString('th-TH')} - {endItem.toLocaleString('th-TH')} จาก{' '}
         {totalItems.toLocaleString('th-TH')} รายการ
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-        <label style={{ fontSize: '13px', color: '#475569', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <div className="table-pagination__controls">
+        <label className="table-pagination__page-size">
           ต่อหน้า
           <select
             value={safePageSize}
             onChange={handlePageSizeChange}
-            style={{
-              border: '1px solid #cbd5f5',
-              borderRadius: '8px',
-              padding: '6px 10px',
-              background: '#fff',
-              cursor: 'pointer',
-            }}
+            className="table-pagination__select"
           >
             {pageSizeOptions.map((option) => (
               <option key={option} value={option}>
@@ -71,12 +52,12 @@ function TablePagination({
           </select>
         </label>
 
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <div className="table-pagination__buttons">
           <button
             type="button"
             onClick={() => handlePageChange(1)}
             disabled={!canGoPrev}
-            style={buttonStyle(!canGoPrev)}
+            className="table-pagination__button"
           >
             «
           </button>
@@ -84,7 +65,7 @@ function TablePagination({
             type="button"
             onClick={() => handlePageChange(safePage - 1)}
             disabled={!canGoPrev}
-            style={buttonStyle(!canGoPrev)}
+            className="table-pagination__button"
           >
             ก่อนหน้า
           </button>
@@ -95,7 +76,7 @@ function TablePagination({
             type="button"
             onClick={() => handlePageChange(safePage + 1)}
             disabled={!canGoNext}
-            style={buttonStyle(!canGoNext)}
+            className="table-pagination__button"
           >
             ถัดไป
           </button>
@@ -103,7 +84,7 @@ function TablePagination({
             type="button"
             onClick={() => handlePageChange(totalPages)}
             disabled={!canGoNext}
-            style={buttonStyle(!canGoNext)}
+            className="table-pagination__button"
           >
             »
           </button>
@@ -112,17 +93,5 @@ function TablePagination({
     </div>
   );
 }
-
-const buttonStyle = (disabled) => ({
-  border: '1px solid #cbd5f5',
-  background: disabled ? '#e2e8f0' : '#fff',
-  color: disabled ? '#94a3b8' : '#1e293b',
-  borderRadius: '8px',
-  padding: '6px 12px',
-  fontSize: '13px',
-  fontWeight: 600,
-  cursor: disabled ? 'not-allowed' : 'pointer',
-  minWidth: '48px',
-});
 
 export default TablePagination;
