@@ -6,6 +6,7 @@
 1. ตาราง `course_enrollments` ไม่มีในฐานข้อมูล
 2. ตาราง `course_sessions` ไม่มีในฐานข้อมูล
 3. คอลัมน์ `status` ไม่มีในตาราง `courses`
+4. ตาราง `branches` ขาดคอลัมน์ที่จำเป็น (`map_url`, `is_active`, `address`, `phone`, `created_at`, `updated_at`)
 
 ## วิธีรัน Migration
 
@@ -51,6 +52,16 @@ ORDER BY table_name;
 SELECT column_name, data_type, column_default
 FROM information_schema.columns
 WHERE table_name = 'courses' AND column_name = 'status';
+```
+
+ตรวจสอบว่าตาราง branches มีคอลัมน์ที่จำเป็นครบหรือไม่:
+
+```sql
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'branches'
+  AND column_name IN ('address', 'phone', 'map_url', 'is_active', 'created_at', 'updated_at')
+ORDER BY column_name;
 ```
 
 ## ฟีเจอร์ใหม่ที่เพิ่ม
