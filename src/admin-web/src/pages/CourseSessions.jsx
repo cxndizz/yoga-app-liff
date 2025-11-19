@@ -245,7 +245,7 @@ function CourseSessions() {
   const fetchSessions = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${apiBase}/api/admin/course-sessions`);
+      const response = await axios.post(`${apiBase}/api/admin/course-sessions/list`, {});
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -257,7 +257,7 @@ function CourseSessions() {
 
   const fetchCourses = async () => {
     try {
-      const response = await axios.get(`${apiBase}/api/admin/courses`);
+      const response = await axios.post(`${apiBase}/api/admin/courses/list`, {});
       setCourses(response.data);
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -266,7 +266,7 @@ function CourseSessions() {
 
   const fetchInstructors = async () => {
     try {
-      const response = await axios.get(`${apiBase}/api/admin/instructors?active_only=true`);
+      const response = await axios.post(`${apiBase}/api/admin/instructors/list`, { active_only: true });
       setInstructors(response.data);
     } catch (error) {
       console.error('Error fetching instructors:', error);
@@ -275,7 +275,7 @@ function CourseSessions() {
 
   const fetchBranches = async () => {
     try {
-      const response = await axios.get(`${apiBase}/api/admin/branches?active_only=true`);
+      const response = await axios.post(`${apiBase}/api/admin/branches/list`, { active_only: true });
       setBranches(response.data);
     } catch (error) {
       console.error('Error fetching branches:', error);
@@ -299,7 +299,10 @@ function CourseSessions() {
       };
 
       if (editingSession) {
-        await axios.put(`${apiBase}/api/admin/course-sessions/${editingSession.id}`, payload);
+        await axios.post(`${apiBase}/api/admin/course-sessions/update`, {
+          id: editingSession.id,
+          ...payload,
+        });
         alert('อัพเดทรอบเรียนสำเร็จ');
       } else {
         await axios.post(`${apiBase}/api/admin/course-sessions`, payload);
@@ -347,7 +350,7 @@ function CourseSessions() {
       return;
     }
     try {
-      await axios.delete(`${apiBase}/api/admin/course-sessions/${sessionId}`);
+      await axios.post(`${apiBase}/api/admin/course-sessions/delete`, { id: sessionId });
       alert('ลบรอบเรียนสำเร็จ');
       fetchSessions();
     } catch (error) {

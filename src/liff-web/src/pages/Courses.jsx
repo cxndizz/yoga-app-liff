@@ -8,7 +8,7 @@ function Courses() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${apiBase}/courses`)
+    axios.post(`${apiBase}/courses/list`, {})
       .then(res => setCourses(res.data || []))
       .catch(err => console.error(err))
       .finally(() => setLoading(false));

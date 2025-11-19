@@ -3,11 +3,19 @@ const router = express.Router();
 const db = require('../db');
 const { requireAdminAuth } = require('../middleware/adminAuth');
 
-// Get all sessions for a course
-router.get('/course/:courseId', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+const parseLimit = (value, fallback) => {
+  if (value === undefined || value === null) return fallback;
+  const parsed = parseInt(value, 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+};
+
+// Sessions for a course
+router.post('/by-course', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { courseId } = req.params;
-    const { status, start_date_from, start_date_to } = req.query;
+    const { course_id, status, start_date_from, start_date_to } = req.body || {};
+    if (!course_id) {
+      return res.status(400).json({ message: 'course_id is required' });
+    }
 
     let query = `
       SELECT cs.*,
@@ -21,7 +29,7 @@ router.get('/course/:courseId', requireAdminAuth(['super_admin', 'branch_admin']
       LEFT JOIN instructors i ON COALESCE(cs.instructor_id, c.instructor_id) = i.id
       WHERE cs.course_id = $1
     `;
-    const params = [courseId];
+    const params = [course_id];
 
     if (status) {
       params.push(status);
@@ -48,10 +56,10 @@ router.get('/course/:courseId', requireAdminAuth(['super_admin', 'branch_admin']
   }
 });
 
-// Get all sessions (with filters)
-router.get('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// All sessions
+router.post('/list', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { status, start_date_from, start_date_to, limit = 100 } = req.query;
+    const { status, start_date_from, start_date_to, limit = 100 } = req.body || {};
 
     let query = `
       SELECT cs.*,
@@ -84,8 +92,9 @@ router.get('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, r
 
     query += ' ORDER BY cs.start_date ASC, cs.start_time ASC';
 
-    if (limit) {
-      params.push(parseInt(limit));
+    const limitValue = parseLimit(limit, 100);
+    if (limitValue) {
+      params.push(limitValue);
       query += ` LIMIT $${params.length}`;
     }
 
@@ -97,10 +106,14 @@ router.get('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, r
   }
 });
 
-// Get single session by ID
-router.get('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Session detail
+router.post('/detail', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'session id is required' });
+    }
+
     const result = await db.query(
       `SELECT cs.*,
               c.title as course_title,
@@ -127,7 +140,7 @@ router.get('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
   }
 });
 
-// Create new session
+// Create session
 router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
     const {
@@ -148,7 +161,6 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
       return res.status(400).json({ message: 'course_id, start_date, and start_time are required' });
     }
 
-    // Check if course exists
     const courseCheck = await db.query(
       'SELECT id, capacity, branch_id as course_branch_id, instructor_id as course_instructor_id FROM courses WHERE id = $1',
       [course_id]
@@ -197,10 +209,10 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
 });
 
 // Update session
-router.put('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+router.post('/update', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
     const {
+      id,
       session_name,
       start_date,
       start_time,
@@ -211,43 +223,46 @@ router.put('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
       notes,
       branch_id,
       instructor_id
-    } = req.body;
+    } = req.body || {};
 
-    // Check if session exists
+    if (!id) {
+      return res.status(400).json({ message: 'session id is required' });
+    }
+
     const checkResult = await db.query('SELECT id FROM course_sessions WHERE id = $1', [id]);
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: 'Session not found' });
     }
 
     const result = await db.query(
-        `UPDATE course_sessions
-         SET session_name = COALESCE($1, session_name),
-             start_date = COALESCE($2, start_date),
-             start_time = COALESCE($3, start_time),
-             end_time = COALESCE($4, end_time),
-             day_of_week = COALESCE($5, day_of_week),
-             max_capacity = COALESCE($6, max_capacity),
-             status = COALESCE($7, status),
-             notes = COALESCE($8, notes),
-             branch_id = COALESCE($9, branch_id),
-             instructor_id = COALESCE($10, instructor_id),
-             updated_at = NOW()
-         WHERE id = $11
-         RETURNING *`,
-        [
-          session_name,
-          start_date,
-          start_time,
-          end_time,
-          day_of_week,
-          max_capacity,
-          status,
-          notes,
-          branch_id,
-          instructor_id,
-          id
-        ]
-      );
+      `UPDATE course_sessions
+       SET session_name = COALESCE($1, session_name),
+           start_date = COALESCE($2, start_date),
+           start_time = COALESCE($3, start_time),
+           end_time = COALESCE($4, end_time),
+           day_of_week = COALESCE($5, day_of_week),
+           max_capacity = COALESCE($6, max_capacity),
+           status = COALESCE($7, status),
+           notes = COALESCE($8, notes),
+           branch_id = COALESCE($9, branch_id),
+           instructor_id = COALESCE($10, instructor_id),
+           updated_at = NOW()
+       WHERE id = $11
+       RETURNING *`,
+      [
+        session_name,
+        start_date,
+        start_time,
+        end_time,
+        day_of_week,
+        max_capacity,
+        status,
+        notes,
+        branch_id,
+        instructor_id,
+        id
+      ]
+    );
 
     res.json(result.rows[0]);
   } catch (err) {
@@ -257,17 +272,19 @@ router.put('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
 });
 
 // Delete session
-router.delete('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
+router.post('/delete', requireAdminAuth(['super_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'session id is required' });
+    }
 
-    // Check if session has enrollments
     const enrollmentsResult = await db.query(
       'SELECT COUNT(*) as count FROM course_enrollments WHERE session_id = $1',
       [id]
     );
 
-    if (parseInt(enrollmentsResult.rows[0].count) > 0) {
+    if (parseInt(enrollmentsResult.rows[0].count, 10) > 0) {
       return res.status(400).json({
         message: 'Cannot delete session with existing enrollments. Consider changing the status to "cancelled" instead.'
       });
@@ -281,10 +298,13 @@ router.delete('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
   }
 });
 
-// Get session enrollments
-router.get('/:id/enrollments', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Session enrollments
+router.post('/enrollments', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'session id is required' });
+    }
 
     const result = await db.query(
       `SELECT
@@ -306,12 +326,14 @@ router.get('/:id/enrollments', requireAdminAuth(['super_admin', 'branch_admin'])
   }
 });
 
-// Update session enrollment count (internal use)
-router.post('/:id/update-count', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Update enrollment count
+router.post('/update-count', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'session id is required' });
+    }
 
-    // Recalculate enrollment count
     const countResult = await db.query(
       `SELECT COUNT(*) as count
        FROM course_enrollments
@@ -319,9 +341,8 @@ router.post('/:id/update-count', requireAdminAuth(['super_admin', 'branch_admin'
       [id]
     );
 
-    const count = parseInt(countResult.rows[0].count);
+    const count = parseInt(countResult.rows[0].count, 10);
 
-    // Update the session
     await db.query(
       `UPDATE course_sessions
        SET current_enrollments = $1,

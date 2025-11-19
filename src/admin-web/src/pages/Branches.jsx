@@ -34,7 +34,7 @@ function Branches() {
   const fetchBranches = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${apiBase}/api/admin/branches`);
+      const response = await axios.post(`${apiBase}/api/admin/branches/list`, {});
       setBranches(response.data);
     } catch (error) {
       console.error('Error fetching branches:', error);
@@ -48,7 +48,10 @@ function Branches() {
     e.preventDefault();
     try {
       if (editingBranch) {
-        await axios.put(`${apiBase}/api/admin/branches/${editingBranch.id}`, formData);
+        await axios.post(`${apiBase}/api/admin/branches/update`, {
+          id: editingBranch.id,
+          ...formData,
+        });
         alert('อัพเดทสาขาสำเร็จ');
       } else {
         await axios.post(`${apiBase}/api/admin/branches`, formData);
@@ -81,7 +84,7 @@ function Branches() {
       return;
     }
     try {
-      await axios.delete(`${apiBase}/api/admin/branches/${branchId}`);
+      await axios.post(`${apiBase}/api/admin/branches/delete`, { id: branchId });
       alert('ปิดการใช้งานสาขาสำเร็จ');
       fetchBranches();
     } catch (error) {

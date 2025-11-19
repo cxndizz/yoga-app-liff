@@ -25,7 +25,7 @@ function Users() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${apiBase}/admin/users`);
+      const res = await axios.post(`${apiBase}/admin/users/list`, {});
       setUsers(res.data || []);
       setError('');
     } catch (err) {

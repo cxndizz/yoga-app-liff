@@ -60,7 +60,7 @@ function Courses() {
   const fetchCourses = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${apiBase}/api/admin/courses`);
+      const res = await axios.post(`${apiBase}/api/admin/courses/list`, {});
       setCourses(res.data || []);
       setError('');
     } catch (err) {
@@ -95,7 +95,10 @@ function Courses() {
       };
 
       if (editingCourse) {
-        await axios.put(`${apiBase}/api/admin/courses/${editingCourse.id}`, payload);
+        await axios.post(`${apiBase}/api/admin/courses/update`, {
+          id: editingCourse.id,
+          ...payload,
+        });
         setSuccess('อัปเดตคอร์สสำเร็จ');
       } else {
         await axios.post(`${apiBase}/api/admin/courses`, payload);
@@ -152,7 +155,7 @@ function Courses() {
     setError('');
     setSuccess('');
     try {
-      await axios.delete(`${apiBase}/api/admin/courses/${course.id}`);
+      await axios.post(`${apiBase}/api/admin/courses/delete`, { id: course.id });
       setSuccess('ลบคอร์สสำเร็จ');
       if (editingCourse?.id === course.id) {
         resetForm();

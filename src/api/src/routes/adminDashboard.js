@@ -3,7 +3,7 @@ const router = express.Router();
 const { requireAdminAuth } = require('../middleware/adminAuth');
 const { getKpis, getCharts } = require('../services/dashboardService');
 
-router.get('/', requireAdminAuth(['super_admin', 'branch_admin', 'staff']), async (req, res) => {
+router.post('/', requireAdminAuth(['super_admin', 'branch_admin', 'staff']), async (req, res) => {
   try {
     const [kpis, charts] = await Promise.all([getKpis(), getCharts()]);
     res.json({ kpis, charts, generatedAt: new Date().toISOString() });

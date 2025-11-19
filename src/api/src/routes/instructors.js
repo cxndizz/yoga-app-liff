@@ -3,14 +3,16 @@ const router = express.Router();
 const db = require('../db');
 const { requireAdminAuth } = require('../middleware/adminAuth');
 
-// Get all instructors
-router.get('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+const isTrue = (value) => value === true || value === 'true';
+
+// List instructors
+router.post('/list', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { active_only, search } = req.query;
+    const { active_only, search } = req.body || {};
     let query = 'SELECT * FROM instructors WHERE 1=1';
     const params = [];
 
-    if (active_only === 'true') {
+    if (isTrue(active_only)) {
       query += ' AND is_active = true';
     }
 
@@ -29,10 +31,14 @@ router.get('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, r
   }
 });
 
-// Get single instructor by ID
-router.get('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Instructor detail
+router.post('/detail', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'instructor id is required' });
+    }
+
     const result = await db.query('SELECT * FROM instructors WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
@@ -46,7 +52,7 @@ router.get('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
   }
 });
 
-// Create new instructor
+// Create instructor
 router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
     const { name, bio, avatar_url, email, phone, specialties, is_active = true } = req.body;
@@ -78,12 +84,14 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
 });
 
 // Update instructor
-router.put('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+router.post('/update', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, bio, avatar_url, email, phone, specialties, is_active } = req.body;
+    const { id, name, bio, avatar_url, email, phone, specialties, is_active } = req.body || {};
 
-    // Check if instructor exists
+    if (!id) {
+      return res.status(400).json({ message: 'instructor id is required' });
+    }
+
     const checkResult = await db.query('SELECT id FROM instructors WHERE id = $1', [id]);
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: 'Instructor not found' });
@@ -111,30 +119,30 @@ router.put('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
   }
 });
 
-// Delete instructor (soft delete by setting is_active to false)
-router.delete('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
+// Delete instructor
+router.post('/delete', requireAdminAuth(['super_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
-    const { hard_delete } = req.query;
+    const { id, hard_delete = false } = req.body || {};
 
-    // Check if instructor has courses
+    if (!id) {
+      return res.status(400).json({ message: 'instructor id is required' });
+    }
+
     const coursesResult = await db.query(
       'SELECT COUNT(*) as count FROM courses WHERE instructor_id = $1',
       [id]
     );
 
-    if (parseInt(coursesResult.rows[0].count) > 0) {
+    if (parseInt(coursesResult.rows[0].count, 10) > 0) {
       return res.status(400).json({
         message: 'Cannot delete instructor with associated courses. Please remove or reassign courses first.'
       });
     }
 
-    if (hard_delete === 'true') {
-      // Hard delete
+    if (hard_delete) {
       await db.query('DELETE FROM instructors WHERE id = $1', [id]);
       res.json({ message: 'Instructor deleted successfully' });
     } else {
-      // Soft delete
       const result = await db.query(
         `UPDATE instructors
          SET is_active = false, updated_at = NOW()
@@ -155,12 +163,14 @@ router.delete('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
   }
 });
 
-// Get instructor statistics
-router.get('/:id/stats', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Instructor statistics
+router.post('/stats', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'instructor id is required' });
+    }
 
-    // Get instructor info with course count
     const result = await db.query(
       `SELECT
          i.*,
@@ -187,10 +197,13 @@ router.get('/:id/stats', requireAdminAuth(['super_admin', 'branch_admin']), asyn
   }
 });
 
-// Get instructor courses
-router.get('/:id/courses', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Instructor courses
+router.post('/courses', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'instructor id is required' });
+    }
 
     const result = await db.query(
       `SELECT c.*, b.name as branch_name

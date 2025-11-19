@@ -3,8 +3,8 @@ const router = express.Router();
 const db = require('../db');
 const { requireAdminAuth } = require('../middleware/adminAuth');
 
-// Get all settings (admin only)
-router.get('/', requireAdminAuth(['super_admin']), async (req, res) => {
+// List settings (admin only)
+router.post('/list', requireAdminAuth(['super_admin']), async (_req, res) => {
   try {
     const result = await db.query('SELECT * FROM settings ORDER BY setting_key ASC');
     res.json(result.rows);
@@ -14,8 +14,8 @@ router.get('/', requireAdminAuth(['super_admin']), async (req, res) => {
   }
 });
 
-// Get public settings (no auth required)
-router.get('/public', async (req, res) => {
+// Public settings
+router.post('/public', async (_req, res) => {
   try {
     const result = await db.query('SELECT * FROM settings WHERE is_public = true ORDER BY setting_key ASC');
     res.json(result.rows);
@@ -25,11 +25,15 @@ router.get('/public', async (req, res) => {
   }
 });
 
-// Get single setting by key
-router.get('/:key', requireAdminAuth(['super_admin']), async (req, res) => {
+// Setting detail
+router.post('/detail', requireAdminAuth(['super_admin']), async (req, res) => {
   try {
-    const { key } = req.params;
-    const result = await db.query('SELECT * FROM settings WHERE setting_key = $1', [key]);
+    const { setting_key } = req.body || {};
+    if (!setting_key) {
+      return res.status(400).json({ message: 'setting_key is required' });
+    }
+
+    const result = await db.query('SELECT * FROM settings WHERE setting_key = $1', [setting_key]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Setting not found' });
@@ -57,12 +61,10 @@ router.post('/', requireAdminAuth(['super_admin']), async (req, res) => {
       return res.status(400).json({ message: 'Setting key is required' });
     }
 
-    // Check if setting exists
     const checkResult = await db.query('SELECT id FROM settings WHERE setting_key = $1', [setting_key]);
 
     let result;
     if (checkResult.rows.length > 0) {
-      // Update existing setting
       result = await db.query(
         `UPDATE settings
          SET setting_value = $1,
@@ -75,7 +77,6 @@ router.post('/', requireAdminAuth(['super_admin']), async (req, res) => {
         [setting_value, setting_type, description, is_public, setting_key]
       );
     } else {
-      // Create new setting
       result = await db.query(
         `INSERT INTO settings (setting_key, setting_value, setting_type, description, is_public)
          VALUES ($1, $2, $3, $4, $5)
@@ -91,11 +92,13 @@ router.post('/', requireAdminAuth(['super_admin']), async (req, res) => {
   }
 });
 
-// Update setting
-router.put('/:key', requireAdminAuth(['super_admin']), async (req, res) => {
+// Update specific setting
+router.post('/update', requireAdminAuth(['super_admin']), async (req, res) => {
   try {
-    const { key } = req.params;
-    const { setting_value, setting_type, description, is_public } = req.body;
+    const { setting_key, setting_value, setting_type, description, is_public } = req.body || {};
+    if (!setting_key) {
+      return res.status(400).json({ message: 'setting_key is required' });
+    }
 
     const result = await db.query(
       `UPDATE settings
@@ -106,7 +109,7 @@ router.put('/:key', requireAdminAuth(['super_admin']), async (req, res) => {
            updated_at = NOW()
        WHERE setting_key = $5
        RETURNING *`,
-      [setting_value, setting_type, description, is_public, key]
+      [setting_value, setting_type, description, is_public, setting_key]
     );
 
     if (result.rows.length === 0) {
@@ -121,11 +124,14 @@ router.put('/:key', requireAdminAuth(['super_admin']), async (req, res) => {
 });
 
 // Delete setting
-router.delete('/:key', requireAdminAuth(['super_admin']), async (req, res) => {
+router.post('/delete', requireAdminAuth(['super_admin']), async (req, res) => {
   try {
-    const { key } = req.params;
+    const { setting_key } = req.body || {};
+    if (!setting_key) {
+      return res.status(400).json({ message: 'setting_key is required' });
+    }
 
-    const result = await db.query('DELETE FROM settings WHERE setting_key = $1 RETURNING *', [key]);
+    const result = await db.query('DELETE FROM settings WHERE setting_key = $1 RETURNING *', [setting_key]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Setting not found' });
@@ -159,7 +165,6 @@ router.post('/bulk-update', requireAdminAuth(['super_admin']), async (req, res) 
           continue;
         }
 
-        // Check if setting exists
         const checkResult = await client.query(
           'SELECT id FROM settings WHERE setting_key = $1',
           [setting_key]
@@ -167,7 +172,6 @@ router.post('/bulk-update', requireAdminAuth(['super_admin']), async (req, res) 
 
         let result;
         if (checkResult.rows.length > 0) {
-          // Update
           result = await client.query(
             `UPDATE settings
              SET setting_value = $1,
@@ -180,7 +184,6 @@ router.post('/bulk-update', requireAdminAuth(['super_admin']), async (req, res) 
             [setting_value, setting_type, description, is_public, setting_key]
           );
         } else {
-          // Insert
           result = await client.query(
             `INSERT INTO settings (setting_key, setting_value, setting_type, description, is_public)
              VALUES ($1, $2, $3, $4, $5)
@@ -201,8 +204,8 @@ router.post('/bulk-update', requireAdminAuth(['super_admin']), async (req, res) 
       client.release();
     }
   } catch (err) {
-    console.error('Error bulk updating settings:', err);
-    res.status(500).json({ message: 'Error bulk updating settings' });
+    console.error('Error in bulk update:', err);
+    res.status(500).json({ message: 'Error updating settings' });
   }
 });
 

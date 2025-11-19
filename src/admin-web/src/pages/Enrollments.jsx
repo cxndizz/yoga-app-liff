@@ -17,7 +17,7 @@ function Enrollments() {
   const fetchEnrollments = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${apiBase}/api/admin/enrollments`);
+      const response = await axios.post(`${apiBase}/api/admin/enrollments/list`, {});
       setEnrollments(response.data);
     } catch (error) {
       console.error('Error fetching enrollments:', error);
@@ -32,7 +32,10 @@ function Enrollments() {
       return;
     }
     try {
-      await axios.patch(`${apiBase}/api/admin/enrollments/${enrollmentId}`, { status: newStatus });
+      await axios.post(`${apiBase}/api/admin/enrollments/update-status`, {
+        id: enrollmentId,
+        status: newStatus,
+      });
       alert('อัพเดทสถานะสำเร็จ');
       fetchEnrollments();
     } catch (error) {

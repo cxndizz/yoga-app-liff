@@ -3,13 +3,13 @@ const router = express.Router();
 const db = require('../db');
 const { requireAdminAuth } = require('../middleware/adminAuth');
 
-// Get all branches
-router.get('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// List branches
+router.post('/list', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { active_only } = req.query;
+    const { active_only } = req.body || {};
     let query = 'SELECT * FROM branches';
 
-    if (active_only === 'true') {
+    if (active_only === true || active_only === 'true') {
       query += ' WHERE is_active = true';
     }
 
@@ -23,10 +23,14 @@ router.get('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, r
   }
 });
 
-// Get single branch by ID
-router.get('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Branch detail
+router.post('/detail', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'branch id is required' });
+    }
+
     const result = await db.query('SELECT * FROM branches WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
@@ -64,12 +68,14 @@ router.post('/', requireAdminAuth(['super_admin']), async (req, res) => {
 });
 
 // Update branch
-router.put('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
+router.post('/update', requireAdminAuth(['super_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, address, phone, map_url, is_active } = req.body;
+    const { id, name, address, phone, map_url, is_active } = req.body || {};
 
-    // Check if branch exists
+    if (!id) {
+      return res.status(400).json({ message: 'branch id is required' });
+    }
+
     const checkResult = await db.query('SELECT id FROM branches WHERE id = $1', [id]);
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: 'Branch not found' });
@@ -95,30 +101,30 @@ router.put('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
   }
 });
 
-// Delete branch (soft delete by setting is_active to false)
-router.delete('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
+// Delete branch (soft delete by default)
+router.post('/delete', requireAdminAuth(['super_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
-    const { hard_delete } = req.query;
+    const { id, hard_delete = false } = req.body || {};
 
-    // Check if branch has courses
+    if (!id) {
+      return res.status(400).json({ message: 'branch id is required' });
+    }
+
     const coursesResult = await db.query(
       'SELECT COUNT(*) as count FROM courses WHERE branch_id = $1',
       [id]
     );
 
-    if (parseInt(coursesResult.rows[0].count) > 0) {
+    if (parseInt(coursesResult.rows[0].count, 10) > 0) {
       return res.status(400).json({
         message: 'Cannot delete branch with associated courses. Please remove or reassign courses first.'
       });
     }
 
-    if (hard_delete === 'true') {
-      // Hard delete
+    if (hard_delete) {
       await db.query('DELETE FROM branches WHERE id = $1', [id]);
       res.json({ message: 'Branch deleted successfully' });
     } else {
-      // Soft delete
       const result = await db.query(
         `UPDATE branches
          SET is_active = false, updated_at = NOW()
@@ -139,12 +145,14 @@ router.delete('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
   }
 });
 
-// Get branch statistics
-router.get('/:id/stats', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Branch statistics
+router.post('/stats', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'branch id is required' });
+    }
 
-    // Get branch info with course count
     const result = await db.query(
       `SELECT
          b.*,

@@ -3,10 +3,16 @@ const router = express.Router();
 const db = require('../db');
 const { requireAdminAuth } = require('../middleware/adminAuth');
 
-// Get all content pages
-router.get('/', async (req, res) => {
+const parseBoolean = (value) => {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === 'boolean') return value;
+  return value === 'true';
+};
+
+// List content pages
+router.post('/list', async (req, res) => {
   try {
-    const { page_type, is_published } = req.query;
+    const { page_type, is_published } = req.body || {};
 
     let query = 'SELECT * FROM content_pages WHERE 1=1';
     const params = [];
@@ -17,7 +23,7 @@ router.get('/', async (req, res) => {
     }
 
     if (is_published !== undefined) {
-      params.push(is_published === 'true');
+      params.push(parseBoolean(is_published));
       query += ` AND is_published = $${params.length}`;
     }
 
@@ -31,10 +37,14 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single content page by ID
-router.get('/:id', async (req, res) => {
+// Content detail by id
+router.post('/detail', async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'content id is required' });
+    }
+
     const result = await db.query('SELECT * FROM content_pages WHERE id = $1', [id]);
 
     if (result.rows.length === 0) {
@@ -48,10 +58,14 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Get content page by slug
-router.get('/slug/:slug', async (req, res) => {
+// Content by slug
+router.post('/by-slug', async (req, res) => {
   try {
-    const { slug } = req.params;
+    const { slug } = req.body || {};
+    if (!slug) {
+      return res.status(400).json({ message: 'slug is required' });
+    }
+
     const result = await db.query('SELECT * FROM content_pages WHERE slug = $1', [slug]);
 
     if (result.rows.length === 0) {
@@ -65,7 +79,7 @@ router.get('/slug/:slug', async (req, res) => {
   }
 });
 
-// Create new content page
+// Create content page
 router.post('/', requireAdminAuth(['super_admin']), async (req, res) => {
   try {
     const {
@@ -82,7 +96,6 @@ router.post('/', requireAdminAuth(['super_admin']), async (req, res) => {
       return res.status(400).json({ message: 'Slug and title are required' });
     }
 
-    // Check if slug already exists
     const slugCheck = await db.query('SELECT id FROM content_pages WHERE slug = $1', [slug]);
     if (slugCheck.rows.length > 0) {
       return res.status(400).json({ message: 'Slug already exists' });
@@ -103,10 +116,10 @@ router.post('/', requireAdminAuth(['super_admin']), async (req, res) => {
 });
 
 // Update content page
-router.put('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
+router.post('/update', requireAdminAuth(['super_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
     const {
+      id,
       slug,
       title,
       content,
@@ -114,20 +127,19 @@ router.put('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
       page_type,
       is_published,
       display_order
-    } = req.body;
+    } = req.body || {};
 
-    // Check if content page exists
+    if (!id) {
+      return res.status(400).json({ message: 'content id is required' });
+    }
+
     const checkResult = await db.query('SELECT id FROM content_pages WHERE id = $1', [id]);
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: 'Content page not found' });
     }
 
-    // Check if slug is being changed and if it already exists
     if (slug) {
-      const slugCheck = await db.query(
-        'SELECT id FROM content_pages WHERE slug = $1 AND id != $2',
-        [slug, id]
-      );
+      const slugCheck = await db.query('SELECT id FROM content_pages WHERE slug = $1 AND id != $2', [slug, id]);
       if (slugCheck.rows.length > 0) {
         return res.status(400).json({ message: 'Slug already exists' });
       }
@@ -156,9 +168,12 @@ router.put('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
 });
 
 // Delete content page
-router.delete('/:id', requireAdminAuth(['super_admin']), async (req, res) => {
+router.post('/delete', requireAdminAuth(['super_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'content id is required' });
+    }
 
     const result = await db.query('DELETE FROM content_pages WHERE id = $1 RETURNING *', [id]);
 

@@ -7,6 +7,6 @@ const router = express.Router();
 router.post('/login', loginAdmin);
 router.post('/refresh', refreshAdminSession);
 router.post('/logout', logoutAdmin);
-router.get('/me', requireAdminAuth(), getCurrentAdmin);
+router.post('/me', requireAdminAuth(), getCurrentAdmin);
 
 module.exports = router;

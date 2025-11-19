@@ -3,10 +3,15 @@ const router = express.Router();
 const db = require('../db');
 const { requireAdminAuth } = require('../middleware/adminAuth');
 
-// Get all customers/users
-router.get('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+const parseNumber = (value, fallback = 0) => {
+  const parsed = parseInt(value, 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+};
+
+// List customers
+router.post('/list', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { search, limit = 100, offset = 0 } = req.query;
+    const { search, limit = 100, offset = 0 } = req.body || {};
 
     let query = `
       SELECT u.*,
@@ -28,12 +33,12 @@ router.get('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, r
     query += ' GROUP BY u.id ORDER BY u.created_at DESC';
 
     if (limit) {
-      params.push(parseInt(limit));
+      params.push(parseNumber(limit, 100));
       query += ` LIMIT $${params.length}`;
     }
 
     if (offset) {
-      params.push(parseInt(offset));
+      params.push(parseNumber(offset, 0));
       query += ` OFFSET $${params.length}`;
     }
 
@@ -45,10 +50,14 @@ router.get('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, r
   }
 });
 
-// Get single customer by ID
-router.get('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Customer detail
+router.post('/detail', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'customer id is required' });
+    }
+
     const result = await db.query(
       `SELECT u.*,
               COUNT(DISTINCT o.id) as total_orders,
@@ -73,10 +82,13 @@ router.get('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
   }
 });
 
-// Get customer orders
-router.get('/:id/orders', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Orders for customer
+router.post('/orders', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'customer id is required' });
+    }
 
     const result = await db.query(
       `SELECT o.*,
@@ -99,10 +111,13 @@ router.get('/:id/orders', requireAdminAuth(['super_admin', 'branch_admin']), asy
   }
 });
 
-// Get customer enrollments
-router.get('/:id/enrollments', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Enrollments for customer
+router.post('/enrollments', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'customer id is required' });
+    }
 
     const result = await db.query(
       `SELECT ce.*,
@@ -131,10 +146,12 @@ router.get('/:id/enrollments', requireAdminAuth(['super_admin', 'branch_admin'])
 });
 
 // Update customer info
-router.put('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+router.post('/update', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { id } = req.params;
-    const { full_name, email, phone } = req.body;
+    const { id, full_name, email, phone } = req.body || {};
+    if (!id) {
+      return res.status(400).json({ message: 'customer id is required' });
+    }
 
     const result = await db.query(
       `UPDATE users
@@ -157,10 +174,10 @@ router.put('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
   }
 });
 
-// Get all orders
-router.get('/orders/all', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// List orders (all customers)
+router.post('/orders/list', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { status, limit = 100, offset = 0 } = req.query;
+    const { status, limit = 100, offset = 0 } = req.body || {};
 
     let query = `
       SELECT o.*,
@@ -185,12 +202,12 @@ router.get('/orders/all', requireAdminAuth(['super_admin', 'branch_admin']), asy
     query += ' ORDER BY o.created_at DESC';
 
     if (limit) {
-      params.push(parseInt(limit));
+      params.push(parseNumber(limit, 100));
       query += ` LIMIT $${params.length}`;
     }
 
     if (offset) {
-      params.push(parseInt(offset));
+      params.push(parseNumber(offset, 0));
       query += ` OFFSET $${params.length}`;
     }
 
@@ -202,10 +219,13 @@ router.get('/orders/all', requireAdminAuth(['super_admin', 'branch_admin']), asy
   }
 });
 
-// Get single order
-router.get('/orders/:orderId', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// Order detail
+router.post('/orders/detail', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { orderId } = req.params;
+    const { order_id } = req.body || {};
+    if (!order_id) {
+      return res.status(400).json({ message: 'order_id is required' });
+    }
 
     const result = await db.query(
       `SELECT o.*,
@@ -222,7 +242,7 @@ router.get('/orders/:orderId', requireAdminAuth(['super_admin', 'branch_admin'])
        LEFT JOIN courses c ON o.course_id = c.id
        LEFT JOIN payments p ON o.id = p.order_id
        WHERE o.id = $1`,
-      [orderId]
+      [order_id]
     );
 
     if (result.rows.length === 0) {
@@ -237,13 +257,11 @@ router.get('/orders/:orderId', requireAdminAuth(['super_admin', 'branch_admin'])
 });
 
 // Update order status
-router.put('/orders/:orderId/status', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+router.post('/orders/update-status', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { orderId } = req.params;
-    const { status } = req.body;
-
-    if (!status) {
-      return res.status(400).json({ message: 'Status is required' });
+    const { order_id, status } = req.body || {};
+    if (!order_id || !status) {
+      return res.status(400).json({ message: 'order_id and status are required' });
     }
 
     const validStatuses = ['pending', 'completed', 'cancelled', 'refunded'];
@@ -256,7 +274,7 @@ router.put('/orders/:orderId/status', requireAdminAuth(['super_admin', 'branch_a
        SET status = $1
        WHERE id = $2
        RETURNING *`,
-      [status, orderId]
+      [status, order_id]
     );
 
     if (result.rows.length === 0) {
@@ -270,10 +288,10 @@ router.put('/orders/:orderId/status', requireAdminAuth(['super_admin', 'branch_a
   }
 });
 
-// Get all payments
-router.get('/payments/all', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
+// List payments
+router.post('/payments/list', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { status, limit = 100, offset = 0 } = req.query;
+    const { status, limit = 100, offset = 0 } = req.body || {};
 
     let query = `
       SELECT p.*,
@@ -298,12 +316,12 @@ router.get('/payments/all', requireAdminAuth(['super_admin', 'branch_admin']), a
     query += ' ORDER BY p.created_at DESC';
 
     if (limit) {
-      params.push(parseInt(limit));
+      params.push(parseNumber(limit, 100));
       query += ` LIMIT $${params.length}`;
     }
 
     if (offset) {
-      params.push(parseInt(offset));
+      params.push(parseNumber(offset, 0));
       query += ` OFFSET $${params.length}`;
     }
 
