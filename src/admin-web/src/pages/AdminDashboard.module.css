@@ -243,6 +243,83 @@
   font-weight: 700;
 }
 
+.sessionList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sessionItem {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sessionItem:last-child {
+  border-bottom: none;
+}
+
+.sessionInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sessionTitle {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.sessionMeta {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.sessionCapacityRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.sessionCapacityTrack {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.sessionCapacityFill {
+  height: 100%;
+  background: linear-gradient(90deg, #60a5fa, #2563eb);
+}
+
+.sessionCapacityLabel {
+  font-size: 0.8rem;
+  color: #475569;
+  min-width: 70px;
+  text-align: right;
+}
+
+.sessionTimeTag {
+  background: #eef2ff;
+  color: #4338ca;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
 .emptyState {
   margin: 0;
   color: #94a3b8;

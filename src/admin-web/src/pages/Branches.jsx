@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import TablePagination from '../components/common/TablePagination';
+import usePagination from '../hooks/usePagination';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -19,6 +21,15 @@ function Branches() {
   useEffect(() => {
     fetchBranches();
   }, []);
+
+  const {
+    page,
+    pageSize,
+    totalItems: totalBranches,
+    paginatedItems: visibleBranches,
+    setPage: goToPage,
+    setPageSize: changePageSize,
+  } = usePagination(branches);
 
   const fetchBranches = async () => {
     try {
@@ -246,14 +257,14 @@ function Branches() {
             </tr>
           </thead>
           <tbody>
-            {branches.length === 0 ? (
+            {visibleBranches.length === 0 ? (
               <tr>
                 <td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
                   ไม่มีข้อมูลสาขา
                 </td>
               </tr>
             ) : (
-              branches.map((branch) => (
+              visibleBranches.map((branch) => (
                 <tr key={branch.id}>
                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{branch.name}</td>
                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
@@ -308,6 +319,13 @@ function Branches() {
           </tbody>
         </table>
       </div>
+      <TablePagination
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalBranches}
+        onPageChange={goToPage}
+        onPageSizeChange={changePageSize}
+      />
     </div>
   );
 }

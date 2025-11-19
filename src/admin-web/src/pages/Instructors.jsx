@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import TablePagination from '../components/common/TablePagination';
+import usePagination from '../hooks/usePagination';
 import { convertImageFileToWebP } from '../utils/image';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
@@ -21,6 +23,15 @@ function Instructors() {
   const [avatarPreview, setAvatarPreview] = useState('');
   const [avatarProcessing, setAvatarProcessing] = useState(false);
   const [avatarInputKey, setAvatarInputKey] = useState(0);
+
+  const {
+    page,
+    pageSize,
+    totalItems: totalInstructors,
+    paginatedItems: visibleInstructors,
+    setPage: goToPage,
+    setPageSize: changePageSize,
+  } = usePagination(instructors);
 
   useEffect(() => {
     fetchInstructors();
@@ -373,14 +384,14 @@ function Instructors() {
             </tr>
           </thead>
           <tbody>
-            {instructors.length === 0 ? (
+            {visibleInstructors.length === 0 ? (
               <tr>
                 <td colSpan={7} style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
                   ไม่มีข้อมูลผู้สอน
                 </td>
               </tr>
             ) : (
-              instructors.map((instructor) => (
+              visibleInstructors.map((instructor) => (
                 <tr key={instructor.id}>
                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
                     {instructor.avatar_url ? (
@@ -462,6 +473,13 @@ function Instructors() {
           </tbody>
         </table>
       </div>
+      <TablePagination
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalInstructors}
+        onPageChange={goToPage}
+        onPageSizeChange={changePageSize}
+      />
     </div>
   );
 }

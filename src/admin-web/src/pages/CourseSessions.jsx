@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
+import TablePagination from '../components/common/TablePagination';
+import usePagination from '../hooks/usePagination';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 const dayLabels = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
@@ -80,6 +82,14 @@ function CourseSessions() {
     return map;
   }, [courses]);
 
+  const instructorMap = useMemo(() => {
+    const map = {};
+    instructors.forEach((instructor) => {
+      map[String(instructor.id)] = instructor.name;
+    });
+    return map;
+  }, [instructors]);
+
   const selectedCourse = selectedCourseId ? courseMap[selectedCourseId] : null;
 
   useEffect(() => {
@@ -129,6 +139,37 @@ function CourseSessions() {
       return true;
     })
   ), [sessions, courseMap, selectedInstructorId, selectedCourseId]);
+
+  const {
+    page: sessionsPage,
+    pageSize: sessionsPageSize,
+    totalItems: totalFilteredSessions,
+    paginatedItems: visibleSessions,
+    setPage: setSessionsPage,
+    setPageSize: setSessionsPageSize,
+    resetPage: resetSessionsPage,
+  } = usePagination(filteredSessions, { initialPageSize: 12 });
+
+  useEffect(() => {
+    resetSessionsPage();
+  }, [selectedInstructorId, selectedCourseId, resetSessionsPage]);
+
+  const getInstructorLabel = (session) => {
+    const course = courseMap[String(session.course_id)];
+    if (course?.instructor_name) {
+      return course.instructor_name;
+    }
+    if (course?.instructor_id) {
+      const fromInstructor = instructorMap[String(course.instructor_id)];
+      if (fromInstructor) {
+        return fromInstructor;
+      }
+    }
+    if (session.instructor_name) {
+      return session.instructor_name;
+    }
+    return 'ยังไม่ระบุ';
+  };
 
   const sessionsByDate = useMemo(() => {
     return filteredSessions.reduce((acc, session) => {
@@ -908,20 +949,20 @@ function CourseSessions() {
             </tr>
           </thead>
           <tbody>
-            {filteredSessions.length === 0 ? (
+            {visibleSessions.length === 0 ? (
               <tr>
                 <td colSpan={8} style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
                   ไม่มีข้อมูลรอบเรียนในตัวกรองนี้
                 </td>
               </tr>
             ) : (
-              filteredSessions.map((session) => (
+              visibleSessions.map((session) => (
                 <tr key={session.id}>
                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
                     {session.course_title || '-'}
                   </td>
                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
-                    {courseMap[String(session.course_id)]?.instructor_name || session.instructor_name || '-'}
+                    {getInstructorLabel(session)}
                   </td>
                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
                     {session.session_name || '-'}
@@ -987,6 +1028,13 @@ function CourseSessions() {
           </tbody>
         </table>
       </div>
+      <TablePagination
+        page={sessionsPage}
+        pageSize={sessionsPageSize}
+        totalItems={totalFilteredSessions}
+        onPageChange={setSessionsPage}
+        onPageSizeChange={setSessionsPageSize}
+      />
     </div>
   );
 }
