@@ -11,6 +11,7 @@ router.get('/', async (req, res) => {
       SELECT c.*,
              b.name AS branch_name,
              i.name AS instructor_name,
+             i.avatar_url AS instructor_avatar,
              (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id) as total_enrollments
       FROM courses c
       LEFT JOIN branches b ON c.branch_id = b.id

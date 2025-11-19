@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { convertImageFileToWebP } from '../utils/image';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -14,8 +15,12 @@ function Instructors() {
     email: '',
     phone: '',
     specialties: '',
-    is_active: true
+    is_active: true,
+    avatar_url: ''
   });
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const [avatarProcessing, setAvatarProcessing] = useState(false);
+  const [avatarInputKey, setAvatarInputKey] = useState(0);
 
   useEffect(() => {
     fetchInstructors();
@@ -34,11 +39,39 @@ function Instructors() {
     }
   };
 
+  const handleAvatarChange = async (event) => {
+    const inputEl = event.target;
+    const file = inputEl.files?.[0];
+    if (!file) {
+      return;
+    }
+    inputEl.value = '';
+    setAvatarProcessing(true);
+    try {
+      const { dataUrl } = await convertImageFileToWebP(file, { maxSizeMB: 5, quality: 0.9 });
+      setFormData((prev) => ({ ...prev, avatar_url: dataUrl }));
+      setAvatarPreview(dataUrl);
+      setAvatarInputKey((prev) => prev + 1);
+    } catch (error) {
+      console.error('Error converting avatar:', error);
+      alert(error.message || 'ไม่สามารถแปลงรูปผู้สอนได้');
+    } finally {
+      setAvatarProcessing(false);
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    setFormData((prev) => ({ ...prev, avatar_url: '' }));
+    setAvatarPreview('');
+    setAvatarInputKey((prev) => prev + 1);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const payload = {
         ...formData,
+        avatar_url: formData.avatar_url || null,
         specialties: formData.specialties ? formData.specialties.split(',').map(s => s.trim()) : []
       };
 
@@ -67,8 +100,11 @@ function Instructors() {
       email: instructor.email || '',
       phone: instructor.phone || '',
       specialties: instructor.specialties ? instructor.specialties.join(', ') : '',
-      is_active: instructor.is_active
+      is_active: instructor.is_active,
+      avatar_url: instructor.avatar_url || ''
     });
+    setAvatarPreview(instructor.avatar_url || '');
+    setAvatarInputKey((prev) => prev + 1);
     setShowForm(true);
   };
 
@@ -93,8 +129,11 @@ function Instructors() {
       email: '',
       phone: '',
       specialties: '',
-      is_active: true
+      is_active: true,
+      avatar_url: ''
     });
+    setAvatarPreview('');
+    setAvatarInputKey((prev) => prev + 1);
   };
 
   const handleCancel = () => {
@@ -150,6 +189,68 @@ function Instructors() {
                   borderRadius: '4px'
                 }}
               />
+            </div>
+
+            <div style={{ display: 'flex', gap: '16px', marginBottom: '15px', flexWrap: 'wrap' }}>
+              <label style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span>รูปผู้สอน</span>
+                <div style={{
+                  border: '1px dashed #cbd5f5',
+                  borderRadius: '10px',
+                  padding: '12px',
+                  background: '#f9fafb',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}>
+                  <input
+                    key={avatarInputKey}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    disabled={avatarProcessing}
+                    style={{ border: '1px solid #d1d5db', borderRadius: '6px', padding: '8px', background: '#fff' }}
+                  />
+                  <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                    ระบบจะบีบอัดและแปลงเป็น .webp ให้อัตโนมัติ (สูงสุด 5MB)
+                  </span>
+                  {avatarProcessing && (
+                    <span style={{ fontSize: '12px', color: '#2563eb' }}>กำลังแปลงรูป...</span>
+                  )}
+                </div>
+              </label>
+
+              {avatarPreview && (
+                <div style={{
+                  flex: '0 0 160px',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '10px',
+                  padding: '10px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}>
+                  <img
+                    src={avatarPreview}
+                    alt="ตัวอย่างรูปผู้สอน"
+                    style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '8px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    style={{
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '6px 10px',
+                      background: '#fee2e2',
+                      color: '#b91c1c',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ลบรูป
+                  </button>
+                </div>
+              )}
             </div>
 
             <div style={{ marginBottom: '15px' }}>
@@ -227,16 +328,17 @@ function Instructors() {
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 type="submit"
+                disabled={avatarProcessing}
                 style={{
-                  background: '#2563eb',
+                  background: avatarProcessing ? '#9ca3af' : '#2563eb',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '8px',
                   padding: '10px 20px',
-                  cursor: 'pointer'
+                  cursor: avatarProcessing ? 'not-allowed' : 'pointer'
                 }}
               >
-                บันทึก
+                {avatarProcessing ? 'กำลังแปลงรูป...' : 'บันทึก'}
               </button>
               <button
                 type="button"
@@ -261,6 +363,7 @@ function Instructors() {
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead style={{ background: '#f9fafb' }}>
             <tr>
+              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>รูป</th>
               <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>ชื่อผู้สอน</th>
               <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>อีเมล</th>
               <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>เบอร์โทร</th>
@@ -272,13 +375,35 @@ function Instructors() {
           <tbody>
             {instructors.length === 0 ? (
               <tr>
-                <td colSpan={6} style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+                <td colSpan={7} style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
                   ไม่มีข้อมูลผู้สอน
                 </td>
               </tr>
             ) : (
               instructors.map((instructor) => (
                 <tr key={instructor.id}>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                    {instructor.avatar_url ? (
+                      <img
+                        src={instructor.avatar_url}
+                        alt={instructor.name}
+                        style={{ width: '48px', height: '48px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e5e7eb' }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '999px',
+                        background: '#f3f4f6',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#9ca3af'
+                      }}>
+                        N/A
+                      </div>
+                    )}
+                  </td>
                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{instructor.name}</td>
                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
                     {instructor.email || '-'}

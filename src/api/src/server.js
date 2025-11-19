@@ -21,8 +21,8 @@ const settingsRoutes = require('./routes/settings');
 const app = express();
 const port = process.env.PORT || 4000;
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '15mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '15mb' }));
 
 const allowedOrigins = [process.env.CORS_ORIGIN_LIFF, process.env.CORS_ORIGIN_ADMIN].filter(Boolean);
 
@@ -65,7 +65,8 @@ app.get('/courses', async (_req, res) => {
     const result = await db.query(`
       SELECT c.*,
              b.name AS branch_name,
-             i.name AS instructor_name
+             i.name AS instructor_name,
+             i.avatar_url AS instructor_avatar
       FROM courses c
       LEFT JOIN branches b ON c.branch_id = b.id
       LEFT JOIN instructors i ON c.instructor_id = i.id
@@ -80,13 +81,21 @@ app.get('/courses', async (_req, res) => {
 });
 
 app.post('/courses', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
-  const { title, description, capacity, is_free, price_cents, access_times } = req.body;
+  const { title, description, capacity, is_free, price_cents, access_times, cover_image_url } = req.body;
   try {
     const result = await db.query(
-      `INSERT INTO courses (title, description, capacity, is_free, price_cents, access_times)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO courses (title, description, capacity, is_free, price_cents, access_times, cover_image_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [title, description, capacity || 0, !!is_free, price_cents || 0, access_times || 1]
+      [
+        title,
+        description,
+        capacity || 0,
+        !!is_free,
+        price_cents || 0,
+        access_times || 1,
+        cover_image_url || null,
+      ]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
