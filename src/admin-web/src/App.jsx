@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import { Routes, Route, Link, Outlet, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, NavLink, Outlet, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
 import Courses from './pages/Courses';
 import Users from './pages/Users';
@@ -17,7 +17,13 @@ const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 const AdminLayout = () => {
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const { user: adminUser, role, refreshToken, clearSession } = useAdminAuth();
+  const location = useLocation();
+
+  React.useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     if (isLoggingOut) {
@@ -48,42 +54,79 @@ const AdminLayout = () => {
 
   const visibleNavItems = navItems.filter((item) => !item.roles || item.roles.includes(role));
 
+  const roleLabel =
+    role === 'super_admin'
+      ? 'Super Admin'
+      : role === 'branch_admin'
+        ? 'Branch Admin'
+        : role === 'instructor'
+          ? 'Instructor'
+          : 'Administrator';
+
+  const renderNavLink = ({ label, to }) => (
+    <NavLink
+      key={to}
+      to={to}
+      className={({ isActive }) => `admin-nav__link${isActive ? ' is-active' : ''}`}
+    >
+      {label}
+    </NavLink>
+  );
+
   return (
-    <div style={{ display: 'flex', fontFamily: 'system-ui, sans-serif', minHeight: '100vh' }}>
-      <aside style={{ width: '240px', background: '#111827', color: '#fff', padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div>
-          <h2 style={{ marginBottom: '4px' }}> Admin</h2>
+    <div className={`admin-shell${sidebarOpen ? ' admin-shell--sidebar-open' : ''}`}>
+      <div
+        className="admin-shell__overlay"
+        aria-hidden={!sidebarOpen}
+        onClick={() => setSidebarOpen(false)}
+      />
+      <aside className="admin-sidebar" aria-label="เมนูผู้ดูแลระบบ">
+        <div className="admin-sidebar__brand">
+          <p className="admin-sidebar__eyebrow">Yoga Flow</p>
+          <h2 className="admin-sidebar__title">Admin Center</h2>
           {adminUser && (
-            <p style={{ margin: 0, fontSize: '14px', color: '#cbd5f5' }}>สวัสดี, {adminUser.fullName || adminUser.email}</p>
+            <p className="admin-sidebar__welcome">
+              {adminUser.fullName || adminUser.email}
+            </p>
           )}
+          <span className="admin-sidebar__welcome" style={{ fontSize: '12px' }}>{roleLabel}</span>
         </div>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {visibleNavItems.map((item) => (
-            <Link key={item.to} to={item.to} style={{ color: '#fff', textDecoration: 'none' }}>
-              {item.label}
-            </Link>
-          ))}
+        <nav className="admin-nav">
+          {visibleNavItems.map(renderNavLink)}
         </nav>
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-          style={{
-            marginTop: 'auto',
-            background: isLoggingOut ? '#6b7280' : '#dc2626',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '10px 12px',
-            cursor: isLoggingOut ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {isLoggingOut ? 'กำลังออกจากระบบ...' : 'Logout'}
-        </button>
+        <div className="admin-sidebar__footer">
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="btn btn--ghost"
+          >
+            {isLoggingOut ? 'กำลังออกจากระบบ...' : 'ออกจากระบบ'}
+          </button>
+          <span style={{ fontSize: '12px', color: 'var(--sidebar-muted)' }}>
+            เข้าสู่ระบบล่าสุด: {adminUser?.lastLoginAt ? new Date(adminUser.lastLoginAt).toLocaleString('th-TH') : '—'}
+          </span>
+        </div>
       </aside>
-      <main style={{ flex: 1, padding: '16px' }}>
-        <Outlet />
-      </main>
+      <div className="admin-shell__body">
+        <header className="admin-shell__topbar">
+          <button
+            type="button"
+            className="sidebar-toggle"
+            onClick={() => setSidebarOpen((prev) => !prev)}
+            aria-expanded={sidebarOpen}
+          >
+            {sidebarOpen ? 'ปิดเมนู' : 'เมนู'}
+          </button>
+          <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+            <h2>Signed in as</h2>
+            <strong>{adminUser?.email || '—'}</strong>
+          </div>
+        </header>
+        <main className="admin-shell__content">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };
