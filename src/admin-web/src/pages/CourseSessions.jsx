@@ -92,11 +92,19 @@ function CourseSessions() {
     setSelectedSlots({});
   }, [selectedCourseId]);
 
-  const filteredCourses = useMemo(() => (
-    selectedInstructorId
-      ? courses.filter((course) => String(course.instructor_id) === selectedInstructorId)
-      : courses
-  ), [courses, selectedInstructorId]);
+  const { filteredCourses, showAllCoursesFallback } = useMemo(() => {
+    if (!selectedInstructorId) {
+      return { filteredCourses: courses, showAllCoursesFallback: false };
+    }
+
+    const matchingCourses = courses.filter((course) => String(course.instructor_id) === selectedInstructorId);
+
+    if (matchingCourses.length === 0) {
+      return { filteredCourses: courses, showAllCoursesFallback: true };
+    }
+
+    return { filteredCourses: matchingCourses, showAllCoursesFallback: false };
+  }, [courses, selectedInstructorId]);
 
   useEffect(() => {
     if (
@@ -396,6 +404,11 @@ function CourseSessions() {
                 </option>
               ))}
             </select>
+            {showAllCoursesFallback && (
+              <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                ยังไม่มีคอร์สที่ผูกกับผู้สอนคนนี้ ระบบจะแสดงทุกคอร์สให้เลือก
+              </span>
+            )}
           </label>
         </div>
 
