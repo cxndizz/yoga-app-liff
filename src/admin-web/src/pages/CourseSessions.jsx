@@ -72,16 +72,6 @@ function CourseSessions() {
     fetchInstructors();
   }, []);
 
-  useEffect(() => {
-    if (selectedCourse) {
-      setBulkMaxCapacity(selectedCourse.capacity || 20);
-    }
-  }, [selectedCourse]);
-
-  useEffect(() => {
-    setSelectedSlots({});
-  }, [selectedCourseId]);
-
   const courseMap = useMemo(() => {
     const map = {};
     courses.forEach((course) => {
@@ -91,6 +81,16 @@ function CourseSessions() {
   }, [courses]);
 
   const selectedCourse = selectedCourseId ? courseMap[selectedCourseId] : null;
+
+  useEffect(() => {
+    if (selectedCourse) {
+      setBulkMaxCapacity(selectedCourse.capacity || 20);
+    }
+  }, [selectedCourse]);
+
+  useEffect(() => {
+    setSelectedSlots({});
+  }, [selectedCourseId]);
 
   const filteredCourses = useMemo(() => (
     selectedInstructorId
