@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { convertImageFileToWebP } from '../utils/image';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -16,7 +17,12 @@ function Courses() {
     is_free: false,
     price_cents: 0,
     access_times: 1,
+    cover_image_url: '',
   });
+  const [coverPreview, setCoverPreview] = useState('');
+  const [coverMeta, setCoverMeta] = useState(null);
+  const [imageProcessing, setImageProcessing] = useState(false);
+  const [coverInputKey, setCoverInputKey] = useState(0);
 
   useEffect(() => {
     fetchCourses();
@@ -70,8 +76,9 @@ function Courses() {
         capacity: Number(form.capacity),
         price_cents: form.is_free ? 0 : Number(form.price_cents),
         access_times: Number(form.access_times),
+        cover_image_url: form.cover_image_url || null,
       });
-      
+
       setForm({
         title: '',
         description: '',
@@ -79,8 +86,12 @@ function Courses() {
         is_free: false,
         price_cents: 0,
         access_times: 1,
+        cover_image_url: '',
       });
-      
+      setCoverPreview('');
+      setCoverMeta(null);
+      setCoverInputKey((prev) => prev + 1);
+
       setSuccess('สร้างคอร์สสำเร็จ');
       await fetchCourses();
     } catch (err) {
@@ -96,12 +107,53 @@ function Courses() {
     setForm(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleCoverChange = async (event) => {
+    const inputEl = event.target;
+    const file = inputEl.files?.[0];
+    if (!file) {
+      return;
+    }
+    inputEl.value = '';
+    setImageProcessing(true);
+    try {
+      const { dataUrl, size } = await convertImageFileToWebP(file, { maxSizeMB: 6, quality: 0.9 });
+      setForm((prev) => ({ ...prev, cover_image_url: dataUrl }));
+      setCoverPreview(dataUrl);
+      setCoverMeta({ size });
+      setError('');
+      setCoverInputKey((prev) => prev + 1);
+    } catch (err) {
+      console.error('Error converting cover image:', err);
+      setError(err.message || 'ไม่สามารถแปลงรูปภาพได้');
+    } finally {
+      setImageProcessing(false);
+    }
+  };
+
+  const handleRemoveCover = () => {
+    setForm((prev) => ({ ...prev, cover_image_url: '' }));
+    setCoverPreview('');
+    setCoverMeta(null);
+    setCoverInputKey((prev) => prev + 1);
+  };
+
   const formatPrice = (cents) => {
     return new Intl.NumberFormat('th-TH', {
       style: 'currency',
       currency: 'THB',
       minimumFractionDigits: 0,
     }).format(cents / 100);
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '';
+    if (bytes < 1024) {
+      return `${bytes} B`;
+    }
+    if (bytes < 1024 * 1024) {
+      return `${Math.round(bytes / 1024)} KB`;
+    }
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   return (
@@ -202,6 +254,82 @@ function Courses() {
             />
           </label>
 
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'stretch' }}>
+            <label style={{
+              flex: '1 1 240px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <span style={{ fontWeight: '500', fontSize: '14px' }}>รูปคอร์ส</span>
+              <div style={{
+                border: '1px dashed #cbd5f5',
+                borderRadius: '12px',
+                padding: '16px',
+                background: '#f9fafb',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                <input
+                  key={coverInputKey}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverChange}
+                  disabled={submitting}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    padding: '8px',
+                    background: '#fff'
+                  }}
+                />
+                <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                  รองรับไฟล์ JPG/PNG และระบบจะแปลงเป็น .webp ให้อัตโนมัติ (สูงสุด 6MB)
+                </span>
+                {imageProcessing && (
+                  <span style={{ fontSize: '12px', color: '#2563eb' }}>กำลังแปลงรูป...</span>
+                )}
+              </div>
+            </label>
+
+            {coverPreview && (
+              <div style={{
+                flex: '0 0 220px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '12px',
+                padding: '12px',
+                background: '#fff',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                <img
+                  src={coverPreview}
+                  alt="ตัวอย่างรูปคอร์ส"
+                  style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '8px' }}
+                />
+                <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                  บันทึกเป็น WebP · {coverMeta?.size ? formatFileSize(coverMeta.size) : 'ขนาดไม่ระบุ'}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveCover}
+                  style={{
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 12px',
+                    background: '#fee2e2',
+                    color: '#b91c1c',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ลบรูปนี้
+                </button>
+              </div>
+            )}
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
             <label style={{
               display: 'flex',
@@ -262,20 +390,20 @@ function Courses() {
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || imageProcessing}
             style={{
-              background: submitting ? '#9ca3af' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: submitting || imageProcessing ? '#9ca3af' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               color: '#fff',
               border: 'none',
               borderRadius: '8px',
               padding: '12px 24px',
               fontSize: '16px',
               fontWeight: '600',
-              cursor: submitting ? 'not-allowed' : 'pointer',
+              cursor: submitting || imageProcessing ? 'not-allowed' : 'pointer',
               width: 'fit-content',
             }}
           >
-            {submitting ? 'กำลังสร้าง...' : 'สร้างคอร์ส'}
+            {submitting ? 'กำลังสร้าง...' : imageProcessing ? 'กำลังแปลงรูป...' : 'สร้างคอร์ส'}
           </button>
         </form>
       </div>
@@ -306,7 +434,9 @@ function Courses() {
               <thead>
                 <tr style={{ borderBottom: '2px solid #e5e7eb', textAlign: 'left' }}>
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ID</th>
+                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>รูป</th>
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ชื่อคอร์ส</th>
+                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ผู้สอน</th>
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>รายละเอียด</th>
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ประเภท</th>
                   <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151', textAlign: 'right' }}>ราคา</th>
@@ -318,8 +448,48 @@ function Courses() {
                 {courses.map((course) => (
                   <tr key={course.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
                     <td style={{ padding: '12px 8px', color: '#6b7280' }}>#{course.id}</td>
+                    <td style={{ padding: '12px 8px' }}>
+                      {course.cover_image_url ? (
+                        <img
+                          src={course.cover_image_url}
+                          alt={course.title}
+                          style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '10px', border: '1px solid #e5e7eb' }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: '72px',
+                          height: '72px',
+                          borderRadius: '10px',
+                          background: '#f3f4f6',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#9ca3af',
+                          fontSize: '12px'
+                        }}>
+                          ไม่มีรูป
+                        </div>
+                      )}
+                    </td>
                     <td style={{ padding: '12px 8px', fontWeight: '500' }}>{course.title}</td>
-                    <td style={{ padding: '12px 8px', color: '#6b7280', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <td style={{ padding: '12px 8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {course.instructor_avatar && (
+                          <img
+                            src={course.instructor_avatar}
+                            alt={course.instructor_name || 'instructor'}
+                            style={{ width: '32px', height: '32px', borderRadius: '999px', objectFit: 'cover' }}
+                          />
+                        )}
+                        <div>
+                          <div style={{ fontWeight: 500 }}>{course.instructor_name || '-'}</div>
+                          {course.branch_name && (
+                            <span style={{ fontSize: '12px', color: '#6b7280' }}>{course.branch_name}</span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px 8px', color: '#6b7280', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {course.description || '-'}
                     </td>
                     <td style={{ padding: '12px 8px' }}>
