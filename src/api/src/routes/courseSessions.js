@@ -12,9 +12,12 @@ router.get('/course/:courseId', requireAdminAuth(['super_admin', 'branch_admin']
     let query = `
       SELECT cs.*,
              c.title as course_title,
+             i.id as instructor_id,
+             i.name as instructor_name,
              (cs.max_capacity - cs.current_enrollments) as available_spots
       FROM course_sessions cs
       LEFT JOIN courses c ON cs.course_id = c.id
+      LEFT JOIN instructors i ON c.instructor_id = i.id
       WHERE cs.course_id = $1
     `;
     const params = [courseId];
@@ -53,6 +56,7 @@ router.get('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, r
       SELECT cs.*,
              c.title as course_title,
              b.name as branch_name,
+             i.id as instructor_id,
              i.name as instructor_name,
              (cs.max_capacity - cs.current_enrollments) as available_spots
       FROM course_sessions cs
@@ -102,6 +106,7 @@ router.get('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
               c.title as course_title,
               c.description as course_description,
               b.name as branch_name,
+              i.id as instructor_id,
               i.name as instructor_name,
               (cs.max_capacity - cs.current_enrollments) as available_spots
        FROM course_sessions cs

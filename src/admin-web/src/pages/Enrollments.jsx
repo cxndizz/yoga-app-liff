@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import TablePagination from '../components/common/TablePagination';
+import usePagination from '../hooks/usePagination';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -43,6 +45,20 @@ function Enrollments() {
     ? enrollments
     : enrollments.filter((e) => e.status === filter);
 
+  const {
+    page,
+    pageSize,
+    totalItems: totalFilteredEnrollments,
+    paginatedItems: visibleFilteredEnrollments,
+    setPage: setFilteredPage,
+    setPageSize: setFilteredPageSize,
+    resetPage: resetFilteredPage,
+  } = usePagination(filteredEnrollments, { initialPageSize: 15 });
+
+  useEffect(() => {
+    resetFilteredPage();
+  }, [filter, resetFilteredPage]);
+
   if (loading) {
     return <div style={{ padding: '20px' }}>กำลังโหลด...</div>;
   }
@@ -85,14 +101,14 @@ function Enrollments() {
             </tr>
           </thead>
           <tbody>
-            {filteredEnrollments.length === 0 ? (
+            {visibleFilteredEnrollments.length === 0 ? (
               <tr>
                 <td colSpan={8} style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
                   ไม่มีข้อมูลการลงทะเบียน
                 </td>
               </tr>
             ) : (
-              filteredEnrollments.map((enrollment) => (
+              visibleFilteredEnrollments.map((enrollment) => (
                 <tr key={enrollment.id}>
                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
                     <div>
@@ -171,6 +187,15 @@ function Enrollments() {
           </tbody>
         </table>
       </div>
+      {!loading && (
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          totalItems={totalFilteredEnrollments}
+          onPageChange={setFilteredPage}
+          onPageSizeChange={setFilteredPageSize}
+        />
+      )}
 
       <div style={{ marginTop: '20px', padding: '15px', background: '#f9fafb', borderRadius: '8px' }}>
         <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>สรุปข้อมูล</h3>

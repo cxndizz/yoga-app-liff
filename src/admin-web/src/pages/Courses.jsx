@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import TablePagination from '../components/common/TablePagination';
+import usePagination from '../hooks/usePagination';
 import { convertImageFileToWebP } from '../utils/image';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
@@ -27,6 +29,15 @@ function Courses() {
   const [coverInputKey, setCoverInputKey] = useState(0);
   const [editingCourse, setEditingCourse] = useState(null);
   const [deletingCourseId, setDeletingCourseId] = useState(null);
+
+  const {
+    page,
+    pageSize,
+    totalItems: totalCourses,
+    paginatedItems: visibleCourses,
+    setPage: goToPage,
+    setPageSize: changePageSize,
+  } = usePagination(courses);
 
   useEffect(() => {
     fetchCourses();
@@ -540,7 +551,7 @@ function Courses() {
                 </tr>
               </thead>
               <tbody>
-                {courses.map((course) => (
+                {visibleCourses.map((course) => (
                   <tr key={course.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
                     <td style={{ padding: '12px 8px', color: '#6b7280' }}>#{course.id}</td>
                     <td style={{ padding: '12px 8px' }}>
@@ -627,6 +638,15 @@ function Courses() {
               </tbody>
             </table>
           </div>
+        )}
+        {!loading && (
+          <TablePagination
+            page={page}
+            pageSize={pageSize}
+            totalItems={totalCourses}
+            onPageChange={goToPage}
+            onPageSizeChange={changePageSize}
+          />
         )}
       </div>
     </div>

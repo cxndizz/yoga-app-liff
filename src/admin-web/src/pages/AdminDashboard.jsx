@@ -22,6 +22,27 @@ const formatDateLabel = (isoDate) => {
   return date.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
 };
 
+const formatSessionDay = (dateStr) => {
+  if (!dateStr) return '—';
+  const date = new Date(`${dateStr}T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return '—';
+  }
+  return date.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' });
+};
+
+const formatSessionTimeRange = (startTime, endTime) => {
+  if (!startTime && !endTime) {
+    return 'ไม่ระบุเวลา';
+  }
+  const start = startTime ? startTime.slice(0, 5) : '';
+  const end = endTime ? endTime.slice(0, 5) : '';
+  if (start && end) {
+    return `${start} - ${end} น.`;
+  }
+  return `${start || end} น.`;
+};
+
 function TrendList({ title, subtitle, data = [], metricKey, formatter }) {
   const safeFormatter = typeof formatter === 'function' ? formatter : (value) => value ?? '—';
   return (
@@ -70,6 +91,59 @@ function RecentActivity({ events = [] }) {
             <span className={styles.activityAmount}>{event.amount}</span>
           </li>
         ))}
+      </ul>
+    </article>
+  );
+}
+
+function UpcomingSessionsCard({ sessions = [] }) {
+  return (
+    <article className={styles.card}>
+      <header className={styles.cardHeader}>
+        <div>
+          <p className={styles.cardEyebrow}>รอบเรียนที่กำลังจะถึง</p>
+          <h3 className={styles.cardTitle}>Upcoming Sessions</h3>
+        </div>
+      </header>
+      <ul className={styles.sessionList}>
+        {sessions.length === 0 && <li className={styles.emptyState}>ยังไม่มีคลาสที่จะถึง</li>}
+        {sessions.map((session) => {
+          const maxCapacity = session.maxCapacity || 0;
+          const enrolled = session.currentEnrollments || 0;
+          const rawAvailable = session.availableSpots ?? (maxCapacity ? maxCapacity - enrolled : 0);
+          const available = Math.max(rawAvailable ?? 0, 0);
+          const occupancyPercent = maxCapacity > 0
+            ? Math.min(100, Math.round((enrolled / maxCapacity) * 100))
+            : 0;
+          return (
+            <li key={session.sessionId} className={styles.sessionItem}>
+              <div className={styles.sessionInfo}>
+                <p className={styles.sessionTitle}>{session.courseTitle || 'ไม่ระบุคอร์ส'}</p>
+                <p className={styles.sessionMeta}>
+                  {session.sessionName || 'รอบเรียน'} · {session.branchName || 'ไม่ระบุสาขา'}
+                </p>
+                <p className={styles.sessionMeta}>
+                  {formatSessionDay(session.startDate)} · {formatSessionTimeRange(session.startTime, session.endTime)}
+                </p>
+                <p className={styles.sessionMeta}>
+                  ผู้สอน: {session.instructorName || 'รอจัดสรร'} · เหลือ {available} ที่นั่ง
+                </p>
+                <div className={styles.sessionCapacityRow}>
+                  <div className={styles.sessionCapacityTrack}>
+                    <div
+                      className={styles.sessionCapacityFill}
+                      style={{ width: `${occupancyPercent}%` }}
+                    />
+                  </div>
+                  <span className={styles.sessionCapacityLabel}>
+                    {enrolled}/{maxCapacity || '∞'} คน
+                  </span>
+                </div>
+              </div>
+              <span className={styles.sessionTimeTag}>{formatSessionDay(session.startDate)}</span>
+            </li>
+          );
+        })}
       </ul>
     </article>
   );
@@ -139,6 +213,7 @@ function AdminDashboard() {
   const ordersTrend = charts.ordersByDay || [];
   const membersTrend = charts.newMembersByDay || [];
   const topCourses = charts.topCourses || [];
+  const upcomingSessions = charts.upcomingSessions || [];
 
   const sortedOrdersTrend = useMemo(() => {
     return [...ordersTrend].sort((a, b) => {
@@ -303,6 +378,8 @@ function AdminDashboard() {
           metricKey="revenueCents"
           formatter={formatCurrency}
         />
+
+        <UpcomingSessionsCard sessions={upcomingSessions} />
 
         <RecentActivity events={recentEvents} />
       </div>

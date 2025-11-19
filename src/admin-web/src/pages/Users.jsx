@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import TablePagination from '../components/common/TablePagination';
+import usePagination from '../hooks/usePagination';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
@@ -55,6 +57,20 @@ function Users() {
       user.line_user_id?.toLowerCase().includes(term)
     );
   });
+
+  const {
+    page,
+    pageSize,
+    totalItems: totalFilteredUsers,
+    paginatedItems: visibleUsers,
+    setPage: goToPage,
+    setPageSize: changePageSize,
+    resetPage,
+  } = usePagination(filteredUsers, { initialPageSize: 15 });
+
+  useEffect(() => {
+    resetPage();
+  }, [searchTerm, resetPage]);
 
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
@@ -192,7 +208,7 @@ function Users() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
+                {visibleUsers.map((user) => (
                   <tr key={user.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
                     <td style={{ padding: '12px 8px', color: '#6b7280' }}>#{user.id}</td>
                     <td style={{ padding: '12px 8px' }}>
@@ -225,6 +241,15 @@ function Users() {
           </div>
         )}
       </div>
+      {!loading && (
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          totalItems={totalFilteredUsers}
+          onPageChange={goToPage}
+          onPageSizeChange={changePageSize}
+        />
+      )}
     </div>
   );
 }
