@@ -41,11 +41,12 @@ const generateCalendarDays = (monthDate) => {
 function CourseSessions() {
   const [sessions, setSessions] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [instructors, setInstructors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingSession, setEditingSession] = useState(null);
-  const [formData, setFormData] = useState({
+  const emptyFormState = {
     course_id: '',
     session_name: '',
     start_date: '',
@@ -54,9 +55,13 @@ function CourseSessions() {
     day_of_week: '',
     max_capacity: 20,
     status: 'open',
-    notes: ''
-  });
+    notes: '',
+    branch_id: '',
+    instructor_id: ''
+  };
+  const [formData, setFormData] = useState(emptyFormState);
   const [selectedInstructorId, setSelectedInstructorId] = useState('');
+  const [selectedBranchId, setSelectedBranchId] = useState('');
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const today = new Date();
@@ -72,6 +77,7 @@ function CourseSessions() {
     fetchSessions();
     fetchCourses();
     fetchInstructors();
+    fetchBranches();
   }, []);
 
   const courseMap = useMemo(() => {
@@ -90,7 +96,16 @@ function CourseSessions() {
     return map;
   }, [instructors]);
 
+  const branchMap = useMemo(() => {
+    const map = {};
+    branches.forEach((branch) => {
+      map[String(branch.id)] = branch.name;
+    });
+    return map;
+  }, [branches]);
+
   const selectedCourse = selectedCourseId ? courseMap[selectedCourseId] : null;
+  const canSchedule = Boolean(selectedCourseId && selectedInstructorId && selectedBranchId);
 
   useEffect(() => {
     if (selectedCourse) {
@@ -100,21 +115,25 @@ function CourseSessions() {
 
   useEffect(() => {
     setSelectedSlots({});
-  }, [selectedCourseId]);
+  }, [selectedCourseId, selectedInstructorId, selectedBranchId]);
 
   const { filteredCourses, showAllCoursesFallback } = useMemo(() => {
-    if (!selectedInstructorId) {
-      return { filteredCourses: courses, showAllCoursesFallback: false };
+    let filtered = courses;
+
+    if (selectedInstructorId) {
+      filtered = filtered.filter((course) => String(course.instructor_id) === selectedInstructorId);
     }
 
-    const matchingCourses = courses.filter((course) => String(course.instructor_id) === selectedInstructorId);
+    if (selectedBranchId) {
+      filtered = filtered.filter((course) => String(course.branch_id) === selectedBranchId);
+    }
 
-    if (matchingCourses.length === 0) {
+    if (filtered.length === 0 && (selectedInstructorId || selectedBranchId)) {
       return { filteredCourses: courses, showAllCoursesFallback: true };
     }
 
-    return { filteredCourses: matchingCourses, showAllCoursesFallback: false };
-  }, [courses, selectedInstructorId]);
+    return { filteredCourses: filtered, showAllCoursesFallback: false };
+  }, [courses, selectedInstructorId, selectedBranchId]);
 
   useEffect(() => {
     if (
@@ -129,7 +148,14 @@ function CourseSessions() {
     sessions.filter((session) => {
       const course = courseMap[String(session.course_id)];
       if (selectedInstructorId) {
-        if (!course || String(course.instructor_id) !== selectedInstructorId) {
+        const instructorId = session.instructor_id ?? course?.instructor_id;
+        if (!instructorId || String(instructorId) !== selectedInstructorId) {
+          return false;
+        }
+      }
+      if (selectedBranchId) {
+        const branchId = session.branch_id ?? course?.branch_id;
+        if (!branchId || String(branchId) !== selectedBranchId) {
           return false;
         }
       }
@@ -138,7 +164,7 @@ function CourseSessions() {
       }
       return true;
     })
-  ), [sessions, courseMap, selectedInstructorId, selectedCourseId]);
+  ), [sessions, courseMap, selectedInstructorId, selectedBranchId, selectedCourseId]);
 
   const {
     page: sessionsPage,
@@ -152,9 +178,18 @@ function CourseSessions() {
 
   useEffect(() => {
     resetSessionsPage();
-  }, [selectedInstructorId, selectedCourseId, resetSessionsPage]);
+  }, [selectedInstructorId, selectedBranchId, selectedCourseId, resetSessionsPage]);
 
   const getInstructorLabel = (session) => {
+    if (session.instructor_name) {
+      return session.instructor_name;
+    }
+    if (session.instructor_id) {
+      const fromSession = instructorMap[String(session.instructor_id)];
+      if (fromSession) {
+        return fromSession;
+      }
+    }
     const course = courseMap[String(session.course_id)];
     if (course?.instructor_name) {
       return course.instructor_name;
@@ -165,10 +200,30 @@ function CourseSessions() {
         return fromInstructor;
       }
     }
-    if (session.instructor_name) {
-      return session.instructor_name;
-    }
     return 'ยังไม่ระบุ';
+  };
+
+  const getBranchLabel = (session) => {
+    if (session.branch_name) {
+      return session.branch_name;
+    }
+    if (session.branch_id) {
+      const fromSession = branchMap[String(session.branch_id)];
+      if (fromSession) {
+        return fromSession;
+      }
+    }
+    const course = courseMap[String(session.course_id)];
+    if (course?.branch_name) {
+      return course.branch_name;
+    }
+    if (course?.branch_id) {
+      const fromCourse = branchMap[String(course.branch_id)];
+      if (fromCourse) {
+        return fromCourse;
+      }
+    }
+    return '-';
   };
 
   const sessionsByDate = useMemo(() => {
@@ -218,14 +273,36 @@ function CourseSessions() {
     }
   };
 
+  const fetchBranches = async () => {
+    try {
+      const response = await axios.get(`${apiBase}/api/admin/branches?active_only=true`);
+      setBranches(response.data);
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      if (!formData.branch_id || !formData.instructor_id) {
+        alert('กรุณาเลือกสาขาและผู้สอนสำหรับรอบเรียนนี้');
+        return;
+      }
+
+      const payload = {
+        ...formData,
+        course_id: Number(formData.course_id),
+        branch_id: Number(formData.branch_id),
+        instructor_id: Number(formData.instructor_id),
+        max_capacity: formData.max_capacity ? Number(formData.max_capacity) : null
+      };
+
       if (editingSession) {
-        await axios.put(`${apiBase}/api/admin/course-sessions/${editingSession.id}`, formData);
+        await axios.put(`${apiBase}/api/admin/course-sessions/${editingSession.id}`, payload);
         alert('อัพเดทรอบเรียนสำเร็จ');
       } else {
-        await axios.post(`${apiBase}/api/admin/course-sessions`, formData);
+        await axios.post(`${apiBase}/api/admin/course-sessions`, payload);
         alert('สร้างรอบเรียนสำเร็จ');
       }
       setShowForm(false);
@@ -240,6 +317,7 @@ function CourseSessions() {
 
   const handleEdit = (session) => {
     setEditingSession(session);
+    const fallbackCourse = courseMap[String(session.course_id)];
     setFormData({
       course_id: session.course_id || '',
       session_name: session.session_name || '',
@@ -249,7 +327,17 @@ function CourseSessions() {
       day_of_week: session.day_of_week || '',
       max_capacity: session.max_capacity || 20,
       status: session.status || 'open',
-      notes: session.notes || ''
+      notes: session.notes || '',
+      branch_id: session.branch_id
+        ? String(session.branch_id)
+        : fallbackCourse?.branch_id
+          ? String(fallbackCourse.branch_id)
+          : '',
+      instructor_id: session.instructor_id
+        ? String(session.instructor_id)
+        : fallbackCourse?.instructor_id
+          ? String(fallbackCourse.instructor_id)
+          : ''
     });
     setShowForm(true);
   };
@@ -268,17 +356,10 @@ function CourseSessions() {
     }
   };
 
-  const resetForm = () => {
+  const resetForm = (overrides = {}) => {
     setFormData({
-      course_id: '',
-      session_name: '',
-      start_date: '',
-      start_time: '',
-      end_time: '',
-      day_of_week: '',
-      max_capacity: 20,
-      status: 'open',
-      notes: ''
+      ...emptyFormState,
+      ...overrides
     });
   };
 
@@ -288,8 +369,22 @@ function CourseSessions() {
     resetForm();
   };
 
+  const handleAddNewClick = () => {
+    if (!selectedInstructorId || !selectedBranchId) {
+      alert('กรุณาเลือกผู้สอนและสาขาก่อนเพิ่มรอบเรียน');
+      return;
+    }
+    setEditingSession(null);
+    resetForm({
+      instructor_id: selectedInstructorId,
+      branch_id: selectedBranchId,
+      course_id: selectedCourseId || ''
+    });
+    setShowForm(true);
+  };
+
   const toggleDateSelection = (dateKey, isDisabled) => {
-    if (!selectedCourseId || isDisabled) {
+    if (!canSchedule || isDisabled) {
       return;
     }
     setSelectedSlots((prev) => {
@@ -327,8 +422,8 @@ function CourseSessions() {
   ), [selectedSlots]);
 
   const handleBulkCreate = async () => {
-    if (!selectedCourseId) {
-      alert('กรุณาเลือกคอร์สที่จะสร้างรอบเรียน');
+    if (!canSchedule) {
+      alert('กรุณาเลือกสาขา ผู้สอน และคอร์สที่จะสร้างรอบเรียน');
       return;
     }
     if (selectedSlotEntries.length === 0) {
@@ -353,7 +448,9 @@ function CourseSessions() {
           day_of_week: dayNames[new Date(`${dateKey}T00:00:00`).getDay()],
           max_capacity: Number(bulkMaxCapacity) || (selectedCourse?.capacity || 20),
           status: bulkStatus,
-          notes: bulkNotes || null
+          notes: bulkNotes || null,
+          branch_id: Number(selectedBranchId),
+          instructor_id: Number(selectedInstructorId)
         };
         await axios.post(`${apiBase}/api/admin/course-sessions`, payload);
       }
@@ -380,14 +477,15 @@ function CourseSessions() {
           <p style={{ margin: 0, color: '#6b7280' }}>วางตารางผู้สอนได้จากปฏิทินและจัดการรายการทั้งหมดจากหน้านี้</p>
         </div>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={handleAddNewClick}
+          disabled={!selectedInstructorId || !selectedBranchId}
           style={{
-            background: '#2563eb',
+            background: !selectedInstructorId || !selectedBranchId ? '#9ca3af' : '#2563eb',
             color: '#fff',
             border: 'none',
             borderRadius: '8px',
             padding: '10px 20px',
-            cursor: 'pointer'
+            cursor: !selectedInstructorId || !selectedBranchId ? 'not-allowed' : 'pointer'
           }}
         >
           เพิ่มรอบเรียนใหม่
@@ -404,6 +502,28 @@ function CourseSessions() {
         gap: '16px'
       }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 220px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 500 }}>เลือกสาขา</span>
+            <select
+              value={selectedBranchId}
+              onChange={(e) => {
+                setSelectedBranchId(e.target.value);
+                setSelectedCourseId('');
+              }}
+              style={{
+                padding: '10px 12px',
+                borderRadius: '8px',
+                border: '1px solid #d1d5db'
+              }}
+            >
+              <option value="">ทุกสาขา</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 250px' }}>
             <span style={{ fontSize: '14px', fontWeight: 500 }}>เลือกผู้สอน</span>
             <select
@@ -432,6 +552,7 @@ function CourseSessions() {
             <select
               value={selectedCourseId}
               onChange={(e) => setSelectedCourseId(e.target.value)}
+              disabled={!selectedInstructorId || !selectedBranchId}
               style={{
                 padding: '10px 12px',
                 borderRadius: '8px',
@@ -447,11 +568,30 @@ function CourseSessions() {
             </select>
             {showAllCoursesFallback && (
               <span style={{ fontSize: '12px', color: '#6b7280' }}>
-                ยังไม่มีคอร์สที่ผูกกับผู้สอนคนนี้ ระบบจะแสดงทุกคอร์สให้เลือก
+                ยังไม่มีคอร์สที่ตรงกับตัวกรองนี้ ระบบจะแสดงทุกคอร์สให้เลือก
               </span>
             )}
+            {!selectedBranchId || !selectedInstructorId ? (
+              <span style={{ fontSize: '12px', color: '#b45309' }}>
+                กรุณาเลือกทั้งสาขาและผู้สอนก่อนเลือกคอร์สและลงตาราง
+              </span>
+            ) : null}
           </label>
         </div>
+
+        {!canSchedule && (
+          <div
+            style={{
+              background: '#fef3c7',
+              border: '1px dashed #f59e0b',
+              color: '#92400e',
+              padding: '10px 12px',
+              borderRadius: '8px'
+            }}
+          >
+            กรุณาเลือกสาขา ผู้สอน และคอร์สก่อนทำการเลือกวันที่จากปฏิทิน
+          </div>
+        )}
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'stretch' }}>
           <div style={{ flex: '2 1 480px', borderRight: '1px dashed #e5e7eb', paddingRight: '16px' }}>
@@ -488,7 +628,7 @@ function CourseSessions() {
                     key={dateKey}
                     type="button"
                     onClick={() => toggleDateSelection(dateKey, disabled)}
-                    disabled={disabled || !selectedCourseId}
+                    disabled={disabled || !canSchedule}
                     style={{
                       borderRadius: '12px',
                       border: isSelected ? '2px solid #2563eb' : '1px solid #e5e7eb',
@@ -497,7 +637,7 @@ function CourseSessions() {
                       padding: '8px',
                       textAlign: 'left',
                       opacity: disabled ? 0.4 : 1,
-                      cursor: disabled || !selectedCourseId ? 'not-allowed' : 'pointer',
+                      cursor: disabled || !canSchedule ? 'not-allowed' : 'pointer',
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '6px'
@@ -716,14 +856,14 @@ function CourseSessions() {
                 <button
                   type="button"
                   onClick={handleBulkCreate}
-                  disabled={bulkSubmitting || !selectedCourseId || selectedSlotEntries.length === 0}
+                  disabled={bulkSubmitting || !canSchedule || selectedSlotEntries.length === 0}
                   style={{
-                    background: bulkSubmitting ? '#9ca3af' : '#16a34a',
+                    background: bulkSubmitting || !canSchedule ? '#9ca3af' : '#16a34a',
                     color: '#fff',
                     border: 'none',
                     borderRadius: '8px',
                     padding: '10px 16px',
-                    cursor: bulkSubmitting ? 'not-allowed' : 'pointer',
+                    cursor: bulkSubmitting || !canSchedule ? 'not-allowed' : 'pointer',
                     fontWeight: 600
                   }}
                 >
@@ -744,6 +884,52 @@ function CourseSessions() {
         }}>
           <h2 style={{ marginTop: 0 }}>{editingSession ? 'แก้ไขรอบเรียน' : 'เพิ่มรอบเรียนใหม่'}</h2>
           <form onSubmit={handleSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px' }}>สาขา *</label>
+                <select
+                  value={formData.branch_id}
+                  onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '4px'
+                  }}
+                >
+                  <option value="">-- เลือกสาขา --</option>
+                  {branches.map((branch) => (
+                    <option key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px' }}>ผู้สอน *</label>
+                <select
+                  value={formData.instructor_id}
+                  onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '4px'
+                  }}
+                >
+                  <option value="">-- เลือกผู้สอน --</option>
+                  {instructors.map((instructor) => (
+                    <option key={instructor.id} value={instructor.id}>
+                      {instructor.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', marginBottom: '5px' }}>คอร์สเรียน *</label>
               <select
@@ -939,6 +1125,7 @@ function CourseSessions() {
           <thead style={{ background: '#f9fafb' }}>
             <tr>
               <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>คอร์สเรียน</th>
+              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>สาขา</th>
               <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>ผู้สอน</th>
               <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>ชื่อรอบ</th>
               <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>วันที่</th>
@@ -960,6 +1147,9 @@ function CourseSessions() {
                 <tr key={session.id}>
                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
                     {session.course_title || '-'}
+                  </td>
+                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                    {getBranchLabel(session)}
                   </td>
                   <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
                     {getInstructorLabel(session)}
