@@ -12,12 +12,13 @@ router.get('/course/:courseId', requireAdminAuth(['super_admin', 'branch_admin']
     let query = `
       SELECT cs.*,
              c.title as course_title,
-             i.id as instructor_id,
+             b.name as branch_name,
              i.name as instructor_name,
              (cs.max_capacity - cs.current_enrollments) as available_spots
       FROM course_sessions cs
       LEFT JOIN courses c ON cs.course_id = c.id
-      LEFT JOIN instructors i ON c.instructor_id = i.id
+      LEFT JOIN branches b ON COALESCE(cs.branch_id, c.branch_id) = b.id
+      LEFT JOIN instructors i ON COALESCE(cs.instructor_id, c.instructor_id) = i.id
       WHERE cs.course_id = $1
     `;
     const params = [courseId];
@@ -56,13 +57,12 @@ router.get('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, r
       SELECT cs.*,
              c.title as course_title,
              b.name as branch_name,
-             i.id as instructor_id,
              i.name as instructor_name,
              (cs.max_capacity - cs.current_enrollments) as available_spots
       FROM course_sessions cs
       LEFT JOIN courses c ON cs.course_id = c.id
-      LEFT JOIN branches b ON c.branch_id = b.id
-      LEFT JOIN instructors i ON c.instructor_id = i.id
+      LEFT JOIN branches b ON COALESCE(cs.branch_id, c.branch_id) = b.id
+      LEFT JOIN instructors i ON COALESCE(cs.instructor_id, c.instructor_id) = i.id
       WHERE 1=1
     `;
     const params = [];
@@ -106,13 +106,12 @@ router.get('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
               c.title as course_title,
               c.description as course_description,
               b.name as branch_name,
-              i.id as instructor_id,
               i.name as instructor_name,
               (cs.max_capacity - cs.current_enrollments) as available_spots
        FROM course_sessions cs
        LEFT JOIN courses c ON cs.course_id = c.id
-       LEFT JOIN branches b ON c.branch_id = b.id
-       LEFT JOIN instructors i ON c.instructor_id = i.id
+       LEFT JOIN branches b ON COALESCE(cs.branch_id, c.branch_id) = b.id
+       LEFT JOIN instructors i ON COALESCE(cs.instructor_id, c.instructor_id) = i.id
        WHERE cs.id = $1`,
       [id]
     );
@@ -140,7 +139,9 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
       day_of_week,
       max_capacity,
       status = 'open',
-      notes
+      notes,
+      branch_id,
+      instructor_id
     } = req.body;
 
     if (!course_id || !start_date || !start_time) {
@@ -148,20 +149,30 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
     }
 
     // Check if course exists
-    const courseCheck = await db.query('SELECT id, capacity FROM courses WHERE id = $1', [course_id]);
+    const courseCheck = await db.query(
+      'SELECT id, capacity, branch_id as course_branch_id, instructor_id as course_instructor_id FROM courses WHERE id = $1',
+      [course_id]
+    );
     if (courseCheck.rows.length === 0) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
     const courseCapacity = courseCheck.rows[0].capacity;
+    const resolvedBranchId = branch_id || courseCheck.rows[0].course_branch_id;
+    const resolvedInstructorId = instructor_id || courseCheck.rows[0].course_instructor_id;
+
+    if (!resolvedBranchId || !resolvedInstructorId) {
+      return res.status(400).json({ message: 'branch_id and instructor_id are required' });
+    }
+
     const sessionCapacity = max_capacity || courseCapacity;
 
     const result = await db.query(
       `INSERT INTO course_sessions (
          course_id, session_name, start_date, start_time, end_time,
-         day_of_week, max_capacity, status, notes
+         day_of_week, max_capacity, status, notes, branch_id, instructor_id
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
       [
         course_id,
@@ -172,7 +183,9 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
         day_of_week || null,
         sessionCapacity,
         status,
-        notes || null
+        notes || null,
+        resolvedBranchId,
+        resolvedInstructorId
       ]
     );
 
@@ -195,7 +208,9 @@ router.put('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
       day_of_week,
       max_capacity,
       status,
-      notes
+      notes,
+      branch_id,
+      instructor_id
     } = req.body;
 
     // Check if session exists
@@ -205,20 +220,34 @@ router.put('/:id', requireAdminAuth(['super_admin', 'branch_admin']), async (req
     }
 
     const result = await db.query(
-      `UPDATE course_sessions
-       SET session_name = COALESCE($1, session_name),
-           start_date = COALESCE($2, start_date),
-           start_time = COALESCE($3, start_time),
-           end_time = COALESCE($4, end_time),
-           day_of_week = COALESCE($5, day_of_week),
-           max_capacity = COALESCE($6, max_capacity),
-           status = COALESCE($7, status),
-           notes = COALESCE($8, notes),
-           updated_at = NOW()
-       WHERE id = $9
-       RETURNING *`,
-      [session_name, start_date, start_time, end_time, day_of_week, max_capacity, status, notes, id]
-    );
+        `UPDATE course_sessions
+         SET session_name = COALESCE($1, session_name),
+             start_date = COALESCE($2, start_date),
+             start_time = COALESCE($3, start_time),
+             end_time = COALESCE($4, end_time),
+             day_of_week = COALESCE($5, day_of_week),
+             max_capacity = COALESCE($6, max_capacity),
+             status = COALESCE($7, status),
+             notes = COALESCE($8, notes),
+             branch_id = COALESCE($9, branch_id),
+             instructor_id = COALESCE($10, instructor_id),
+             updated_at = NOW()
+         WHERE id = $11
+         RETURNING *`,
+        [
+          session_name,
+          start_date,
+          start_time,
+          end_time,
+          day_of_week,
+          max_capacity,
+          status,
+          notes,
+          branch_id,
+          instructor_id,
+          id
+        ]
+      );
 
     res.json(result.rows[0]);
   } catch (err) {
