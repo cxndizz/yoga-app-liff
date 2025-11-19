@@ -466,55 +466,38 @@ function CourseSessions() {
   };
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>กำลังโหลด...</div>;
+    return <div className="page">กำลังโหลด...</div>;
   }
 
   return (
-    <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="page">
+      <div className="page__header">
         <div>
-          <h1 style={{ margin: 0 }}>จัดการรอบเรียน (Sessions)</h1>
-          <p style={{ margin: 0, color: '#6b7280' }}>วางตารางผู้สอนได้จากปฏิทินและจัดการรายการทั้งหมดจากหน้านี้</p>
+          <h1 className="page__title">จัดการรอบเรียน (Sessions)</h1>
+          <p className="page__subtitle">วางตารางผู้สอนได้จากปฏิทินและจัดการรายการทั้งหมดจากหน้านี้</p>
         </div>
-        <button
-          onClick={handleAddNewClick}
-          disabled={!selectedInstructorId || !selectedBranchId}
-          style={{
-            background: !selectedInstructorId || !selectedBranchId ? '#9ca3af' : '#2563eb',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '10px 20px',
-            cursor: !selectedInstructorId || !selectedBranchId ? 'not-allowed' : 'pointer'
-          }}
-        >
-          เพิ่มรอบเรียนใหม่
-        </button>
+        <div className="page__actions">
+          <button
+            onClick={handleAddNewClick}
+            disabled={!selectedInstructorId || !selectedBranchId}
+            className="btn btn--primary"
+          >
+            เพิ่มรอบเรียนใหม่
+          </button>
+        </div>
       </div>
 
-      <div style={{
-        background: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: '12px',
-        padding: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px'
-      }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 220px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 500 }}>เลือกสาขา</span>
+      <div className="page-card">
+        <div className="form-grid form-grid--two">
+          <div className="field">
+            <label className="field__label">เลือกสาขา</label>
             <select
               value={selectedBranchId}
               onChange={(e) => {
                 setSelectedBranchId(e.target.value);
                 setSelectedCourseId('');
               }}
-              style={{
-                padding: '10px 12px',
-                borderRadius: '8px',
-                border: '1px solid #d1d5db'
-              }}
+              className="select"
             >
               <option value="">ทุกสาขา</option>
               {branches.map((branch) => (
@@ -523,20 +506,16 @@ function CourseSessions() {
                 </option>
               ))}
             </select>
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 250px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 500 }}>เลือกผู้สอน</span>
+          </div>
+          <div className="field">
+            <label className="field__label">เลือกผู้สอน</label>
             <select
               value={selectedInstructorId}
               onChange={(e) => {
                 setSelectedInstructorId(e.target.value);
                 setSelectedCourseId('');
               }}
-              style={{
-                padding: '10px 12px',
-                borderRadius: '8px',
-                border: '1px solid #d1d5db'
-              }}
+              className="select"
             >
               <option value="">ผู้สอนทั้งหมด</option>
               {instructors.map((instructor) => (
@@ -545,19 +524,15 @@ function CourseSessions() {
                 </option>
               ))}
             </select>
-          </label>
+          </div>
 
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: '1 1 250px' }}>
-            <span style={{ fontSize: '14px', fontWeight: 500 }}>เลือกคอร์สที่ต้องการวางตาราง</span>
+          <div className="field" style={{ gridColumn: '1 / -1' }}>
+            <label className="field__label">เลือกคอร์สที่ต้องการวางตาราง</label>
             <select
               value={selectedCourseId}
               onChange={(e) => setSelectedCourseId(e.target.value)}
               disabled={!selectedInstructorId || !selectedBranchId}
-              style={{
-                padding: '10px 12px',
-                borderRadius: '8px',
-                border: '1px solid #d1d5db'
-              }}
+              className="select"
             >
               <option value="">เลือกคอร์ส</option>
               {filteredCourses.map((course) => (
@@ -576,19 +551,11 @@ function CourseSessions() {
                 กรุณาเลือกทั้งสาขาและผู้สอนก่อนเลือกคอร์สและลงตาราง
               </span>
             ) : null}
-          </label>
+          </div>
         </div>
 
         {!canSchedule && (
-          <div
-            style={{
-              background: '#fef3c7',
-              border: '1px dashed #f59e0b',
-              color: '#92400e',
-              padding: '10px 12px',
-              borderRadius: '8px'
-            }}
-          >
+          <div className="page-alert page-alert--error" style={{ background: '#fef3c7', borderColor: '#f59e0b', color: '#92400e' }}>
             กรุณาเลือกสาขา ผู้สอน และคอร์สก่อนทำการเลือกวันที่จากปฏิทิน
           </div>
         )}
@@ -598,7 +565,7 @@ function CourseSessions() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
               <button
                 onClick={() => setCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
-                style={{ border: 'none', background: '#f3f4f6', borderRadius: '6px', padding: '6px 10px', cursor: 'pointer' }}
+                className="btn btn--ghost btn--small"
                 aria-label="เดือนก่อนหน้า"
               >
                 ←
@@ -606,7 +573,7 @@ function CourseSessions() {
               <strong>{calendarMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</strong>
               <button
                 onClick={() => setCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-                style={{ border: 'none', background: '#f3f4f6', borderRadius: '6px', padding: '6px 10px', cursor: 'pointer' }}
+                className="btn btn--ghost btn--small"
                 aria-label="เดือนถัดไป"
               >
                 →
@@ -747,7 +714,8 @@ function CourseSessions() {
                   <button
                     type="button"
                     onClick={() => setSelectedSlots({})}
-                    style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', fontSize: '13px' }}
+                    className="btn btn--text"
+                    style={{ color: '#2563eb' }}
                   >
                     ล้างทั้งหมด
                   </button>
@@ -777,7 +745,8 @@ function CourseSessions() {
                         <button
                           type="button"
                           onClick={() => toggleDateSelection(dateKey, false)}
-                          style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '12px' }}
+                          className="btn btn--text"
+                          style={{ color: '#dc2626', fontSize: '12px' }}
                         >
                           ลบ
                         </button>
@@ -787,85 +756,73 @@ function CourseSessions() {
                         value={slot.session_name}
                         onChange={(e) => updateSlotField(dateKey, 'session_name', e.target.value)}
                         placeholder="ชื่อรอบ (ไม่บังคับ)"
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          borderRadius: '8px',
-                          border: '1px solid #d1d5db'
-                        }}
+                        className="input"
                       />
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                        <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div className="field">
                           <span style={{ fontSize: '12px', color: '#6b7280' }}>เวลาเริ่ม *</span>
                           <input
                             type="time"
                             value={slot.start_time}
                             onChange={(e) => updateSlotField(dateKey, 'start_time', e.target.value)}
                             required
-                            style={{ padding: '8px', borderRadius: '8px', border: '1px solid #d1d5db' }}
+                            className="input"
                           />
-                        </label>
-                        <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        </div>
+                        <div className="field">
                           <span style={{ fontSize: '12px', color: '#6b7280' }}>เวลาสิ้นสุด</span>
                           <input
                             type="time"
                             value={slot.end_time}
                             onChange={(e) => updateSlotField(dateKey, 'end_time', e.target.value)}
-                            style={{ padding: '8px', borderRadius: '8px', border: '1px solid #d1d5db' }}
+                            className="input"
                           />
-                        </label>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '12px', color: '#6b7280' }}>จำนวนผู้เข้าร่วมสูงสุด</span>
+              <div className="form-grid">
+                <div className="field">
+                  <label className="field__label">จำนวนผู้เข้าร่วมสูงสุด</label>
                   <input
                     type="number"
                     min="1"
                     value={bulkMaxCapacity}
                     onChange={(e) => setBulkMaxCapacity(parseInt(e.target.value, 10) || 0)}
-                    style={{ padding: '8px', borderRadius: '8px', border: '1px solid #d1d5db' }}
+                    className="input"
                   />
-                </label>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '12px', color: '#6b7280' }}>สถานะ</span>
+                </div>
+                <div className="field">
+                  <label className="field__label">สถานะ</label>
                   <select
                     value={bulkStatus}
                     onChange={(e) => setBulkStatus(e.target.value)}
-                    style={{ padding: '8px', borderRadius: '8px', border: '1px solid #d1d5db' }}
+                    className="select"
                   >
                     <option value="open">เปิดให้ลงทะเบียน</option>
                     <option value="full">เต็ม</option>
                     <option value="closed">ปิด</option>
                     <option value="cancelled">ยกเลิก</option>
                   </select>
-                </label>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '12px', color: '#6b7280' }}>หมายเหตุ (ใช้กับทุกวันที่เลือก)</span>
+                </div>
+                <div className="field">
+                  <label className="field__label">หมายเหตุ (ใช้กับทุกวันที่เลือก)</label>
                   <textarea
                     value={bulkNotes}
                     onChange={(e) => setBulkNotes(e.target.value)}
                     rows={2}
-                    style={{ padding: '8px', borderRadius: '8px', border: '1px solid #d1d5db' }}
+                    className="textarea"
                   />
-                </label>
+                </div>
                 <button
                   type="button"
                   onClick={handleBulkCreate}
                   disabled={bulkSubmitting || !canSchedule || selectedSlotEntries.length === 0}
-                  style={{
-                    background: bulkSubmitting || !canSchedule ? '#9ca3af' : '#16a34a',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '10px 16px',
-                    cursor: bulkSubmitting || !canSchedule ? 'not-allowed' : 'pointer',
-                    fontWeight: 600
-                  }}
+                  className="btn btn--primary"
+                  style={{ background: bulkSubmitting || !canSchedule ? '#9ca3af' : '#16a34a' }}
                 >
                   {bulkSubmitting ? 'กำลังบันทึก...' : 'สร้างรอบเรียนตามวันที่ที่เลือก'}
                 </button>
@@ -876,27 +833,19 @@ function CourseSessions() {
       </div>
 
       {showForm && (
-        <div style={{
-          background: '#fff',
-          border: '1px solid #e5e7eb',
-          borderRadius: '8px',
-          padding: '20px'
-        }}>
-          <h2 style={{ marginTop: 0 }}>{editingSession ? 'แก้ไขรอบเรียน' : 'เพิ่มรอบเรียนใหม่'}</h2>
+        <div className="page-card">
+          <div className="page-card__header">
+            <h2 className="page-card__title">{editingSession ? 'แก้ไขรอบเรียน' : 'เพิ่มรอบเรียนใหม่'}</h2>
+          </div>
           <form onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>สาขา *</label>
+            <div className="form-grid form-grid--two">
+              <div className="field">
+                <label className="field__label">สาขา *</label>
                 <select
                   value={formData.branch_id}
                   onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '4px'
-                  }}
+                  className="select"
                 >
                   <option value="">-- เลือกสาขา --</option>
                   {branches.map((branch) => (
@@ -907,18 +856,13 @@ function CourseSessions() {
                 </select>
               </div>
 
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>ผู้สอน *</label>
+              <div className="field">
+                <label className="field__label">ผู้สอน *</label>
                 <select
                   value={formData.instructor_id}
                   onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '4px'
-                  }}
+                  className="select"
                 >
                   <option value="">-- เลือกผู้สอน --</option>
                   {instructors.map((instructor) => (
@@ -930,139 +874,101 @@ function CourseSessions() {
               </div>
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>คอร์สเรียน *</label>
-              <select
-                value={formData.course_id}
-                onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
-                required
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px'
-                }}
-              >
-                <option value="">-- เลือกคอร์สเรียน --</option>
-                {courses.map((course) => (
-                  <option key={course.id} value={course.id}>
-                    {course.title}{course.instructor_name ? ` · ${course.instructor_name}` : ''}
-                  </option>
-                ))}
-              </select>
+            <div className="form-grid">
+              <div className="field">
+                <label className="field__label">คอร์สเรียน *</label>
+                <select
+                  value={formData.course_id}
+                  onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
+                  required
+                  className="select"
+                >
+                  <option value="">-- เลือกคอร์สเรียน --</option>
+                  {courses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.title}{course.instructor_name ? ` · ${course.instructor_name}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="field">
+                <label className="field__label">ชื่อรอบเรียน</label>
+                <input
+                  type="text"
+                  value={formData.session_name}
+                  onChange={(e) => setFormData({ ...formData, session_name: e.target.value })}
+                  placeholder="เช่น รอบเช้า, รอบเย็น"
+                  className="input"
+                />
+              </div>
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>ชื่อรอบเรียน</label>
-              <input
-                type="text"
-                value={formData.session_name}
-                onChange={(e) => setFormData({ ...formData, session_name: e.target.value })}
-                placeholder="เช่น รอบเช้า, รอบเย็น"
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px'
-                }}
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>วันที่เริ่ม *</label>
+            <div className="form-grid form-grid--two">
+              <div className="field">
+                <label className="field__label">วันที่เริ่ม *</label>
                 <input
                   type="date"
                   value={formData.start_date}
                   onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '4px'
-                  }}
+                  className="input"
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>วันในสัปดาห์</label>
+              <div className="field">
+                <label className="field__label">วันในสัปดาห์</label>
                 <input
                   type="text"
                   value={formData.day_of_week}
                   onChange={(e) => setFormData({ ...formData, day_of_week: e.target.value })}
                   placeholder="จันทร์, อังคาร, ..."
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '4px'
-                  }}
+                  className="input"
                 />
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>เวลาเริ่ม *</label>
+            <div className="form-grid form-grid--two">
+              <div className="field">
+                <label className="field__label">เวลาเริ่ม *</label>
                 <input
                   type="time"
                   value={formData.start_time}
                   onChange={(e) => setFormData({ ...formData, start_time: e.target.value })}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '4px'
-                  }}
+                  className="input"
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>เวลาสิ้นสุด</label>
+              <div className="field">
+                <label className="field__label">เวลาสิ้นสุด</label>
                 <input
                   type="time"
                   value={formData.end_time}
                   onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '4px'
-                  }}
+                  className="input"
                 />
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>จำนวนผู้เข้าร่วมสูงสุด</label>
+            <div className="form-grid form-grid--two">
+              <div className="field">
+                <label className="field__label">จำนวนผู้เข้าร่วมสูงสุด</label>
                 <input
                   type="number"
                   value={formData.max_capacity}
                   onChange={(e) => setFormData({ ...formData, max_capacity: parseInt(e.target.value, 10) })}
                   min="1"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '4px'
-                  }}
+                  className="input"
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px' }}>สถานะ</label>
+              <div className="field">
+                <label className="field__label">สถานะ</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '4px'
-                  }}
+                  className="select"
                 >
                   <option value="open">เปิดให้ลงทะเบียน</option>
                   <option value="full">เต็ม</option>
@@ -1072,46 +978,29 @@ function CourseSessions() {
               </div>
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>หมายเหตุ</label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={2}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px'
-                }}
-              />
+            <div className="form-grid">
+              <div className="field">
+                <label className="field__label">หมายเหตุ</label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  rows={2}
+                  className="textarea"
+                />
+              </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div className="page__actions">
               <button
                 type="submit"
-                style={{
-                  background: '#2563eb',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  cursor: 'pointer'
-                }}
+                className="btn btn--primary"
               >
                 บันทึก
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                style={{
-                  background: '#6b7280',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  cursor: 'pointer'
-                }}
+                className="btn btn--ghost"
               >
                 ยกเลิก
               </button>
@@ -1120,103 +1009,89 @@ function CourseSessions() {
         </div>
       )}
 
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead style={{ background: '#f9fafb' }}>
-            <tr>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>คอร์สเรียน</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>สาขา</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>ผู้สอน</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>ชื่อรอบ</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>วันที่</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>เวลา</th>
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>จำนวน</th>
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>สถานะ</th>
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleSessions.length === 0 ? (
+      <div className="page-card">
+        <div className="table-wrapper">
+          <table className="table">
+            <thead>
               <tr>
-                <td colSpan={8} style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
-                  ไม่มีข้อมูลรอบเรียนในตัวกรองนี้
-                </td>
+                <th>คอร์สเรียน</th>
+                <th>สาขา</th>
+                <th>ผู้สอน</th>
+                <th>ชื่อรอบ</th>
+                <th>วันที่</th>
+                <th>เวลา</th>
+                <th style={{ textAlign: 'center' }}>จำนวน</th>
+                <th style={{ textAlign: 'center' }}>สถานะ</th>
+                <th style={{ textAlign: 'center' }}>จัดการ</th>
               </tr>
-            ) : (
-              visibleSessions.map((session) => (
-                <tr key={session.id}>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
-                    {session.course_title || '-'}
-                  </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
-                    {getBranchLabel(session)}
-                  </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
-                    {getInstructorLabel(session)}
-                  </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
-                    {session.session_name || '-'}
-                  </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
-                    {session.start_date ? new Date(session.start_date).toLocaleDateString('th-TH') : '-'}
-                  </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
-                    {formatTime(session.start_time)} {session.end_time ? `- ${formatTime(session.end_time)}` : ''}
-                  </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
-                    {session.current_enrollments || 0} / {session.max_capacity || 0}
-                  </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
-                    <span style={{
-                      padding: '4px 12px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      background: session.status === 'open' ? '#dcfce7' : session.status === 'full' ? '#fef3c7' : '#fee2e2',
-                      color: session.status === 'open' ? '#166534' : session.status === 'full' ? '#92400e' : '#991b1b'
-                    }}>
-                      {session.status === 'open'
-                        ? 'เปิด'
-                        : session.status === 'full'
-                          ? 'เต็ม'
-                          : session.status === 'closed'
-                            ? 'ปิด'
-                            : 'ยกเลิก'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
-                    <button
-                      onClick={() => handleEdit(session)}
-                      style={{
-                        background: '#f59e0b',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '6px 12px',
-                        cursor: 'pointer',
-                        marginRight: '8px'
-                      }}
-                    >
-                      แก้ไข
-                    </button>
-                    <button
-                      onClick={() => handleDelete(session.id)}
-                      style={{
-                        background: '#dc2626',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '6px 12px',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      ลบ
-                    </button>
+            </thead>
+            <tbody>
+              {visibleSessions.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="empty-state">
+                    ไม่มีข้อมูลรอบเรียนในตัวกรองนี้
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                visibleSessions.map((session) => (
+                  <tr key={session.id}>
+                    <td>
+                      {session.course_title || '-'}
+                    </td>
+                    <td>
+                      {getBranchLabel(session)}
+                    </td>
+                    <td>
+                      {getInstructorLabel(session)}
+                    </td>
+                    <td>
+                      {session.session_name || '-'}
+                    </td>
+                    <td>
+                      {session.start_date ? new Date(session.start_date).toLocaleDateString('th-TH') : '-'}
+                    </td>
+                    <td>
+                      {formatTime(session.start_time)} {session.end_time ? `- ${formatTime(session.end_time)}` : ''}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      {session.current_enrollments || 0} / {session.max_capacity || 0}
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className={
+                        session.status === 'open' ? 'status-pill status-pill--success' :
+                        session.status === 'full' ? 'status-pill status-pill--warning' :
+                        'status-pill status-pill--danger'
+                      }>
+                        {session.status === 'open'
+                          ? 'เปิด'
+                          : session.status === 'full'
+                            ? 'เต็ม'
+                            : session.status === 'closed'
+                              ? 'ปิด'
+                              : 'ยกเลิก'}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button
+                        onClick={() => handleEdit(session)}
+                        className="btn btn--small"
+                        style={{ background: '#f59e0b', color: '#fff', marginRight: '8px' }}
+                      >
+                        แก้ไข
+                      </button>
+                      <button
+                        onClick={() => handleDelete(session.id)}
+                        className="btn btn--small btn--danger"
+                      >
+                        ลบ
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
       <TablePagination
         page={sessionsPage}

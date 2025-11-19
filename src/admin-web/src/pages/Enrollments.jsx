@@ -60,23 +60,18 @@ function Enrollments() {
   }, [filter, resetFilteredPage]);
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>กำลังโหลด...</div>;
+    return <div className="page">กำลังโหลด...</div>;
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ margin: 0 }}>การลงทะเบียนเรียน (Enrollments)</h1>
-        <div style={{ display: 'flex', gap: '10px' }}>
+    <div className="page">
+      <div className="page__header">
+        <h1 className="page__title">การลงทะเบียนเรียน (Enrollments)</h1>
+        <div className="page__actions">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              cursor: 'pointer'
-            }}
+            className="select"
           >
             <option value="all">ทั้งหมด</option>
             <option value="active">ใช้งานอยู่</option>
@@ -86,58 +81,58 @@ function Enrollments() {
         </div>
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-          <thead style={{ background: '#f9fafb' }}>
+      <div className="table-wrapper">
+        <table className="table">
+          <thead>
             <tr>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>ผู้ใช้</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>คอร์ส</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>รอบเรียน</th>
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>วันที่ลงทะเบียน</th>
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>สิทธิ์เหลือ</th>
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>เข้าร่วมล่าสุด</th>
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>สถานะ</th>
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>จัดการ</th>
+              <th>ผู้ใช้</th>
+              <th>คอร์ส</th>
+              <th>รอบเรียน</th>
+              <th style={{ textAlign: 'center' }}>วันที่ลงทะเบียน</th>
+              <th style={{ textAlign: 'center' }}>สิทธิ์เหลือ</th>
+              <th style={{ textAlign: 'center' }}>เข้าร่วมล่าสุด</th>
+              <th style={{ textAlign: 'center' }}>สถานะ</th>
+              <th style={{ textAlign: 'center' }}>จัดการ</th>
             </tr>
           </thead>
           <tbody>
             {visibleFilteredEnrollments.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+                <td colSpan={8} className="empty-state">
                   ไม่มีข้อมูลการลงทะเบียน
                 </td>
               </tr>
             ) : (
               visibleFilteredEnrollments.map((enrollment) => (
                 <tr key={enrollment.id}>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                  <td>
                     <div>
                       <div style={{ fontWeight: '500' }}>{enrollment.user_name || 'N/A'}</div>
                       <div style={{ fontSize: '12px', color: '#6b7280' }}>{enrollment.user_email || '-'}</div>
                     </div>
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                  <td>
                     {enrollment.course_title || '-'}
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                  <td>
                     {enrollment.session_name || '-'}
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <td style={{ textAlign: 'center' }}>
                     {enrollment.enrolled_at
                       ? new Date(enrollment.enrolled_at).toLocaleDateString('th-TH')
                       : '-'}
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <td style={{ textAlign: 'center' }}>
                     {enrollment.remaining_access !== null && enrollment.remaining_access !== undefined
                       ? enrollment.remaining_access
                       : '∞'}
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <td style={{ textAlign: 'center' }}>
                     {enrollment.last_attended_at
                       ? new Date(enrollment.last_attended_at).toLocaleDateString('th-TH')
                       : '-'}
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <td style={{ textAlign: 'center' }}>
                     <span
                       style={{
                         padding: '4px 12px',
@@ -164,17 +159,11 @@ function Enrollments() {
                         : 'ยกเลิก'}
                     </span>
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <td style={{ textAlign: 'center' }}>
                     <select
                       value={enrollment.status}
                       onChange={(e) => handleStatusChange(enrollment.id, e.target.value)}
-                      style={{
-                        padding: '6px 8px',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                      }}
+                      className="select btn--small"
                     >
                       <option value="active">ใช้งาน</option>
                       <option value="expired">หมดอายุ</option>
@@ -197,8 +186,8 @@ function Enrollments() {
         />
       )}
 
-      <div style={{ marginTop: '20px', padding: '15px', background: '#f9fafb', borderRadius: '8px' }}>
-        <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>สรุปข้อมูล</h3>
+      <div className="page-card" style={{ marginTop: '20px' }}>
+        <h3 className="page-card__title">สรุปข้อมูล</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
           <div>
             <div style={{ fontSize: '12px', color: '#6b7280' }}>ทั้งหมด</div>

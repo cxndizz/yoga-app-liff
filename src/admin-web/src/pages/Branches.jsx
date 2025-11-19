@@ -107,101 +107,68 @@ function Branches() {
   };
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>กำลังโหลด...</div>;
+    return <div className="page">กำลังโหลด...</div>;
   }
 
   return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ margin: 0 }}>จัดการสาขา</h1>
+    <div className="page">
+      <div className="page__header">
+        <h1 className="page__title">จัดการสาขา</h1>
         <button
           onClick={() => setShowForm(true)}
-          style={{
-            background: '#2563eb',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '10px 20px',
-            cursor: 'pointer'
-          }}
+          className="btn btn--primary"
         >
           เพิ่มสาขาใหม่
         </button>
       </div>
 
       {showForm && (
-        <div style={{
-          background: '#fff',
-          border: '1px solid #e5e7eb',
-          borderRadius: '8px',
-          padding: '20px',
-          marginBottom: '20px'
-        }}>
-          <h2 style={{ marginTop: 0 }}>{editingBranch ? 'แก้ไขสาขา' : 'เพิ่มสาขาใหม่'}</h2>
+        <div className="page-card">
+          <h2 className="page-card__title">{editingBranch ? 'แก้ไขสาขา' : 'เพิ่มสาขาใหม่'}</h2>
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>ชื่อสาขา *</label>
+            <div className="field">
+              <label className="field__label">ชื่อสาขา *</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px'
-                }}
+                className="input"
               />
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>ที่อยู่</label>
+            <div className="field">
+              <label className="field__label">ที่อยู่</label>
               <textarea
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 rows={3}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px'
-                }}
+                className="textarea"
               />
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>เบอร์โทร</label>
+            <div className="field">
+              <label className="field__label">เบอร์โทร</label>
               <input
                 type="text"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px'
-                }}
+                className="input"
               />
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px' }}>ลิงก์แผนที่</label>
+            <div className="field">
+              <label className="field__label">ลิงก์แผนที่</label>
               <input
                 type="url"
                 value={formData.map_url}
                 onChange={(e) => setFormData({ ...formData, map_url: e.target.value })}
                 placeholder="https://maps.google.com/..."
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '4px'
-                }}
+                className="input"
               />
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
+            <div className="field">
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input
                   type="checkbox"
@@ -212,31 +179,17 @@ function Branches() {
               </label>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div className="page__actions">
               <button
                 type="submit"
-                style={{
-                  background: '#2563eb',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  cursor: 'pointer'
-                }}
+                className="btn btn--primary"
               >
                 บันทึก
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                style={{
-                  background: '#6b7280',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '10px 20px',
-                  cursor: 'pointer'
-                }}
+                className="btn btn--ghost"
               >
                 ยกเลิก
               </button>
@@ -245,35 +198,35 @@ function Branches() {
         </div>
       )}
 
-      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead style={{ background: '#f9fafb' }}>
+      <div className="table-wrapper">
+        <table className="table">
+          <thead>
             <tr>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>ชื่อสาขา</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>ที่อยู่</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>เบอร์โทร</th>
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>สถานะ</th>
-              <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>จัดการ</th>
+              <th>ชื่อสาขา</th>
+              <th>ที่อยู่</th>
+              <th>เบอร์โทร</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
             </tr>
           </thead>
           <tbody>
             {visibleBranches.length === 0 ? (
               <tr>
-                <td colSpan={5} style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
-                  ไม่มีข้อมูลสาขา
+                <td colSpan={5}>
+                  <div className="empty-state">ไม่มีข้อมูลสาขา</div>
                 </td>
               </tr>
             ) : (
               visibleBranches.map((branch) => (
                 <tr key={branch.id}>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{branch.name}</td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                  <td>{branch.name}</td>
+                  <td>
                     {branch.address || '-'}
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
+                  <td>
                     {branch.phone || '-'}
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <td>
                     <span style={{
                       padding: '4px 12px',
                       borderRadius: '12px',
@@ -284,31 +237,16 @@ function Branches() {
                       {branch.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                     </span>
                   </td>
-                  <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <td>
                     <button
                       onClick={() => handleEdit(branch)}
-                      style={{
-                        background: '#f59e0b',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '6px 12px',
-                        cursor: 'pointer',
-                        marginRight: '8px'
-                      }}
+                      className="btn btn--small"
                     >
                       แก้ไข
                     </button>
                     <button
                       onClick={() => handleDelete(branch.id)}
-                      style={{
-                        background: '#dc2626',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        padding: '6px 12px',
-                        cursor: 'pointer'
-                      }}
+                      className="btn btn--small btn--danger"
                     >
                       ปิดใช้งาน
                     </button>

@@ -92,9 +92,9 @@ function Login() {
           <h1 style={{ margin: 0, fontSize: '28px' }}>Admin Center</h1>
           <p style={{ margin: '8px 0 0', color: 'var(--color-muted)' }}>เข้าสู่ระบบเพื่อจัดการคอร์สและสมาชิก</p>
         </div>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span className="field__label">อีเมล</span>
+        <form onSubmit={handleSubmit} className="form-grid">
+          <div className="field">
+            <label className="field__label">อีเมล</label>
             <input
               type="email"
               value={form.email}
@@ -105,9 +105,9 @@ function Login() {
               disabled={isSubmitting}
             />
             {errors.email && <span style={{ color: '#dc2626', fontSize: '13px' }}>{errors.email}</span>}
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span className="field__label">รหัสผ่าน</span>
+          </div>
+          <div className="field">
+            <label className="field__label">รหัสผ่าน</label>
             <input
               type="password"
               value={form.password}
@@ -118,7 +118,7 @@ function Login() {
               disabled={isSubmitting}
             />
             {errors.password && <span style={{ color: '#dc2626', fontSize: '13px' }}>{errors.password}</span>}
-          </label>
+          </div>
           {serverError && <div className="page-alert page-alert--error">{serverError}</div>}
           <button type="submit" disabled={isSubmitting} className="btn btn--primary" style={{ width: '100%' }}>
             {isSubmitting ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}

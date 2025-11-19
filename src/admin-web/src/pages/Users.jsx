@@ -73,74 +73,40 @@ function Users() {
   }, [searchTerm, resetPage]);
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '8px' }}>จัดการผู้ใช้งาน</h1>
-        <p style={{ color: '#6b7280', margin: 0 }}>ดูข้อมูลและจัดการสมาชิกทั้งหมดในระบบ</p>
+    <div className="page">
+      <div className="page__header">
+        <h1 className="page__title">จัดการผู้ใช้งาน</h1>
+        <p className="page__subtitle">ดูข้อมูลและจัดการสมาชิกทั้งหมดในระบบ</p>
       </div>
 
       {error && (
-        <div style={{
-          background: '#fee2e2',
-          border: '1px solid #fecaca',
-          color: '#991b1b',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          marginBottom: '16px',
-        }}>
+        <div className="page-alert page-alert--error">
           {error}
         </div>
       )}
 
-      <div style={{
-        background: '#fff',
-        borderRadius: '12px',
-        padding: '24px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px',
-          gap: '16px',
-          flexWrap: 'wrap',
-        }}>
+      <div className="page-card">
+        <div className="page-card__header">
           <div>
-            <h2 style={{ fontSize: '20px', fontWeight: '600', margin: 0 }}>สมาชิกทั้งหมด</h2>
+            <h2 className="page-card__title">สมาชิกทั้งหมด</h2>
             <p style={{ color: '#6b7280', fontSize: '14px', margin: '4px 0 0' }}>
               ทั้งหมด {filteredUsers.length} รายการ
               {searchTerm && ` (จากทั้งหมด ${users.length} รายการ)`}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div className="page__actions">
             <input
               type="text"
               placeholder="ค้นหาชื่อ, อีเมล, เบอร์..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                padding: '10px 16px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                fontSize: '14px',
-                width: '280px',
-              }}
+              className="input"
+              style={{ width: '280px' }}
             />
             <button
               onClick={fetchUsers}
               disabled={loading}
-              style={{
-                background: '#667eea',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '10px 20px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.6 : 1,
-              }}
+              className="btn btn--primary"
             >
               {loading ? 'กำลังโหลด...' : 'รีเฟรช'}
             </button>
@@ -166,7 +132,7 @@ function Users() {
             `}</style>
           </div>
         ) : filteredUsers.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#6b7280' }}>
+          <div className="empty-state">
             <svg style={{ width: '64px', height: '64px', margin: '0 auto 16px', opacity: 0.3 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
@@ -176,42 +142,30 @@ function Users() {
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  padding: '6px 12px',
-                  fontSize: '13px',
-                  color: '#6b7280',
-                  cursor: 'pointer',
-                }}
+                className="btn btn--ghost btn--small"
               >
                 ล้างการค้นหา
               </button>
             )}
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              fontSize: '14px',
-            }}>
+          <div className="table-wrapper">
+            <table className="table">
               <thead>
-                <tr style={{ borderBottom: '2px solid #e5e7eb', textAlign: 'left' }}>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ID</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>Line User ID</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>ชื่อ-นามสกุล</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>อีเมล</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>เบอร์โทร</th>
-                  <th style={{ padding: '12px 8px', fontWeight: '600', color: '#374151' }}>สมัครเมื่อ</th>
+                <tr>
+                  <th>ID</th>
+                  <th>Line User ID</th>
+                  <th>ชื่อ-นามสกุล</th>
+                  <th>อีเมล</th>
+                  <th>เบอร์โทร</th>
+                  <th>สมัครเมื่อ</th>
                 </tr>
               </thead>
               <tbody>
                 {visibleUsers.map((user) => (
-                  <tr key={user.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: '12px 8px', color: '#6b7280' }}>#{user.id}</td>
-                    <td style={{ padding: '12px 8px' }}>
+                  <tr key={user.id}>
+                    <td style={{ color: '#6b7280' }}>#{user.id}</td>
+                    <td>
                       <span style={{
                         fontFamily: 'monospace',
                         fontSize: '13px',
@@ -222,16 +176,16 @@ function Users() {
                         {user.line_user_id || '-'}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 8px', fontWeight: '500' }}>
+                    <td style={{ fontWeight: '500' }}>
                       {user.full_name || <span style={{ color: '#9ca3af' }}>ไม่ระบุ</span>}
                     </td>
-                    <td style={{ padding: '12px 8px', color: '#6b7280' }}>
+                    <td style={{ color: '#6b7280' }}>
                       {user.email || <span style={{ color: '#9ca3af' }}>ไม่ระบุ</span>}
                     </td>
-                    <td style={{ padding: '12px 8px', color: '#6b7280' }}>
+                    <td style={{ color: '#6b7280' }}>
                       {user.phone || <span style={{ color: '#9ca3af' }}>ไม่ระบุ</span>}
                     </td>
-                    <td style={{ padding: '12px 8px', color: '#6b7280', fontSize: '13px' }}>
+                    <td style={{ color: '#6b7280', fontSize: '13px' }}>
                       {formatDate(user.created_at)}
                     </td>
                   </tr>
