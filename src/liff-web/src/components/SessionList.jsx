@@ -1,10 +1,13 @@
 import React from 'react';
+import { useI18n } from '../lib/i18n';
 
 function SessionList({ sessions, fallbackChannel }) {
+  const { t } = useI18n();
+
   if (!sessions?.length) {
     return (
       <div className="card-surface" style={{ padding: 16 }}>
-        <div style={{ color: 'var(--muted)' }}>ยังไม่มีรอบเรียนสำหรับคอร์สนี้</div>
+        <div style={{ color: 'var(--muted)' }}>{t('session.none')}</div>
       </div>
     );
   }
@@ -24,7 +27,7 @@ function SessionList({ sessions, fallbackChannel }) {
           }}
         >
           <div className="badge" style={{ background: 'rgba(231, 177, 160, 0.18)', color: '#0b1a3c' }}>
-            {session.mode || fallbackChannel || 'Session'}
+            {session.mode || fallbackChannel || t('session.topicFallback')}
           </div>
           <div>
             <div style={{ fontWeight: 700 }}>{session.topic}</div>
@@ -40,7 +43,9 @@ function SessionList({ sessions, fallbackChannel }) {
             )}
           </div>
           <div style={{ color: 'var(--rose)', fontWeight: 700 }}>
-            {session.availableSpots != null ? `เหลือ ${session.availableSpots} ที่` : 'เปิดจอง'}
+            {session.availableSpots != null
+              ? t('session.available', { count: session.availableSpots })
+              : t('session.open')}
           </div>
         </div>
       ))}

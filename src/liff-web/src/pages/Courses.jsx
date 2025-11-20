@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import CourseCard from '../components/CourseCard';
 import FilterBar from '../components/FilterBar';
 import { fetchCourses } from '../lib/courseApi';
+import { useI18n } from '../lib/i18n';
 
 function Courses() {
   const location = useLocation();
@@ -11,6 +12,7 @@ function Courses() {
   const [branch, setBranch] = useState('');
   const [instructor, setInstructor] = useState('');
   const [status, setStatus] = useState('idle');
+  const { t, language } = useI18n();
 
   useEffect(() => {
     let active = true;
@@ -19,7 +21,14 @@ function Courses() {
     const params = new URLSearchParams(location.search);
     const highlight = params.get('filter');
 
-    fetchCourses({ limit: 100 })
+    const copy = {
+      branchFallback: t('fallback.branch'),
+      instructorFallback: t('fallback.instructor'),
+      courseLabel: t('fallback.courseLabel'),
+      sessionTopicFallback: t('session.topicFallback'),
+    };
+
+    fetchCourses({ limit: 100, language, copy })
       .then((data) => {
         if (!active) return;
         setCourses(data);
@@ -37,7 +46,7 @@ function Courses() {
     return () => {
       active = false;
     };
-  }, [location.search]);
+  }, [language, location.search, t]);
 
   const branches = useMemo(() => [...new Set(courses.map((c) => c.branchName).filter(Boolean))], [courses]);
   const instructors = useMemo(
@@ -61,8 +70,8 @@ function Courses() {
     <div style={{ display: 'grid', gap: 18 }}>
       <div className="section-heading">
         <div>
-          <h2>คอร์สทั้งหมด</h2>
-          <div className="helper-text">ค้นหาและกรองคอร์สด้วยหมวดหมู่ สาขา และผู้สอน</div>
+          <h2>{t('courses.title')}</h2>
+          <div className="helper-text">{t('courses.subtitle')}</div>
         </div>
       </div>
 
@@ -77,15 +86,15 @@ function Courses() {
         instructors={instructors}
       />
 
-      {status === 'loading' && <div className="helper-text">กำลังโหลดคอร์สทั้งหมด...</div>}
-      {status === 'error' && <div className="helper-text">ไม่สามารถดึงข้อมูลคอร์สได้</div>}
+      {status === 'loading' && <div className="helper-text">{t('courses.loading')}</div>}
+      {status === 'error' && <div className="helper-text">{t('courses.error')}</div>}
 
       <div className="grid">
         {filtered.map((course) => (
           <CourseCard key={course.id} course={course} />
         ))}
         {status === 'ready' && filtered.length === 0 && (
-          <div className="helper-text">ไม่มีคอร์สที่ตรงกับเงื่อนไขการค้นหา</div>
+          <div className="helper-text">{t('courses.empty')}</div>
         )}
       </div>
     </div>

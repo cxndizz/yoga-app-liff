@@ -1,14 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { formatAccessTimes, formatPriceTHB, placeholderImage } from '../lib/formatters';
+import { placeholderImage } from '../lib/formatters';
+import { useI18n } from '../lib/i18n';
 
 function CourseCard({ course }) {
   const navigate = useNavigate();
-  const priceLabel = formatPriceTHB(course.priceCents, course.isFree);
+  const { t, formatPrice, formatAccessTimes } = useI18n();
+  const priceLabel = formatPrice(course.priceCents, course.isFree);
   const accessLabel = formatAccessTimes(course.accessTimes);
   const coverImage = course.coverImage || placeholderImage;
-  const seatsLabel = Number.isFinite(course.seatsLeft) ? `${course.seatsLeft} ที่นั่ง` : 'ตรวจสอบที่ว่าง';
+  const seatsLabel = Number.isFinite(course.seatsLeft)
+    ? t('card.seats', { count: course.seatsLeft })
+    : t('card.seatsUnknown');
 
   return (
     <article
@@ -37,7 +41,7 @@ function CourseCard({ course }) {
           className="badge"
           style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(11, 26, 60, 0.75)' }}
         >
-          {course.channel || 'คอร์ส'}
+          {course.channel || t('card.channelFallback')}
         </div>
         <div
           className="badge"
@@ -68,7 +72,7 @@ function CourseCard({ course }) {
         />
         <div>
           <div style={{ fontWeight: 600 }}>{course.instructorName}</div>
-          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{course.instructorBio || 'ผู้สอนจากสตูดิโอ'}</div>
+          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{course.instructorBio || t('card.instructorBioFallback')}</div>
         </div>
       </div>
 
@@ -86,14 +90,14 @@ function CourseCard({ course }) {
           className="btn btn-outline"
           onClick={() => navigate(`/courses/${course.id}`)}
         >
-          ดูรายละเอียด
+          {t('card.viewDetail')}
         </button>
         <button
           type="button"
           className="btn btn-primary"
           onClick={() => navigate(`/courses/${course.id}?action=purchase`)}
         >
-          {course.isFree ? 'ลงทะเบียน' : 'ซื้อคอร์ส'}
+          {course.isFree ? t('card.register') : t('card.buy')}
         </button>
       </div>
     </article>

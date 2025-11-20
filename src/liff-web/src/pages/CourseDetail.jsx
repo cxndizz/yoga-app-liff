@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import SessionList from '../components/SessionList';
 import { fetchCourseDetail } from '../lib/courseApi';
-import { formatAccessTimes, formatPriceTHB, placeholderImage } from '../lib/formatters';
+import { placeholderImage } from '../lib/formatters';
+import { useI18n } from '../lib/i18n';
 
 function CourseDetail() {
   const { courseId } = useParams();
@@ -10,12 +11,20 @@ function CourseDetail() {
   const [course, setCourse] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [status, setStatus] = useState('idle');
+  const { t, language, formatPrice, formatAccessTimes } = useI18n();
 
   useEffect(() => {
     let active = true;
     setStatus('loading');
 
-    fetchCourseDetail(courseId)
+    const copy = {
+      branchFallback: t('fallback.branch'),
+      instructorFallback: t('fallback.instructor'),
+      courseLabel: t('detail.channelFallback'),
+      sessionTopicFallback: t('session.topicFallback'),
+    };
+
+    fetchCourseDetail(courseId, { language, copy })
       .then(({ course: coursePayload, sessions: sessionPayload }) => {
         if (!active) return;
         setCourse(coursePayload);
@@ -30,15 +39,16 @@ function CourseDetail() {
     return () => {
       active = false;
     };
-  }, [courseId]);
+  }, [courseId, language, t]);
 
-  if (status === 'loading') return <div className="helper-text">กำลังโหลดรายละเอียดคอร์ส...</div>;
+  if (status === 'loading') return <div className="helper-text">{t('detail.loading')}</div>;
   if (status === 'error' || !course)
-    return <div className="helper-text">ไม่พบคอร์สที่คุณต้องการ กรุณากลับไปหน้าหลัก</div>;
+    return <div className="helper-text">{t('detail.error')}</div>;
 
-  const priceLabel = formatPriceTHB(course.priceCents, course.isFree);
+  const priceLabel = formatPrice(course.priceCents, course.isFree);
   const accessLabel = formatAccessTimes(course.accessTimes);
   const coverImage = course.coverImage || placeholderImage;
+  const seatLabel = t('detail.seatsLeft', { left: course.seatsLeft, capacity: course.capacity });
 
   return (
     <div style={{ display: 'grid', gap: 18 }}>
@@ -75,9 +85,9 @@ function CourseDetail() {
           }}
         >
           <button type="button" className="btn btn-outline" onClick={() => navigate(-1)}>
-            ← กลับ
+            {t('detail.back')}
           </button>
-          <div className="badge">{course.channel || 'คอร์ส'}</div>
+          <div className="badge">{course.channel || t('detail.channelFallback')}</div>
         </div>
         <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 2, right: 18 }}>
           <div style={{ color: 'var(--rose)', fontWeight: 700 }}>{course.branchName}</div>
@@ -98,16 +108,16 @@ function CourseDetail() {
       <div className="card-surface" style={{ padding: 18, display: 'grid', gap: 12 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ color: 'var(--muted)' }}>ราคา / สิทธิ์เข้าเรียน</div>
+            <div style={{ color: 'var(--muted)' }}>{t('detail.priceAccess')}</div>
             <div style={{ fontSize: '1.4rem', fontWeight: 800 }}>{priceLabel}</div>
             <div style={{ color: 'var(--muted)' }}>{accessLabel}</div>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button type="button" className="btn btn-outline" onClick={() => navigate('/courses')}>
-              เลือกคอร์สอื่น
+              {t('detail.chooseOther')}
             </button>
             <button type="button" className="btn btn-primary">
-              {course.isFree ? 'ลงทะเบียนทันที' : 'ซื้อคอร์สผ่าน Omise'}
+              {course.isFree ? t('detail.registerNow') : t('detail.buyNow')}
             </button>
           </div>
         </div>
@@ -120,7 +130,7 @@ function CourseDetail() {
             />
             <div>
               <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>{course.instructorName}</div>
-              <div style={{ color: 'var(--muted)' }}>{course.instructorBio || 'ผู้สอนจากสตูดิโอ'}</div>
+              <div style={{ color: 'var(--muted)' }}>{course.instructorBio || t('card.instructorBioFallback')}</div>
             </div>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -129,8 +139,12 @@ function CourseDetail() {
                 {tag}
               </span>
             ))}
-            {course.level && <span className="badge">ระดับ: {course.level}</span>}
-            <span className="badge">ที่นั่งเหลือ {course.seatsLeft}/{course.capacity}</span>
+            {course.level && (
+              <span className="badge">
+                {t('detail.levelLabel')}: {course.level}
+              </span>
+            )}
+            <span className="badge">{seatLabel}</span>
           </div>
         </div>
       </div>
@@ -138,11 +152,11 @@ function CourseDetail() {
       <section>
         <div className="section-heading">
           <div>
-            <h2>รอบเรียน / Sessions</h2>
-            <div className="helper-text">ตารางเรียนปรับตามขนาดหน้าจอ รองรับ Onsite / Online / Hybrid</div>
+            <h2>{t('detail.sessionsTitle')}</h2>
+            <div className="helper-text">{t('detail.sessionsSubtitle')}</div>
           </div>
         </div>
-        <SessionList sessions={sessions} fallbackChannel={course.channel} />
+        <SessionList sessions={sessions} fallbackChannel={course.channel || t('detail.channelFallback')} />
       </section>
     </div>
   );

@@ -1,22 +1,37 @@
-const formatPriceTHB = (priceCents = 0, isFree = false) => {
-  if (isFree) return 'Free Access';
+const localeMap = {
+  en: 'en-US',
+  th: 'th-TH',
+  zh: 'zh-CN',
+};
+
+const formatPriceTHB = (priceCents = 0, isFree = false, { language = 'en', t } = {}) => {
+  if (isFree) return t?.('price.free') ?? 'Free access';
   const amount = Number(priceCents || 0) / 100;
-  return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 }).format(
-    amount,
-  );
+  const locale = localeMap[language] || localeMap.en;
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: 'THB',
+    maximumFractionDigits: 0,
+  }).format(amount);
 };
 
-const formatAccessTimes = (accessTimes) => {
-  if (!accessTimes) return 'เข้าถึง 1 ครั้ง';
-  if (accessTimes === -1) return 'เข้าถึงไม่จำกัดครั้ง';
-  return `เข้าถึง ${accessTimes} ครั้ง`;
+const formatAccessTimes = (accessTimes, { language = 'en', t } = {}) => {
+  const single = t?.('access.single') ?? 'Access 1 time';
+  const unlimited = t?.('access.unlimited') ?? 'Unlimited access';
+  const pluralTemplate = t?.('access.multiple') ?? 'Access {count} times';
+
+  if (!accessTimes) return single;
+  if (accessTimes === -1) return unlimited;
+
+  return pluralTemplate.replace('{count}', accessTimes);
 };
 
-const formatDateDisplay = (dateString) => {
+const formatDateDisplay = (dateString, language = 'en') => {
   if (!dateString) return '';
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return dateString;
-  return date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' });
+  const locale = localeMap[language] || localeMap.en;
+  return date.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 const formatTimeDisplay = (timeString) => {

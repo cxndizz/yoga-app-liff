@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useI18n } from '../lib/i18n';
 
 function Footer() {
+  const { t } = useI18n();
+
   return (
     <footer
       className="card-surface"
@@ -17,25 +20,23 @@ function Footer() {
     >
       <div>
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.15rem' }}>Yoga Luxe</div>
-        <div style={{ color: 'var(--muted)', marginTop: 4 }}>
-          Boutique LIFF Studio • Luxury movement and mindfulness experiences
-        </div>
+        <div style={{ color: 'var(--muted)', marginTop: 4 }}>{t('footer.tagline')}</div>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
         <Link to="/about" className="badge">
-          About
+          {t('footer.about')}
         </Link>
         <Link to="/contact" className="badge">
-          Contact
+          {t('footer.contact')}
         </Link>
         <Link to="/terms" className="badge">
-          Terms
+          {t('footer.terms')}
         </Link>
         <Link to="/privacy" className="badge">
-          Privacy
+          {t('footer.privacy')}
         </Link>
       </div>
-      <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>© 2024 Yoga Luxe LIFF. All rights reserved.</div>
+      <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{t('footer.rights')}</div>
     </footer>
   );
 }
