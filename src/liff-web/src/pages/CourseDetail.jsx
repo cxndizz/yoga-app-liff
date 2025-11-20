@@ -1,29 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { courseData } from '../data/sampleData';
 import SessionList from '../components/SessionList';
+import { fetchCourseDetail } from '../lib/courseApi';
+import { formatAccessTimes, formatPriceTHB, placeholderImage } from '../lib/formatters';
 
 function CourseDetail() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const [course, setCourse] = useState(null);
+  const [sessions, setSessions] = useState([]);
   const [status, setStatus] = useState('idle');
 
   useEffect(() => {
     let active = true;
     setStatus('loading');
 
-    // Example endpoint: fetch(`/api/courses/${courseId}?include=sessions,instructor`)
-    //   .then((res) => res.json())
-    //   .then((data) => active && setCourse(data))
-    //   .catch(() => active && setStatus('error'));
-
-    setTimeout(() => {
-      if (!active) return;
-      const found = courseData.find((item) => item.id === courseId);
-      setCourse(found || null);
-      setStatus(found ? 'ready' : 'error');
-    }, 320);
+    fetchCourseDetail(courseId)
+      .then(({ course: coursePayload, sessions: sessionPayload }) => {
+        if (!active) return;
+        setCourse(coursePayload);
+        setSessions(sessionPayload);
+        setStatus(coursePayload ? 'ready' : 'error');
+      })
+      .catch(() => {
+        if (!active) return;
+        setStatus('error');
+      });
 
     return () => {
       active = false;
@@ -34,7 +36,9 @@ function CourseDetail() {
   if (status === 'error' || !course)
     return <div className="helper-text">ไม่พบคอร์สที่คุณต้องการ กรุณากลับไปหน้าหลัก</div>;
 
-  const priceLabel = course.isFree ? 'Free Access' : `${course.currency} ${course.price.toLocaleString()}`;
+  const priceLabel = formatPriceTHB(course.priceCents, course.isFree);
+  const accessLabel = formatAccessTimes(course.accessTimes);
+  const coverImage = course.coverImage || placeholderImage;
 
   return (
     <div style={{ display: 'grid', gap: 18 }}>
@@ -56,7 +60,7 @@ function CourseDetail() {
           }}
         />
         <img
-          src={course.thumbnail}
+          src={coverImage}
           alt={course.title}
           style={{ width: '100%', height: 320, objectFit: 'cover', display: 'block' }}
         />
@@ -73,10 +77,10 @@ function CourseDetail() {
           <button type="button" className="btn btn-outline" onClick={() => navigate(-1)}>
             ← กลับ
           </button>
-          <div className="badge">{course.category}</div>
+          <div className="badge">{course.channel || 'คอร์ส'}</div>
         </div>
         <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 2, right: 18 }}>
-          <div style={{ color: 'var(--rose)', fontWeight: 700 }}>{course.branch}</div>
+          <div style={{ color: 'var(--rose)', fontWeight: 700 }}>{course.branchName}</div>
           <h1
             style={{
               margin: '6px 0',
@@ -96,7 +100,7 @@ function CourseDetail() {
           <div>
             <div style={{ color: 'var(--muted)' }}>ราคา / สิทธิ์เข้าเรียน</div>
             <div style={{ fontSize: '1.4rem', fontWeight: 800 }}>{priceLabel}</div>
-            <div style={{ color: 'var(--muted)' }}>{course.accessCount}</div>
+            <div style={{ color: 'var(--muted)' }}>{accessLabel}</div>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button type="button" className="btn btn-outline" onClick={() => navigate('/courses')}>
@@ -110,13 +114,13 @@ function CourseDetail() {
         <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <img
-              src={course.instructor.avatar}
-              alt={course.instructor.name}
+              src={course.instructorAvatar || placeholderImage}
+              alt={course.instructorName}
               style={{ width: 64, height: 64, borderRadius: '50%', border: '1px solid var(--border)', objectFit: 'cover' }}
             />
             <div>
-              <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>{course.instructor.name}</div>
-              <div style={{ color: 'var(--muted)' }}>{course.instructor.title}</div>
+              <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>{course.instructorName}</div>
+              <div style={{ color: 'var(--muted)' }}>{course.instructorBio || 'ผู้สอนจากสตูดิโอ'}</div>
             </div>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -125,7 +129,7 @@ function CourseDetail() {
                 {tag}
               </span>
             ))}
-            <span className="badge">ระดับ: {course.level}</span>
+            {course.level && <span className="badge">ระดับ: {course.level}</span>}
             <span className="badge">ที่นั่งเหลือ {course.seatsLeft}/{course.capacity}</span>
           </div>
         </div>
@@ -138,7 +142,7 @@ function CourseDetail() {
             <div className="helper-text">ตารางเรียนปรับตามขนาดหน้าจอ รองรับ Onsite / Online / Hybrid</div>
           </div>
         </div>
-        <SessionList sessions={course.sessions} />
+        <SessionList sessions={sessions} fallbackChannel={course.channel} />
       </section>
     </div>
   );

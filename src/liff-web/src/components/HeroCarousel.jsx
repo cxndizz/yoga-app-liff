@@ -1,18 +1,36 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { heroSlides } from '../data/sampleData';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-function HeroCarousel() {
+import { placeholderImage } from '../lib/formatters';
+
+function HeroCarousel({ slides = [], isLoading = false }) {
   const [active, setActive] = useState(0);
   const navigate = useNavigate();
-  const slides = useMemo(() => heroSlides, []);
 
   useEffect(() => {
+    if (slides.length === 0) return undefined;
+
     const timer = setInterval(() => {
       setActive((prev) => (prev + 1) % slides.length);
     }, 5500);
     return () => clearInterval(timer);
   }, [slides.length]);
+
+  if (isLoading) {
+    return (
+      <section className="card-surface" style={{ padding: 18, borderRadius: 28, minHeight: 240 }}>
+        <div className="helper-text">กำลังโหลดคอร์สแนะนำ...</div>
+      </section>
+    );
+  }
+
+  if (!slides.length) {
+    return (
+      <section className="card-surface" style={{ padding: 18, borderRadius: 28, minHeight: 240 }}>
+        <div className="helper-text">ยังไม่มีคอร์สที่เปิดรับจองในขณะนี้</div>
+      </section>
+    );
+  }
 
   return (
     <section
@@ -52,7 +70,11 @@ function HeroCarousel() {
               >
                 {slide.title}
               </h1>
-              <p style={{ color: '#dbe2ef', margin: '0 0 16px', fontSize: '1.02rem' }}>{slide.subtitle}</p>
+              <p style={{ color: '#dbe2ef', margin: '0 0 12px', fontSize: '1.02rem' }}>{slide.subtitle}</p>
+              <div style={{ color: 'var(--muted)', marginBottom: 12 }}>
+                {slide.branchName && <span className="badge">{slide.branchName}</span>}
+                {slide.channel && <span className="badge">{slide.channel}</span>}
+              </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                 <button type="button" className="btn btn-primary" onClick={() => navigate('/courses')}>
                   {slide.ctaLabel}
@@ -75,7 +97,7 @@ function HeroCarousel() {
                 }}
               />
               <img
-                src={slide.image}
+                src={slide.image || placeholderImage}
                 alt={slide.title}
                 style={{
                   width: '100%',

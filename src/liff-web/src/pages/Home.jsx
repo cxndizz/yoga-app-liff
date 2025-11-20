@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HeroCarousel from '../components/HeroCarousel';
 import CourseCard from '../components/CourseCard';
-import { courseData } from '../data/sampleData';
+import { fetchFeaturedCourses } from '../lib/courseApi';
 
 function Home() {
   const navigate = useNavigate();
@@ -13,28 +13,40 @@ function Home() {
     let active = true;
     setStatus('loading');
 
-    // Example: fetch from existing API without altering schema
-    // fetch('/api/courses?limit=6&sort=popular')
-    //   .then((res) => res.json())
-    //   .then((data) => active && setCourses(data.results))
-    //   .catch(() => active && setStatus('error'));
-
-    setTimeout(() => {
-      if (!active) return;
-      setCourses(courseData.slice(0, 4));
-      setStatus('ready');
-    }, 320);
+    fetchFeaturedCourses({ limit: 8 })
+      .then((data) => {
+        if (!active) return;
+        setCourses(data);
+        setStatus('ready');
+      })
+      .catch(() => {
+        if (!active) return;
+        setStatus('error');
+      });
 
     return () => {
       active = false;
     };
   }, []);
 
-  const featured = useMemo(() => courses.slice(0, 3), [courses]);
+  const featured = useMemo(() => courses.slice(0, 4), [courses]);
+  const slides = useMemo(
+    () =>
+      courses.slice(0, 3).map((course) => ({
+        id: course.id,
+        title: course.title,
+        subtitle: course.description || 'คอร์สที่ทีมคัดมาเป็นพิเศษ',
+        ctaLabel: course.isFree ? 'ลงทะเบียนฟรี' : 'จองคอร์สนี้',
+        image: course.coverImage,
+        branchName: course.branchName,
+        channel: course.channel,
+      })),
+    [courses],
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-      <HeroCarousel />
+      <HeroCarousel slides={slides} isLoading={status === 'loading'} />
 
       <section>
         <div className="section-heading">
@@ -54,6 +66,9 @@ function Home() {
           {featured.map((course) => (
             <CourseCard key={course.id} course={course} />
           ))}
+          {status === 'ready' && featured.length === 0 && (
+            <div className="helper-text">ยังไม่พบคอร์สที่เปิดรับจองในระบบ</div>
+          )}
         </div>
       </section>
 

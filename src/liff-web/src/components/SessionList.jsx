@@ -1,6 +1,6 @@
 import React from 'react';
 
-function SessionList({ sessions }) {
+function SessionList({ sessions, fallbackChannel }) {
   if (!sessions?.length) {
     return (
       <div className="card-surface" style={{ padding: 16 }}>
@@ -24,15 +24,24 @@ function SessionList({ sessions }) {
           }}
         >
           <div className="badge" style={{ background: 'rgba(231, 177, 160, 0.18)', color: '#0b1a3c' }}>
-            {session.mode}
+            {session.mode || fallbackChannel || 'Session'}
           </div>
           <div>
             <div style={{ fontWeight: 700 }}>{session.topic}</div>
             <div style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
-              {session.date} · {session.time}
+              {session.date} {session.time && `· ${session.time}`}
             </div>
+            {(session.branchName || session.instructorName) && (
+              <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
+                {session.branchName}
+                {session.branchName && session.instructorName ? ' • ' : ''}
+                {session.instructorName}
+              </div>
+            )}
           </div>
-          <div style={{ color: 'var(--rose)', fontWeight: 700 }}>จอง</div>
+          <div style={{ color: 'var(--rose)', fontWeight: 700 }}>
+            {session.availableSpots != null ? `เหลือ ${session.availableSpots} ที่` : 'เปิดจอง'}
+          </div>
         </div>
       ))}
     </div>
