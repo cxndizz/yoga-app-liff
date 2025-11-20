@@ -1,0 +1,90 @@
+{
+  "common": {
+    "loading": "正在加载...",
+    "error": "发生错误",
+    "back": "← 返回",
+    "viewAll": "查看全部",
+    "viewDetails": "查看详情",
+    "register": "报名",
+    "registerNow": "立即报名",
+    "registerFree": "免费注册",
+    "buyCourse": "购买课程",
+    "bookCourse": "预订此课程",
+    "payOmise": "使用 Omise 支付",
+    "language": "语言",
+    "search": "搜索",
+    "filter": "筛选"
+  },
+  "access": {
+    "free": "免费使用",
+    "single": "可使用1次",
+    "unlimited": "不限次数",
+    "multiple": "可使用{{count}}次",
+    "seatsCount": "席位 {{count}}",
+    "seatsLeft": "剩余 {{count}} 席",
+    "seatsLeftDetail": "剩余席位 {{left}}/{{capacity}}",
+    "checkAvailability": "查看空位",
+    "openBooking": "开放预订"
+  },
+  "course": {
+    "course": "课程",
+    "session": "课次",
+    "sessions": "课表",
+    "level": "难度",
+    "priceAccess": "价格 / 权限",
+    "featured": "精选课程",
+    "featuredSubtitle": "精选课程，实时显示席位",
+    "premium": "高级课程",
+    "all": "全部课程",
+    "browseOther": "浏览其他课程",
+    "notFound": "未找到课程，请返回主页",
+    "loadingCourses": "正在加载课程...",
+    "loadingAll": "正在加载全部课程...",
+    "loadingDetails": "正在加载课程详情...",
+    "errorLoad": "目前无法加载课程",
+    "errorFetch": "无法获取课程",
+    "noCoursesBooking": "尚无课程开放预订",
+    "noCoursesMatch": "没有符合搜索的课程"
+  },
+  "session": {
+    "timetable": "适用于现场 / 在线 / 混合的灵活课表",
+    "noSessions": "暂时没有课次"
+  },
+  "filter": {
+    "searchPlaceholder": "搜索课程名称或关键词",
+    "searchHint": "试试输入 Yin、Mobility、Meditation",
+    "branch": "分店 / 地点",
+    "allLocations": "所有地点",
+    "instructor": "教练",
+    "allInstructors": "所有教练",
+    "searchFilter": "按分店与教练搜索和筛选"
+  },
+  "instructor": {
+    "studio": "工作室教练",
+    "unspecified": "未指定教练"
+  },
+  "branch": {
+    "unspecified": "未指定分店"
+  },
+  "hero": {
+    "tagline": "由工作室团队精心挑选的体验",
+    "signature": "特色体验",
+    "findCourse": "找到适合你的课程",
+    "startBrowsing": "开始浏览",
+    "hybridTypes": "混合 / 现场 / 在线",
+    "omisePayment": "Omise 支付",
+    "omiseDescription": "通过 Omise 与共享 SchemaDB 无缝预订与支付，支持 LINE LIFF 登录与实时权限控制。"
+  },
+  "nav": {
+    "home": "首页",
+    "courses": "课程",
+    "brand": "Yoga Luxe"
+  },
+  "footer": {
+    "about": "关于",
+    "contact": "联系",
+    "terms": "条款",
+    "privacy": "隐私",
+    "copyright": "© {{year}} Yoga Luxe. 保留所有权利。"
+  }
+}

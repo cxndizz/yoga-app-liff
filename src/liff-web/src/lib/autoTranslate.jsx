@@ -1,113 +1,46 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { languageOptions, localeMap } from '../i18n';
 import { formatAccessTimes, formatDateDisplay, formatPriceTHB, formatTimeDisplay } from './formatters';
 
-const languageOptions = [
-  { code: 'en', label: 'English' },
-  { code: 'zh', label: '中文' },
-  { code: 'th', label: 'ไทย' },
-];
-
 const TranslationContext = createContext({});
-const translationCache = new Map();
-let hasTranslationError = false;
-
-async function translateText(text, targetLanguage) {
-  if (!text) return '';
-  if (targetLanguage === 'en') return text;
-
-  const cacheKey = `${targetLanguage}:${text}`;
-  if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
-
-  try {
-    const translator = await import('./localTranslator');
-    const translated = translator.translateText(text, targetLanguage);
-    translationCache.set(cacheKey, translated);
-    return translated;
-  } catch (error) {
-    if (!hasTranslationError) {
-      console.warn('Translation unavailable, showing original text instead.', error);
-      hasTranslationError = true;
-    }
-    translationCache.set(cacheKey, text);
-    return text;
-  }
-}
-
-async function translateMap(stringsMap = {}, targetLanguage = 'en') {
-  const entries = await Promise.all(
-    Object.entries(stringsMap).map(async ([key, value]) => {
-      try {
-        const translated = await translateText(value, targetLanguage);
-        return [key, translated];
-      } catch (error) {
-        console.error('Translation error:', error);
-        return [key, value];
-      }
-    }),
-  );
-
-  return Object.fromEntries(entries);
-}
 
 export function AutoTranslateProvider({ children }) {
-  const [language, setLanguage] = useState(() => {
-    if (typeof window === 'undefined') return 'en';
-    return localStorage.getItem('yl-liff-lang') || 'en';
-  });
+  const { t, i18n } = useTranslation();
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('yl-liff-lang', language);
-  }, [language]);
+  const language = i18n.language || 'en';
 
-  const baseSystemText = useMemo(
-    () => ({
-      freeLabel: 'Free access',
-      accessSingle: 'Access 1 time',
-      accessUnlimited: 'Unlimited access',
-      accessMultiple: 'Access {count} times',
-    }),
-    [],
-  );
-
-  const [systemText, setSystemText] = useState(baseSystemText);
-
-  useEffect(() => {
-    let active = true;
-
-    translateMap(baseSystemText, language)
-      .then((mapped) => {
-        if (active) setSystemText(mapped);
-      })
-      .catch(() => {
-        if (active) setSystemText(baseSystemText);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [language, baseSystemText]);
+  const setLanguage = (lang) => {
+    i18n.changeLanguage(lang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('yl-liff-lang', lang);
+    }
+  };
 
   const value = useMemo(
     () => ({
       language,
       setLanguage,
       languageOptions,
-      translateInstant: (text) => translateText(text, language).catch(() => text),
+      t, // Direct access to i18next translate function
       formatPrice: (priceCents, isFree) =>
-        formatPriceTHB(priceCents, isFree, { language, freeLabel: systemText.freeLabel }),
+        formatPriceTHB(priceCents, isFree, {
+          language,
+          freeLabel: t('access.free'),
+        }),
       formatAccessTimes: (accessTimes) =>
         formatAccessTimes(accessTimes, {
           language,
-          singleLabel: systemText.accessSingle,
-          unlimitedLabel: systemText.accessUnlimited,
-          multipleTemplate: systemText.accessMultiple,
+          singleLabel: t('access.single'),
+          unlimitedLabel: t('access.unlimited'),
+          multipleTemplate: t('access.multiple', { count: '{count}' }),
         }),
       formatDate: (dateString) => formatDateDisplay(dateString, language),
       formatTime: formatTimeDisplay,
+      getLocale: () => localeMap[language] || localeMap.en,
     }),
-    [language, systemText],
+    [language, t],
   );
 
   return <TranslationContext.Provider value={value}>{children}</TranslationContext.Provider>;
@@ -115,26 +48,5 @@ export function AutoTranslateProvider({ children }) {
 
 export const useAutoTranslate = () => useContext(TranslationContext);
 
-export function useTranslatedText(stringsMap) {
-  const { language } = useAutoTranslate();
-  const [translated, setTranslated] = useState(stringsMap);
-
-  useEffect(() => {
-    let active = true;
-    translateMap(stringsMap, language)
-      .then((mapped) => {
-        if (active) setTranslated(mapped);
-      })
-      .catch(() => {
-        if (active) setTranslated(stringsMap);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [language, stringsMap]);
-
-  return translated;
-}
-
-export { translateText };
+// Re-export useTranslation for direct usage
+export { useTranslation };

@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import SessionList from '../components/SessionList';
 import { fetchCourseDetail } from '../lib/courseApi';
 import { placeholderImage } from '../lib/formatters';
-import { useAutoTranslate, useTranslatedText } from '../lib/autoTranslate';
+import { useAutoTranslate } from '../lib/autoTranslate';
 
 function CourseDetail() {
   const { courseId } = useParams();
@@ -12,40 +13,17 @@ function CourseDetail() {
   const [sessions, setSessions] = useState([]);
   const [status, setStatus] = useState('idle');
   const { language, formatPrice, formatAccessTimes } = useAutoTranslate();
-  const labels = useTranslatedText(
-    useMemo(
-      () => ({
-        loading: 'Loading course details...',
-        error: 'Course not found, please return to the main page',
-        back: '← Back',
-        channelFallback: 'Course',
-        priceAccess: 'Price / Access',
-        chooseOther: 'Browse other courses',
-        registerNow: 'Register now',
-        buyNow: 'Pay via Omise',
-        levelLabel: 'Level',
-        seatsLeft: 'Seats left {left}/{capacity}',
-        sessionsTitle: 'Sessions',
-        sessionsSubtitle: 'Responsive timetable for Onsite / Online / Hybrid',
-        instructorBioFallback: 'Studio instructor',
-        branchFallback: 'Unspecified branch',
-        instructorFallback: 'Unspecified instructor',
-        courseLabel: 'Course',
-        sessionTopicFallback: 'Session',
-      }),
-      [],
-    ),
-  );
+  const { t } = useTranslation();
 
   useEffect(() => {
     let active = true;
     setStatus('loading');
 
     const copy = {
-      branchFallback: labels.branchFallback,
-      instructorFallback: labels.instructorFallback,
-      courseLabel: labels.courseLabel,
-      sessionTopicFallback: labels.sessionTopicFallback,
+      branchFallback: t('branch.unspecified'),
+      instructorFallback: t('instructor.unspecified'),
+      courseLabel: t('course.course'),
+      sessionTopicFallback: t('course.session'),
     };
 
     fetchCourseDetail(courseId, { language, copy })
@@ -63,17 +41,15 @@ function CourseDetail() {
     return () => {
       active = false;
     };
-  }, [courseId, language, labels]);
+  }, [courseId, language, t]);
 
-  if (status === 'loading') return <div className="helper-text">{labels.loading}</div>;
-  if (status === 'error' || !course) return <div className="helper-text">{labels.error}</div>;
+  if (status === 'loading') return <div className="helper-text">{t('course.loadingDetails')}</div>;
+  if (status === 'error' || !course) return <div className="helper-text">{t('course.notFound')}</div>;
 
   const priceLabel = formatPrice(course.priceCents, course.isFree);
   const accessLabel = formatAccessTimes(course.accessTimes);
   const coverImage = course.coverImage || placeholderImage;
-  const seatLabel = labels.seatsLeft
-    .replace('{left}', course.seatsLeft)
-    .replace('{capacity}', course.capacity);
+  const seatLabel = t('access.seatsLeftDetail', { left: course.seatsLeft, capacity: course.capacity });
 
   return (
     <div style={{ display: 'grid', gap: 18 }}>
@@ -110,9 +86,9 @@ function CourseDetail() {
           }}
         >
           <button type="button" className="btn btn-outline" onClick={() => navigate(-1)}>
-            {labels.back}
+            {t('common.back')}
           </button>
-          <div className="badge">{course.channel || labels.channelFallback}</div>
+          <div className="badge">{course.channel || t('course.course')}</div>
         </div>
         <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 2, right: 18 }}>
           <div style={{ color: 'var(--rose)', fontWeight: 700 }}>{course.branchName}</div>
@@ -133,16 +109,16 @@ function CourseDetail() {
       <div className="card-surface" style={{ padding: 18, display: 'grid', gap: 12 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ color: 'var(--muted)' }}>{labels.priceAccess}</div>
+            <div style={{ color: 'var(--muted)' }}>{t('course.priceAccess')}</div>
             <div style={{ fontSize: '1.4rem', fontWeight: 800 }}>{priceLabel}</div>
             <div style={{ color: 'var(--muted)' }}>{accessLabel}</div>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button type="button" className="btn btn-outline" onClick={() => navigate('/courses')}>
-              {labels.chooseOther}
+              {t('course.browseOther')}
             </button>
             <button type="button" className="btn btn-primary">
-              {course.isFree ? labels.registerNow : labels.buyNow}
+              {course.isFree ? t('common.registerNow') : t('common.payOmise')}
             </button>
           </div>
         </div>
@@ -155,7 +131,7 @@ function CourseDetail() {
             />
             <div>
               <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>{course.instructorName}</div>
-              <div style={{ color: 'var(--muted)' }}>{course.instructorBio || labels.instructorBioFallback}</div>
+              <div style={{ color: 'var(--muted)' }}>{course.instructorBio || t('instructor.studio')}</div>
             </div>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -166,7 +142,7 @@ function CourseDetail() {
             ))}
             {course.level && (
               <span className="badge">
-                {labels.levelLabel}: {course.level}
+                {t('course.level')}: {course.level}
               </span>
             )}
             <span className="badge">{seatLabel}</span>
@@ -177,11 +153,11 @@ function CourseDetail() {
       <section>
         <div className="section-heading">
           <div>
-            <h2>{labels.sessionsTitle}</h2>
-            <div className="helper-text">{labels.sessionsSubtitle}</div>
+            <h2>{t('course.sessions')}</h2>
+            <div className="helper-text">{t('session.timetable')}</div>
           </div>
         </div>
-        <SessionList sessions={sessions} fallbackChannel={course.channel || labels.channelFallback} />
+        <SessionList sessions={sessions} fallbackChannel={course.channel || t('course.course')} />
       </section>
     </div>
   );

@@ -1,0 +1,90 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "back": "← Back",
+    "viewAll": "View all",
+    "viewDetails": "View details",
+    "register": "Register",
+    "registerNow": "Register now",
+    "registerFree": "Register for free",
+    "buyCourse": "Buy course",
+    "bookCourse": "Book this course",
+    "payOmise": "Pay via Omise",
+    "language": "Language",
+    "search": "Search",
+    "filter": "Filter"
+  },
+  "access": {
+    "free": "Free access",
+    "single": "Access 1 time",
+    "unlimited": "Unlimited access",
+    "multiple": "Access {{count}} times",
+    "seatsCount": "Seats {{count}}",
+    "seatsLeft": "{{count}} seats left",
+    "seatsLeftDetail": "Seats left {{left}}/{{capacity}}",
+    "checkAvailability": "Check availability",
+    "openBooking": "Open for booking"
+  },
+  "course": {
+    "course": "Course",
+    "session": "Session",
+    "sessions": "Sessions",
+    "level": "Level",
+    "priceAccess": "Price / Access",
+    "featured": "Featured courses",
+    "featuredSubtitle": "Curated classes with real-time availability",
+    "premium": "Premium courses",
+    "all": "All courses",
+    "browseOther": "Browse other courses",
+    "notFound": "Course not found, please return to the main page",
+    "loadingCourses": "Loading courses...",
+    "loadingAll": "Loading all courses...",
+    "loadingDetails": "Loading course details...",
+    "errorLoad": "Unable to load courses right now",
+    "errorFetch": "Unable to fetch courses",
+    "noCoursesBooking": "No courses are open for booking yet",
+    "noCoursesMatch": "No courses match your search"
+  },
+  "session": {
+    "timetable": "Responsive timetable for Onsite / Online / Hybrid",
+    "noSessions": "No sessions available yet"
+  },
+  "filter": {
+    "searchPlaceholder": "Search course name or keywords",
+    "searchHint": "Try Yin, Mobility, Meditation",
+    "branch": "Branch / Location",
+    "allLocations": "All locations",
+    "instructor": "Instructor",
+    "allInstructors": "All instructors",
+    "searchFilter": "Search and filter by branch and instructor"
+  },
+  "instructor": {
+    "studio": "Studio instructor",
+    "unspecified": "Unspecified instructor"
+  },
+  "branch": {
+    "unspecified": "Unspecified branch"
+  },
+  "hero": {
+    "tagline": "Hand-picked experiences by our studio team",
+    "signature": "SIGNATURE EXPERIENCE",
+    "findCourse": "Find the right course",
+    "startBrowsing": "Start browsing",
+    "hybridTypes": "Hybrid / Onsite / Online",
+    "omisePayment": "Omise Payment",
+    "omiseDescription": "Seamless booking and payments with Omise and shared SchemaDB — works with LINE LIFF login and real-time access control."
+  },
+  "nav": {
+    "home": "Home",
+    "courses": "Courses",
+    "brand": "Yoga Luxe"
+  },
+  "footer": {
+    "about": "About",
+    "contact": "Contact",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "copyright": "© {{year}} Yoga Luxe. All rights reserved."
+  }
+}

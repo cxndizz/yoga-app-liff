@@ -1,23 +1,13 @@
-import React, { useMemo } from 'react';
-import { useTranslatedText } from '../lib/autoTranslate';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 function SessionList({ sessions, fallbackChannel }) {
-  const labels = useTranslatedText(
-    useMemo(
-      () => ({
-        none: 'No sessions available yet',
-        available: '{count} seats left',
-        open: 'Open for booking',
-        topicFallback: 'Session',
-      }),
-      [],
-    ),
-  );
+  const { t } = useTranslation();
 
   if (!sessions?.length) {
     return (
       <div className="card-surface" style={{ padding: 16 }}>
-        <div style={{ color: 'var(--muted)' }}>{labels.none}</div>
+        <div style={{ color: 'var(--muted)' }}>{t('session.noSessions')}</div>
       </div>
     );
   }
@@ -37,7 +27,7 @@ function SessionList({ sessions, fallbackChannel }) {
           }}
         >
           <div className="badge" style={{ background: 'rgba(231, 177, 160, 0.18)', color: '#0b1a3c' }}>
-            {session.mode || fallbackChannel || labels.topicFallback}
+            {session.mode || fallbackChannel || t('course.session')}
           </div>
           <div>
             <div style={{ fontWeight: 700 }}>{session.topic}</div>
@@ -54,8 +44,8 @@ function SessionList({ sessions, fallbackChannel }) {
           </div>
           <div style={{ color: 'var(--rose)', fontWeight: 700 }}>
             {session.availableSpots != null
-              ? labels.available.replace('{count}', session.availableSpots)
-              : labels.open}
+              ? t('access.seatsLeft', { count: session.availableSpots })
+              : t('access.openBooking')}
           </div>
         </div>
       ))}

@@ -1,0 +1,90 @@
+{
+  "common": {
+    "loading": "กำลังโหลด...",
+    "error": "เกิดข้อผิดพลาด",
+    "back": "← กลับ",
+    "viewAll": "ดูทั้งหมด",
+    "viewDetails": "ดูรายละเอียด",
+    "register": "ลงทะเบียน",
+    "registerNow": "ลงทะเบียนตอนนี้",
+    "registerFree": "ลงทะเบียนฟรี",
+    "buyCourse": "ซื้อคอร์ส",
+    "bookCourse": "จองคอร์สนี้",
+    "payOmise": "ชำระผ่าน Omise",
+    "language": "ภาษา",
+    "search": "ค้นหา",
+    "filter": "กรอง"
+  },
+  "access": {
+    "free": "เข้าใช้ได้ฟรี",
+    "single": "เข้าใช้ได้ 1 ครั้ง",
+    "unlimited": "เข้าใช้ได้ไม่จำกัด",
+    "multiple": "เข้าใช้ได้ {{count}} ครั้ง",
+    "seatsCount": "ที่นั่ง {{count}}",
+    "seatsLeft": "เหลือที่นั่ง {{count}}",
+    "seatsLeftDetail": "ที่นั่งคงเหลือ {{left}}/{{capacity}}",
+    "checkAvailability": "ตรวจสอบจำนวนที่นั่ง",
+    "openBooking": "เปิดให้จอง"
+  },
+  "course": {
+    "course": "คอร์ส",
+    "session": "รอบเรียน",
+    "sessions": "ตารางรอบเรียน",
+    "level": "ระดับ",
+    "priceAccess": "ราคา / สิทธิ์การเข้า",
+    "featured": "คอร์สแนะนำ",
+    "featuredSubtitle": "คัดสรรคอร์สพร้อมเช็กที่นั่งแบบเรียลไทม์",
+    "premium": "คอร์สพรีเมียม",
+    "all": "คอร์สทั้งหมด",
+    "browseOther": "ดูคอร์สอื่น",
+    "notFound": "ไม่พบคอร์ส กรุณากลับไปหน้าหลัก",
+    "loadingCourses": "กำลังโหลดคอร์ส...",
+    "loadingAll": "กำลังโหลดคอร์สทั้งหมด...",
+    "loadingDetails": "กำลังโหลดรายละเอียดคอร์ส...",
+    "errorLoad": "ไม่สามารถโหลดคอร์สตอนนี้",
+    "errorFetch": "ไม่สามารถดึงข้อมูลคอร์ส",
+    "noCoursesBooking": "ยังไม่มีคอร์สเปิดให้จอง",
+    "noCoursesMatch": "ไม่พบคอร์สที่ตรงกับการค้นหา"
+  },
+  "session": {
+    "timetable": "ตารางเรียนสำหรับ Onsite / Online / Hybrid",
+    "noSessions": "ยังไม่มีรอบเรียน"
+  },
+  "filter": {
+    "searchPlaceholder": "ค้นหาชื่อคอร์สหรือคีย์เวิร์ด",
+    "searchHint": "ลองใส่คำว่า Yin, Mobility, Meditation",
+    "branch": "สาขา / สถานที่",
+    "allLocations": "ทุกสาขา",
+    "instructor": "ผู้สอน",
+    "allInstructors": "ผู้สอนทั้งหมด",
+    "searchFilter": "ค้นหาและกรองตามสาขาและผู้สอน"
+  },
+  "instructor": {
+    "studio": "ผู้สอนประจำสตูดิโอ",
+    "unspecified": "ยังไม่ระบุผู้สอน"
+  },
+  "branch": {
+    "unspecified": "ยังไม่ระบุสาขา"
+  },
+  "hero": {
+    "tagline": "ประสบการณ์คัดสรรโดยทีมสตูดิโอ",
+    "signature": "ประสบการณ์ซิกเนเจอร์",
+    "findCourse": "หาคอร์สที่เหมาะกับคุณ",
+    "startBrowsing": "เริ่มเลือกคอร์ส",
+    "hybridTypes": "ไฮบริด / ที่สตูดิโอ / ออนไลน์",
+    "omisePayment": "ชำระเงินผ่าน Omise",
+    "omiseDescription": "จองและชำระเงินง่ายด้วย Omise และ SchemaDB ร่วมกับ LIFF ตรวจสอบสิทธิ์แบบเรียลไทม์."
+  },
+  "nav": {
+    "home": "หน้าหลัก",
+    "courses": "คอร์สเรียน",
+    "brand": "Yoga Luxe"
+  },
+  "footer": {
+    "about": "เกี่ยวกับเรา",
+    "contact": "ติดต่อ",
+    "terms": "ข้อกำหนด",
+    "privacy": "นโยบายความเป็นส่วนตัว",
+    "copyright": "© {{year}} Yoga Luxe. สงวนลิขสิทธิ์."
+  }
+}

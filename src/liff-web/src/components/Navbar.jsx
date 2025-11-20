@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
-import { useTranslatedText } from '../lib/autoTranslate';
 
 const NavLink = ({ to, label, onClick }) => (
   <Link
@@ -24,24 +24,12 @@ const NavLink = ({ to, label, onClick }) => (
 function Navbar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-
-  const labels = useTranslatedText(
-    useMemo(
-      () => ({
-        home: 'Home',
-        courses: 'Courses',
-        premium: 'Premium picks',
-        buyCourse: 'Buy courses',
-        brandTagline: 'Boutique LIFF Studio',
-      }),
-      [],
-    ),
-  );
+  const { t } = useTranslation();
 
   const links = [
-    { to: '/', label: labels.home },
-    { to: '/courses', label: labels.courses },
-    { to: '/courses?filter=premium', label: labels.premium },
+    { to: '/', label: t('nav.home') },
+    { to: '/courses', label: t('nav.courses') },
+    { to: '/courses?filter=premium', label: t('course.premium') },
   ];
 
   return (
@@ -80,9 +68,9 @@ function Navbar() {
         </div>
         <div>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', letterSpacing: '0.01em' }}>
-          Yoga Luxe
+          {t('nav.brand')}
         </div>
-        <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{labels.brandTagline}</div>
+        <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Boutique LIFF Studio</div>
         </div>
       </div>
 
@@ -126,7 +114,7 @@ function Navbar() {
           onClick={() => navigate('/courses')}
           style={{ paddingInline: 18 }}
         >
-          {labels.buyCourse}
+          {t('common.buyCourse')}
         </button>
       </nav>
 
@@ -150,7 +138,7 @@ function Navbar() {
           ))}
           <LanguageSwitcher />
           <button type="button" className="btn btn-primary" onClick={() => navigate('/courses')}>
-            {labels.buyCourse}
+            {t('common.buyCourse')}
           </button>
         </div>
       )}

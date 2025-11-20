@@ -1,53 +1,27 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import HeroCarousel from '../components/HeroCarousel';
 import CourseCard from '../components/CourseCard';
 import { fetchFeaturedCourses } from '../lib/courseApi';
-import { useAutoTranslate, useTranslatedText } from '../lib/autoTranslate';
+import { useAutoTranslate } from '../lib/autoTranslate';
 
 function Home() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [status, setStatus] = useState('idle');
   const { language } = useAutoTranslate();
-  const labels = useTranslatedText(
-    useMemo(
-      () => ({
-        branchFallback: 'Unspecified branch',
-        instructorFallback: 'Unspecified instructor',
-        courseLabel: 'Course',
-        sessionTopicFallback: 'Session',
-        heroFallbackSubtitle: 'Hand-picked experiences by our studio team',
-        featuredCtaFree: 'Register for free',
-        featuredCtaPaid: 'Book this course',
-        featuredTitle: 'Featured courses',
-        featuredSubtitle: 'Curated classes with real-time availability',
-        viewAll: 'View all',
-        loading: 'Loading courses...',
-        error: 'Unable to load courses right now',
-        empty: 'No courses are open for booking yet',
-        omisePill1: 'Omise Payment',
-        omisePill2: 'Hybrid / Onsite / Online',
-        omiseDescription:
-          'Seamless booking and payments with Omise and shared SchemaDB — works with LINE LIFF login and real-time access control.',
-        ctaStart: 'Start browsing',
-        ctaPremium: 'Premium courses',
-        heroSignature: 'SIGNATURE EXPERIENCE',
-        heroSecondaryCta: 'Find the right course',
-      }),
-      [],
-    ),
-  );
+  const { t } = useTranslation();
 
   useEffect(() => {
     let active = true;
     setStatus('loading');
 
     const copy = {
-      branchFallback: labels.branchFallback,
-      instructorFallback: labels.instructorFallback,
-      courseLabel: labels.courseLabel,
-      sessionTopicFallback: labels.sessionTopicFallback,
+      branchFallback: t('branch.unspecified'),
+      instructorFallback: t('instructor.unspecified'),
+      courseLabel: t('course.course'),
+      sessionTopicFallback: t('course.session'),
     };
 
     fetchFeaturedCourses({ limit: 8, language, copy })
@@ -64,7 +38,7 @@ function Home() {
     return () => {
       active = false;
     };
-  }, [language, labels]);
+  }, [language, t]);
 
   const featured = useMemo(() => courses.slice(0, 4), [courses]);
   const slides = useMemo(
@@ -72,13 +46,13 @@ function Home() {
       courses.slice(0, 3).map((course) => ({
         id: course.id,
         title: course.title,
-        subtitle: course.description || labels.heroFallbackSubtitle,
-        ctaLabel: course.isFree ? labels.featuredCtaFree : labels.featuredCtaPaid,
+        subtitle: course.description || t('hero.tagline'),
+        ctaLabel: course.isFree ? t('common.registerFree') : t('common.bookCourse'),
         image: course.coverImage,
         branchName: course.branchName,
         channel: course.channel,
       })),
-    [courses, labels],
+    [courses, t],
   );
 
   return (
@@ -87,47 +61,47 @@ function Home() {
         slides={slides}
         isLoading={status === 'loading'}
         labels={{
-          loading: labels.loading,
-          empty: labels.empty,
-          signature: labels.heroSignature,
-          secondaryCta: labels.heroSecondaryCta,
+          loading: t('course.loadingCourses'),
+          empty: t('course.noCoursesBooking'),
+          signature: t('hero.signature'),
+          secondaryCta: t('hero.findCourse'),
         }}
       />
 
       <section>
         <div className="section-heading">
           <div>
-            <h2>{labels.featuredTitle}</h2>
-            <div className="helper-text">{labels.featuredSubtitle}</div>
+            <h2>{t('course.featured')}</h2>
+            <div className="helper-text">{t('course.featuredSubtitle')}</div>
           </div>
           <button type="button" className="btn btn-outline" onClick={() => navigate('/courses')}>
-            {labels.viewAll}
+            {t('common.viewAll')}
           </button>
         </div>
 
-        {status === 'loading' && <div className="helper-text">{labels.loading}</div>}
-        {status === 'error' && <div className="helper-text">{labels.error}</div>}
+        {status === 'loading' && <div className="helper-text">{t('course.loadingCourses')}</div>}
+        {status === 'error' && <div className="helper-text">{t('course.errorLoad')}</div>}
 
         <div className="grid">
           {featured.map((course) => (
             <CourseCard key={course.id} course={course} />
           ))}
-          {status === 'ready' && featured.length === 0 && <div className="helper-text">{labels.empty}</div>}
+          {status === 'ready' && featured.length === 0 && <div className="helper-text">{t('course.noCoursesBooking')}</div>}
         </div>
       </section>
 
       <section className="card-surface" style={{ padding: 20, borderRadius: 18, display: 'grid', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <div className="badge">{labels.omisePill1}</div>
-          <div className="badge">{labels.omisePill2}</div>
+          <div className="badge">{t('hero.omisePayment')}</div>
+          <div className="badge">{t('hero.hybridTypes')}</div>
         </div>
-        <div style={{ fontSize: '1.05rem', color: '#e6e9f3' }}>{labels.omiseDescription}</div>
+        <div style={{ fontSize: '1.05rem', color: '#e6e9f3' }}>{t('hero.omiseDescription')}</div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <button type="button" className="btn btn-primary" onClick={() => navigate('/courses')}>
-            {labels.ctaStart}
+            {t('hero.startBrowsing')}
           </button>
           <button type="button" className="btn btn-outline" onClick={() => navigate('/courses?filter=premium')}>
-            {labels.ctaPremium}
+            {t('course.premium')}
           </button>
         </div>
       </section>
