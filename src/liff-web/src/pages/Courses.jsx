@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
@@ -308,7 +309,6 @@ const ClockIcon = () => (
 
 function Courses() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [courses, setCourses] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -317,7 +317,6 @@ function Courses() {
   const [selectedBranch, setSelectedBranch] = useState('all');
   const [selectedInstructor, setSelectedInstructor] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
-  const [selectedCourseId, setSelectedCourseId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -339,15 +338,6 @@ function Courses() {
 
     fetchData();
   }, []);
-
-  useEffect(() => {
-    const courseIdFromParams = searchParams.get('courseId');
-    if (courseIdFromParams) {
-      setSelectedCourseId(Number(courseIdFromParams));
-    } else {
-      setSelectedCourseId(null);
-    }
-  }, [searchParams]);
 
   const branches = useMemo(() => {
     const branchSet = new Set();
@@ -372,16 +362,6 @@ function Courses() {
       return acc;
     }, {});
   }, [sessions]);
-
-  const selectedCourse = useMemo(() => {
-    if (!selectedCourseId) return null;
-    return courses.find((c) => c.id === Number(selectedCourseId)) || null;
-  }, [courses, selectedCourseId]);
-
-  const selectedCourseSessions = useMemo(() => {
-    if (!selectedCourseId) return [];
-    return sessionsByCourse[selectedCourseId] || [];
-  }, [selectedCourseId, sessionsByCourse]);
 
   const filteredCourses = useMemo(() => {
     return courses.filter((course) => {
@@ -413,17 +393,7 @@ function Courses() {
   };
 
   const openCourseDetail = (courseId) => {
-    setSelectedCourseId(courseId);
-    const params = new URLSearchParams(searchParams);
-    params.set('courseId', courseId);
-    setSearchParams(params);
-  };
-
-  const closeCourseDetail = () => {
-    setSelectedCourseId(null);
-    const params = new URLSearchParams(searchParams);
-    params.delete('courseId');
-    setSearchParams(params);
+    navigate(`/courses/${courseId}`);
   };
 
   const hasActiveFilters = searchTerm || selectedBranch !== 'all' || selectedInstructor !== 'all' || selectedType !== 'all';
@@ -813,153 +783,6 @@ function Courses() {
         )}
       </div>
 
-      {selectedCourse && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-            zIndex: 50,
-          }}
-        >
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '14px',
-              width: 'min(960px, 100%)',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              boxShadow: '0 12px 40px rgba(0,0,0,0.2)',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: `1px solid ${palette.border}` }}>
-              <div>
-                <div style={{ fontSize: '12px', color: palette.textLight, marginBottom: '4px' }}>คอร์ส #{selectedCourse.id}</div>
-                <h2 style={{ margin: 0, fontSize: '20px', color: palette.text }}>{selectedCourse.title}</h2>
-                <div style={{ color: palette.textMuted, fontSize: '14px' }}>{selectedCourse.branch_name || 'ไม่ระบุสาขา'} • {selectedCourse.instructor_name || 'ไม่ระบุผู้สอน'}</div>
-              </div>
-              <button
-                type="button"
-                onClick={closeCourseDetail}
-                style={{ border: 'none', background: '#e2e8f0', borderRadius: '8px', padding: '8px 12px', cursor: 'pointer' }}
-              >
-                ปิด
-              </button>
-            </div>
-
-            {getCoverImage(selectedCourse) && (
-              <div style={{ height: '240px', background: `url(${getCoverImage(selectedCourse)}) center/cover`, position: 'relative' }}>
-                <div style={{
-                  position: 'absolute',
-                  top: '12px',
-                  right: '12px',
-                  background: selectedCourse.is_free ? '#16a34a' : '#1e40af',
-                  color: '#fff',
-                  padding: '6px 10px',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}>
-                  {formatPrice(selectedCourse)}
-                </div>
-              </div>
-            )}
-
-            <div style={{ padding: '16px 20px', display: 'grid', gap: '12px' }}>
-              {selectedCourse.description && (
-                <p style={{ margin: 0, color: palette.text }}>{selectedCourse.description}</p>
-              )}
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
-                <div style={{ background: palette.borderLight, padding: '12px', borderRadius: '10px' }}>
-                  <div style={{ fontSize: '12px', color: palette.textMuted }}>สาขา</div>
-                  <div style={{ fontWeight: 600 }}>{selectedCourse.branch_name || 'ไม่ระบุ'}</div>
-                </div>
-                <div style={{ background: palette.borderLight, padding: '12px', borderRadius: '10px' }}>
-                  <div style={{ fontSize: '12px', color: palette.textMuted }}>ผู้สอน</div>
-                  <div style={{ fontWeight: 600 }}>{selectedCourse.instructor_name || 'ไม่ระบุ'}</div>
-                </div>
-                <div style={{ background: palette.borderLight, padding: '12px', borderRadius: '10px' }}>
-                  <div style={{ fontSize: '12px', color: palette.textMuted }}>จำนวนที่รับ</div>
-                  <div style={{ fontWeight: 600 }}>{selectedCourse.capacity} คน</div>
-                </div>
-                <div style={{ background: palette.borderLight, padding: '12px', borderRadius: '10px' }}>
-                  <div style={{ fontSize: '12px', color: palette.textMuted }}>สิทธิ์เข้าเรียน</div>
-                  <div style={{ fontWeight: 600 }}>{selectedCourse.access_times} ครั้ง</div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  style={{ ...styles.button, ...styles.buttonPrimary }}
-                  onClick={() => alert('เริ่มขั้นตอนจองคอร์ส (เชื่อม Omise ภายนอก)')}
-                >
-                  จองคอร์สนี้
-                </button>
-                <button
-                  type="button"
-                  style={{ ...styles.button, ...styles.buttonSecondary }}
-                  onClick={closeCourseDetail}
-                >
-                  ปิดหน้ารายละเอียด
-                </button>
-              </div>
-
-              <div style={{ marginTop: '8px' }}>
-                <h4 style={{ margin: '0 0 8px', color: palette.text }}>รอบเรียนทั้งหมด</h4>
-                {selectedCourseSessions.length === 0 ? (
-                  <div style={{ color: palette.textMuted, fontSize: '14px' }}>ยังไม่มีตารางเรียน</div>
-                ) : (
-                  <div style={{ display: 'grid', gap: '8px' }}>
-                    {selectedCourseSessions
-                      .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
-                      .map((session) => (
-                        <div
-                          key={session.id}
-                          style={{
-                            border: `1px solid ${palette.border}`,
-                            borderRadius: '8px',
-                            padding: '10px 12px',
-                            display: 'grid',
-                            gridTemplateColumns: '1.2fr 1fr 1fr 1fr',
-                            gap: '8px',
-                            alignItems: 'center',
-                          }}
-                        >
-                          <div>
-                            <div style={{ fontWeight: 600 }}>{session.session_name || 'รอบเรียน'}</div>
-                            <div style={{ fontSize: '12px', color: palette.textMuted }}>{formatDate(session.start_date)}</div>
-                          </div>
-                          <div style={{ fontSize: '14px' }}>
-                            {formatTime(session.start_time)}{session.end_time && ` - ${formatTime(session.end_time)}`}
-                          </div>
-                          <div style={{ fontSize: '14px' }}>{session.branch_name || selectedCourse.branch_name || 'ไม่ระบุ'}</div>
-                          <div style={{ fontSize: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span>{session.instructor_name || selectedCourse.instructor_name || 'ไม่ระบุ'}</span>
-                            <span style={{
-                              padding: '4px 8px',
-                              borderRadius: '6px',
-                              background: (session.available_spots ?? 0) > 0 ? '#dcfce7' : '#fee2e2',
-                              color: (session.available_spots ?? 0) > 0 ? '#15803d' : '#b91c1c',
-                              fontWeight: 600,
-                              fontSize: '12px',
-                            }}>
-                              ว่าง {Math.max((session.available_spots ?? 0), 0)}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

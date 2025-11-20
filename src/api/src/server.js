@@ -89,9 +89,52 @@ app.post('/courses/list', async (req, res) => {
 
 app.post('/courses/sessions', async (req, res) => {
   try {
-    const { course_id, course_ids, status = 'open', start_date_from, start_date_to, limit = 200 } = req.body || {};
+    const {
+      course_id,
+      course_ids,
+      status = 'open',
+      start_date_from,
+      start_date_to,
+      limit = 200,
+      offset = 0,
+      paginate = false,
+    } = req.body || {};
 
-    let query = `
+    const filters = ['1=1'];
+    const params = [];
+
+    if (course_id) {
+      params.push(course_id);
+      filters.push(`AND cs.course_id = $${params.length}`);
+    } else if (Array.isArray(course_ids) && course_ids.length > 0) {
+      params.push(course_ids);
+      filters.push(`AND cs.course_id = ANY($${params.length})`);
+    }
+
+    if (status) {
+      params.push(status);
+      filters.push(`AND cs.status = $${params.length}`);
+    }
+
+    if (start_date_from) {
+      params.push(start_date_from);
+      filters.push(`AND cs.start_date >= $${params.length}`);
+    }
+
+    if (start_date_to) {
+      params.push(start_date_to);
+      filters.push(`AND cs.start_date <= $${params.length}`);
+    }
+
+    const baseQuery = `
+      FROM course_sessions cs
+      LEFT JOIN courses c ON cs.course_id = c.id
+      LEFT JOIN branches b ON COALESCE(cs.branch_id, c.branch_id) = b.id
+      LEFT JOIN instructors i ON COALESCE(cs.instructor_id, c.instructor_id) = i.id
+      WHERE ${filters.join(' ')}
+    `;
+
+    let selectQuery = `
       SELECT cs.id,
              cs.course_id,
              cs.session_name,
@@ -108,47 +151,33 @@ app.post('/courses/sessions', async (req, res) => {
              b.name AS branch_name,
              COALESCE(cs.instructor_id, c.instructor_id) AS instructor_id,
              i.name AS instructor_name
-      FROM course_sessions cs
-      LEFT JOIN courses c ON cs.course_id = c.id
-      LEFT JOIN branches b ON COALESCE(cs.branch_id, c.branch_id) = b.id
-      LEFT JOIN instructors i ON COALESCE(cs.instructor_id, c.instructor_id) = i.id
-      WHERE 1=1
+      ${baseQuery}
+      ORDER BY cs.start_date ASC, cs.start_time ASC
     `;
 
-    const params = [];
-
-    if (course_id) {
-      params.push(course_id);
-      query += ` AND cs.course_id = $${params.length}`;
-    } else if (Array.isArray(course_ids) && course_ids.length > 0) {
-      params.push(course_ids);
-      query += ` AND cs.course_id = ANY($${params.length})`;
-    }
-
-    if (status) {
-      params.push(status);
-      query += ` AND cs.status = $${params.length}`;
-    }
-
-    if (start_date_from) {
-      params.push(start_date_from);
-      query += ` AND cs.start_date >= $${params.length}`;
-    }
-
-    if (start_date_to) {
-      params.push(start_date_to);
-      query += ` AND cs.start_date <= $${params.length}`;
-    }
-
-    query += ' ORDER BY cs.start_date ASC, cs.start_time ASC';
-
+    const queryParams = [...params];
     const limitValue = parseLimit(limit, 200);
+    const offsetValue = parseLimit(offset, 0);
+
     if (limitValue) {
-      params.push(limitValue);
-      query += ` LIMIT $${params.length}`;
+      queryParams.push(limitValue);
+      selectQuery += ` LIMIT $${queryParams.length}`;
     }
 
-    const result = await db.query(query, params);
+    if (offsetValue) {
+      queryParams.push(offsetValue);
+      selectQuery += ` OFFSET $${queryParams.length}`;
+    }
+
+    const result = await db.query(selectQuery, queryParams);
+
+    if (paginate) {
+      const countQuery = `SELECT COUNT(*) ${baseQuery}`;
+      const countResult = await db.query(countQuery, params);
+      const total = parseInt(countResult.rows[0]?.count, 10) || 0;
+      return res.json({ items: result.rows, total });
+    }
+
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching course sessions', err);
