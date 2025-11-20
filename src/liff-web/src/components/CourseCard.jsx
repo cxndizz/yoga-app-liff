@@ -47,7 +47,7 @@ function CourseCard({ course }) {
         </div>
         <div
           className="badge"
-          style={{ position: 'absolute', bottom: 10, right: 10, background: 'rgba(231, 177, 160, 0.18)', color: '#0b1a3c' }}
+          style={{ position: 'absolute', bottom: 10, right: 10, background: 'rgba(231, 177, 160, 0.18)', color: '#ffffffff' }}
         >
           {seatsLabel}
         </div>
