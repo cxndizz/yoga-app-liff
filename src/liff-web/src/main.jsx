@@ -3,14 +3,14 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './styles.css';
-import { I18nProvider } from './lib/i18n';
+import { AutoTranslateProvider } from './lib/autoTranslate';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <I18nProvider>
+    <AutoTranslateProvider>
       <BrowserRouter>
         <App />
       </BrowserRouter>
-    </I18nProvider>
+    </AutoTranslateProvider>
   </React.StrictMode>,
 );

@@ -1,18 +1,32 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { placeholderImage } from '../lib/formatters';
-import { useI18n } from '../lib/i18n';
+import { useAutoTranslate, useTranslatedText } from '../lib/autoTranslate';
 
 function CourseCard({ course }) {
   const navigate = useNavigate();
-  const { t, formatPrice, formatAccessTimes } = useI18n();
+  const { formatPrice, formatAccessTimes } = useAutoTranslate();
+  const labels = useTranslatedText(
+    useMemo(
+      () => ({
+        channelFallback: 'Course',
+        seats: 'Seats {count}',
+        seatsUnknown: 'Check availability',
+        instructorBioFallback: 'Studio instructor',
+        viewDetail: 'View details',
+        register: 'Register',
+        buy: 'Buy course',
+      }),
+      [],
+    ),
+  );
   const priceLabel = formatPrice(course.priceCents, course.isFree);
   const accessLabel = formatAccessTimes(course.accessTimes);
   const coverImage = course.coverImage || placeholderImage;
   const seatsLabel = Number.isFinite(course.seatsLeft)
-    ? t('card.seats', { count: course.seatsLeft })
-    : t('card.seatsUnknown');
+    ? labels.seats.replace('{count}', course.seatsLeft)
+    : labels.seatsUnknown;
 
   return (
     <article
@@ -41,7 +55,7 @@ function CourseCard({ course }) {
           className="badge"
           style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(11, 26, 60, 0.75)' }}
         >
-          {course.channel || t('card.channelFallback')}
+          {course.channel || labels.channelFallback}
         </div>
         <div
           className="badge"
@@ -72,7 +86,7 @@ function CourseCard({ course }) {
         />
         <div>
           <div style={{ fontWeight: 600 }}>{course.instructorName}</div>
-          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{course.instructorBio || t('card.instructorBioFallback')}</div>
+          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{course.instructorBio || labels.instructorBioFallback}</div>
         </div>
       </div>
 
@@ -90,14 +104,14 @@ function CourseCard({ course }) {
           className="btn btn-outline"
           onClick={() => navigate(`/courses/${course.id}`)}
         >
-          {t('card.viewDetail')}
+          {labels.viewDetail}
         </button>
         <button
           type="button"
           className="btn btn-primary"
           onClick={() => navigate(`/courses/${course.id}?action=purchase`)}
         >
-          {course.isFree ? t('card.register') : t('card.buy')}
+          {course.isFree ? labels.register : labels.buy}
         </button>
       </div>
     </article>

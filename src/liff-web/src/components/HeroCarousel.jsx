@@ -1,13 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { placeholderImage } from '../lib/formatters';
-import { useI18n } from '../lib/i18n';
 
-function HeroCarousel({ slides = [], isLoading = false }) {
+function HeroCarousel({ slides = [], isLoading = false, labels }) {
   const [active, setActive] = useState(0);
   const navigate = useNavigate();
-  const { t } = useI18n();
+
+  const mergedLabels = useMemo(
+    () => ({
+      loading: 'Loading courses...',
+      empty: 'No courses are open for booking yet',
+      signature: 'SIGNATURE EXPERIENCE',
+      secondaryCta: 'Find the right course',
+      ...(labels || {}),
+    }),
+    [labels],
+  );
 
   useEffect(() => {
     if (slides.length === 0) return undefined;
@@ -21,7 +30,7 @@ function HeroCarousel({ slides = [], isLoading = false }) {
   if (isLoading) {
     return (
       <section className="card-surface" style={{ padding: 18, borderRadius: 28, minHeight: 240 }}>
-        <div className="helper-text">{t('home.loading')}</div>
+        <div className="helper-text">{mergedLabels.loading}</div>
       </section>
     );
   }
@@ -29,7 +38,7 @@ function HeroCarousel({ slides = [], isLoading = false }) {
   if (!slides.length) {
     return (
       <section className="card-surface" style={{ padding: 18, borderRadius: 28, minHeight: 240 }}>
-        <div className="helper-text">{t('home.empty')}</div>
+        <div className="helper-text">{mergedLabels.empty}</div>
       </section>
     );
   }
@@ -56,13 +65,13 @@ function HeroCarousel({ slides = [], isLoading = false }) {
             alignItems: 'center',
           }}
         >
-          <div className="hero-grid">
-            <div>
-              <div style={{ color: 'var(--rose)', fontWeight: 600, letterSpacing: '0.12em', fontSize: '0.85rem' }}>
-                {t('hero.signature')}
-              </div>
-              <h1
-                style={{
+            <div className="hero-grid">
+              <div>
+                <div style={{ color: 'var(--rose)', fontWeight: 600, letterSpacing: '0.12em', fontSize: '0.85rem' }}>
+                  {mergedLabels.signature}
+                </div>
+                <h1
+                  style={{
                   margin: '12px 0 10px',
                   fontSize: '2rem',
                   lineHeight: 1.2,
@@ -82,7 +91,7 @@ function HeroCarousel({ slides = [], isLoading = false }) {
                   {slide.ctaLabel}
                 </button>
                 <button type="button" className="btn btn-outline" onClick={() => navigate('/courses?filter=premium')}>
-                  {t('hero.secondaryCta')}
+                  {mergedLabels.secondaryCta}
                 </button>
               </div>
             </div>
