@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { placeholderImage } from '../lib/formatters';
+import { useI18n } from '../lib/i18n';
 
 function HeroCarousel({ slides = [], isLoading = false }) {
   const [active, setActive] = useState(0);
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (slides.length === 0) return undefined;
@@ -19,7 +21,7 @@ function HeroCarousel({ slides = [], isLoading = false }) {
   if (isLoading) {
     return (
       <section className="card-surface" style={{ padding: 18, borderRadius: 28, minHeight: 240 }}>
-        <div className="helper-text">กำลังโหลดคอร์สแนะนำ...</div>
+        <div className="helper-text">{t('home.loading')}</div>
       </section>
     );
   }
@@ -27,7 +29,7 @@ function HeroCarousel({ slides = [], isLoading = false }) {
   if (!slides.length) {
     return (
       <section className="card-surface" style={{ padding: 18, borderRadius: 28, minHeight: 240 }}>
-        <div className="helper-text">ยังไม่มีคอร์สที่เปิดรับจองในขณะนี้</div>
+        <div className="helper-text">{t('home.empty')}</div>
       </section>
     );
   }
@@ -57,7 +59,7 @@ function HeroCarousel({ slides = [], isLoading = false }) {
           <div className="hero-grid">
             <div>
               <div style={{ color: 'var(--rose)', fontWeight: 600, letterSpacing: '0.12em', fontSize: '0.85rem' }}>
-                SIGNATURE EXPERIENCE
+                {t('hero.signature')}
               </div>
               <h1
                 style={{
@@ -80,7 +82,7 @@ function HeroCarousel({ slides = [], isLoading = false }) {
                   {slide.ctaLabel}
                 </button>
                 <button type="button" className="btn btn-outline" onClick={() => navigate('/courses?filter=premium')}>
-                  ค้นหาคอร์สที่ใช่
+                  {t('hero.secondaryCta')}
                 </button>
               </div>
             </div>

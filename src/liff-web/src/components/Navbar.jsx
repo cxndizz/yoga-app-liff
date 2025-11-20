@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useI18n } from '../lib/i18n';
 
 const NavLink = ({ to, label, onClick }) => (
   <Link
@@ -22,11 +24,12 @@ const NavLink = ({ to, label, onClick }) => (
 function Navbar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const links = [
-    { to: '/', label: 'Home' },
-    { to: '/courses', label: 'Courses' },
-    { to: '/courses?filter=premium', label: 'Premium Picks' },
+    { to: '/', label: t('nav.home') },
+    { to: '/courses', label: t('nav.courses') },
+    { to: '/courses?filter=premium', label: t('nav.premium') },
   ];
 
   return (
@@ -67,7 +70,7 @@ function Navbar() {
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', letterSpacing: '0.01em' }}>
             Yoga Luxe
           </div>
-          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Boutique LIFF Studio</div>
+          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{t('nav.brandTagline')}</div>
         </div>
       </div>
 
@@ -104,13 +107,14 @@ function Navbar() {
         {links.map((link) => (
           <NavLink key={link.to} to={link.to} label={link.label} />
         ))}
+        <LanguageSwitcher inline />
         <button
           type="button"
           className="btn btn-primary"
           onClick={() => navigate('/courses')}
           style={{ paddingInline: 18 }}
         >
-          ซื้อคอร์ส
+          {t('nav.buyCourse')}
         </button>
       </nav>
 
@@ -132,8 +136,9 @@ function Navbar() {
           {links.map((link) => (
             <NavLink key={link.to} to={link.to} label={link.label} onClick={() => setOpen(false)} />
           ))}
+          <LanguageSwitcher />
           <button type="button" className="btn btn-primary" onClick={() => navigate('/courses')}>
-            ซื้อคอร์ส
+            {t('nav.buyCourse')}
           </button>
         </div>
       )}

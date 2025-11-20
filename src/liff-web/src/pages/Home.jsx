@@ -3,17 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import HeroCarousel from '../components/HeroCarousel';
 import CourseCard from '../components/CourseCard';
 import { fetchFeaturedCourses } from '../lib/courseApi';
+import { useI18n } from '../lib/i18n';
 
 function Home() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [status, setStatus] = useState('idle');
+  const { t, language } = useI18n();
 
   useEffect(() => {
     let active = true;
     setStatus('loading');
 
-    fetchFeaturedCourses({ limit: 8 })
+    const copy = {
+      branchFallback: t('fallback.branch'),
+      instructorFallback: t('fallback.instructor'),
+      courseLabel: t('fallback.courseLabel'),
+      sessionTopicFallback: t('session.topicFallback'),
+    };
+
+    fetchFeaturedCourses({ limit: 8, language, copy })
       .then((data) => {
         if (!active) return;
         setCourses(data);
@@ -27,7 +36,7 @@ function Home() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [language, t]);
 
   const featured = useMemo(() => courses.slice(0, 4), [courses]);
   const slides = useMemo(
@@ -35,13 +44,13 @@ function Home() {
       courses.slice(0, 3).map((course) => ({
         id: course.id,
         title: course.title,
-        subtitle: course.description || 'คอร์สที่ทีมคัดมาเป็นพิเศษ',
-        ctaLabel: course.isFree ? 'ลงทะเบียนฟรี' : 'จองคอร์สนี้',
+        subtitle: course.description || t('hero.fallbackSubtitle'),
+        ctaLabel: course.isFree ? t('courses.featuredCtaFree') : t('courses.featuredCtaPaid'),
         image: course.coverImage,
         branchName: course.branchName,
         channel: course.channel,
       })),
-    [courses],
+    [courses, t],
   );
 
   return (
@@ -51,42 +60,39 @@ function Home() {
       <section>
         <div className="section-heading">
           <div>
-            <h2>คอร์สแนะนำ</h2>
-            <div className="helper-text">เลือกจากคอร์สยอดนิยม ประสบการณ์แบบ Luxury พร้อมจองได้ทันที</div>
+            <h2>{t('home.featuredTitle')}</h2>
+            <div className="helper-text">{t('home.featuredSubtitle')}</div>
           </div>
           <button type="button" className="btn btn-outline" onClick={() => navigate('/courses')}>
-            ดูทั้งหมด
+            {t('home.viewAll')}
           </button>
         </div>
 
-        {status === 'loading' && <div className="helper-text">กำลังโหลดคอร์ส...</div>}
-        {status === 'error' && <div className="helper-text">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>}
+        {status === 'loading' && <div className="helper-text">{t('home.loading')}</div>}
+        {status === 'error' && <div className="helper-text">{t('home.error')}</div>}
 
         <div className="grid">
           {featured.map((course) => (
             <CourseCard key={course.id} course={course} />
           ))}
           {status === 'ready' && featured.length === 0 && (
-            <div className="helper-text">ยังไม่พบคอร์สที่เปิดรับจองในระบบ</div>
+            <div className="helper-text">{t('home.empty')}</div>
           )}
         </div>
       </section>
 
       <section className="card-surface" style={{ padding: 20, borderRadius: 18, display: 'grid', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <div className="badge">Omise Payment</div>
-          <div className="badge">Hybrid / Onsite / Online</div>
+          <div className="badge">{t('home.omisePill1')}</div>
+          <div className="badge">{t('home.omisePill2')}</div>
         </div>
-        <div style={{ fontSize: '1.05rem', color: '#e6e9f3' }}>
-          ประสบการณ์จองและชำระเงินที่ไหลลื่น — ใช้ Omise Payment เชื่อมต่อกับ SchemaDB เดิม รองรับทั้งผู้ใช้ที่
-          Login ผ่าน LINE LIFF และข้อมูลสิทธิ์เข้าคอร์สแบบเรียลไทม์
-        </div>
+        <div style={{ fontSize: '1.05rem', color: '#e6e9f3' }}>{t('home.omiseDescription')}</div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <button type="button" className="btn btn-primary" onClick={() => navigate('/courses')}>
-            เริ่มเลือกคอร์ส
+            {t('home.ctaStart')}
           </button>
           <button type="button" className="btn btn-outline" onClick={() => navigate('/courses?filter=premium')}>
-            คอร์สระดับพรีเมียม
+            {t('home.ctaPremium')}
           </button>
         </div>
       </section>
