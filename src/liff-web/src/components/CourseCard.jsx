@@ -1,9 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { formatAccessTimes, formatPriceTHB, placeholderImage } from '../lib/formatters';
+
 function CourseCard({ course }) {
   const navigate = useNavigate();
-  const priceLabel = course.isFree ? 'Free Access' : `${course.currency} ${course.price.toLocaleString()}`;
+  const priceLabel = formatPriceTHB(course.priceCents, course.isFree);
+  const accessLabel = formatAccessTimes(course.accessTimes);
+  const coverImage = course.coverImage || placeholderImage;
+  const seatsLabel = Number.isFinite(course.seatsLeft) ? `${course.seatsLeft} ที่นั่ง` : 'ตรวจสอบที่ว่าง';
 
   return (
     <article
@@ -18,7 +23,7 @@ function CourseCard({ course }) {
     >
       <div style={{ position: 'relative' }}>
         <img
-          src={course.thumbnail}
+          src={coverImage}
           alt={course.title}
           style={{
             width: '100%',
@@ -32,24 +37,24 @@ function CourseCard({ course }) {
           className="badge"
           style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(11, 26, 60, 0.75)' }}
         >
-          {course.category}
+          {course.channel || 'คอร์ส'}
         </div>
         <div
           className="badge"
           style={{ position: 'absolute', bottom: 10, right: 10, background: 'rgba(231, 177, 160, 0.18)', color: '#0b1a3c' }}
         >
-          {course.seatsLeft} ที่นั่ง
+          {seatsLabel}
         </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
         <div>
-          <div style={{ color: 'var(--rose)', fontWeight: 600, fontSize: '0.9rem' }}>{course.branch}</div>
+          <div style={{ color: 'var(--rose)', fontWeight: 600, fontSize: '0.9rem' }}>{course.branchName}</div>
           <h3 style={{ margin: '4px 0 6px', fontSize: '1.05rem', lineHeight: 1.35 }}>{course.title}</h3>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontWeight: 700, color: '#fff' }}>{priceLabel}</div>
-          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{course.accessCount}</div>
+          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{accessLabel}</div>
         </div>
       </div>
 
@@ -57,13 +62,13 @@ function CourseCard({ course }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <img
-          src={course.instructor.avatar}
-          alt={course.instructor.name}
+          src={course.instructorAvatar || placeholderImage}
+          alt={course.instructorName}
           style={{ width: 44, height: 44, borderRadius: '50%', border: '1px solid var(--border)', objectFit: 'cover' }}
         />
         <div>
-          <div style={{ fontWeight: 600 }}>{course.instructor.name}</div>
-          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{course.instructor.title}</div>
+          <div style={{ fontWeight: 600 }}>{course.instructorName}</div>
+          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{course.instructorBio || 'ผู้สอนจากสตูดิโอ'}</div>
         </div>
       </div>
 

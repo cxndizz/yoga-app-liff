@@ -2,13 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import CourseCard from '../components/CourseCard';
 import FilterBar from '../components/FilterBar';
-import { courseData } from '../data/sampleData';
+import { fetchCourses } from '../lib/courseApi';
 
 function Courses() {
   const location = useLocation();
   const [courses, setCourses] = useState([]);
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
+  const [branch, setBranch] = useState('');
   const [instructor, setInstructor] = useState('');
   const [status, setStatus] = useState('idle');
 
@@ -16,38 +16,45 @@ function Courses() {
     let active = true;
     setStatus('loading');
 
-    // Example: fetch('/api/courses?withInstructor=true')
-    //   .then((res) => res.json())
-    //   .then((data) => active && setCourses(data.results))
-    //   .catch(() => active && setStatus('error'));
-
     const params = new URLSearchParams(location.search);
     const highlight = params.get('filter');
 
-    setTimeout(() => {
-      if (!active) return;
-      setCourses(courseData);
-      if (highlight === 'premium') setCategory('Performance');
-      setStatus('ready');
-    }, 320);
+    fetchCourses({ limit: 100 })
+      .then((data) => {
+        if (!active) return;
+        setCourses(data);
+        if (highlight === 'premium') {
+          const premiumCourse = data.find((item) => !item.isFree && item.branchName);
+          if (premiumCourse?.branchName) setBranch(premiumCourse.branchName);
+        }
+        setStatus('ready');
+      })
+      .catch(() => {
+        if (!active) return;
+        setStatus('error');
+      });
 
     return () => {
       active = false;
     };
   }, [location.search]);
 
-  const categories = useMemo(() => [...new Set(courseData.map((c) => c.category))], []);
-  const instructors = useMemo(() => [...new Set(courseData.map((c) => c.instructor.name))], []);
+  const branches = useMemo(() => [...new Set(courses.map((c) => c.branchName).filter(Boolean))], [courses]);
+  const instructors = useMemo(
+    () => [...new Set(courses.map((c) => c.instructorName).filter(Boolean))],
+    [courses],
+  );
 
   const filtered = useMemo(
     () =>
       courses.filter((course) => {
-        const matchSearch = course.title.toLowerCase().includes(search.toLowerCase());
-        const matchCategory = category ? course.category === category : true;
-        const matchInstructor = instructor ? course.instructor.name === instructor : true;
-        return matchSearch && matchCategory && matchInstructor;
+        const title = course.title || '';
+        const matchSearch = title.toLowerCase().includes(search.toLowerCase());
+        const matchBranch = branch ? course.branchName === branch : true;
+        const matchInstructor = instructor ? course.instructorName === instructor : true;
+        return matchSearch && matchBranch && matchInstructor;
       }),
-    [courses, search, category, instructor],
+    [courses, search, branch, instructor],
   );
 
   return (
@@ -62,11 +69,11 @@ function Courses() {
       <FilterBar
         search={search}
         onSearch={setSearch}
-        category={category}
-        onCategory={setCategory}
+        category={branch}
+        onCategory={setBranch}
         instructor={instructor}
         onInstructor={setInstructor}
-        categories={categories}
+        categories={branches}
         instructors={instructors}
       />
 
@@ -77,6 +84,9 @@ function Courses() {
         {filtered.map((course) => (
           <CourseCard key={course.id} course={course} />
         ))}
+        {status === 'ready' && filtered.length === 0 && (
+          <div className="helper-text">ไม่มีคอร์สที่ตรงกับเงื่อนไขการค้นหา</div>
+        )}
       </div>
     </div>
   );

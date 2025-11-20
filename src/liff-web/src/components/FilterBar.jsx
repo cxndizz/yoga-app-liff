@@ -41,7 +41,7 @@ function FilterBar({ search, onSearch, category, onCategory, instructor, onInstr
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
         <div>
-          <div style={{ color: 'var(--muted)', marginBottom: 6 }}>สาขา / หมวดหมู่</div>
+          <div style={{ color: 'var(--muted)', marginBottom: 6 }}>สาขา / สถานที่</div>
           <select className="input" value={category} onChange={(e) => onCategory(e.target.value)}>
             <option value="">ทั้งหมด</option>
             {categories.map((cat) => (
