@@ -3,19 +3,32 @@ import axios from 'axios';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
-const containerStyle = {
-  padding: '16px',
-  fontFamily: 'system-ui, sans-serif',
-  background: '#f6f8f7',
-  minHeight: '100vh',
+const palette = {
+  ink: '#0f172a',
+  navy: '#111827',
+  accent: '#3b82f6',
+  accentDark: '#2563eb',
+  accentSoft: '#e0ecff',
+  border: '#e5e7eb',
+  soft: '#f8fafc',
+  muted: '#6b7280',
+  slate: '#1f2937',
 };
 
-const cardStyle = {
-  background: '#fff',
-  borderRadius: '12px',
-  padding: '14px',
-  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.05)',
-  border: '1px solid #e8eeeb',
+const layout = {
+  container: {
+    padding: '18px',
+    fontFamily: 'Inter, system-ui, sans-serif',
+    background: palette.soft,
+    minHeight: '100vh',
+  },
+  card: {
+    background: '#fff',
+    borderRadius: '16px',
+    padding: '16px',
+    boxShadow: '0 16px 40px rgba(15, 23, 42, 0.08)',
+    border: `1px solid ${palette.border}`,
+  },
 };
 
 function formatPrice(course) {
@@ -34,6 +47,18 @@ function formatDate(dateString) {
 function formatTime(timeString) {
   if (!timeString) return '';
   return timeString.slice(0, 5);
+}
+
+function getCoverImage(course) {
+  return course.cover_image_url || course.course_image || '';
+}
+
+function getPlaceholder(courseTitle) {
+  const colors = ['#0ea5e9', '#8b5cf6', '#14b8a6', '#f59e0b', '#6366f1'];
+  const colorIndex = Math.abs((courseTitle || 'C').charCodeAt(0) % colors.length);
+  const color = colors[colorIndex];
+  const initial = courseTitle?.charAt(0)?.toUpperCase() || 'C';
+  return { color, initial };
 }
 
 function Courses() {
@@ -66,8 +91,7 @@ function Courses() {
   const heroText = useMemo(
     () => ({
       title: 'คอร์ส + ตารางรอบเรียน',
-      subtitle:
-        'ลูกค้า LIFF สามารถดูรายละเอียดคอร์ส ตรวจสอบรอบเรียน สาขา ความจุ และสั่งซื้อผ่าน Omise ได้ในหน้าเดียว',
+      subtitle: 'ประสบการณ์ลูกค้าแบบองค์กรใน LIFF ตรวจสอบรูปปก ราคา และตารางจริงก่อนจอง',
     }),
     []
   );
@@ -80,132 +104,160 @@ function Courses() {
     }, {});
   }, [sessions]);
 
-  if (loading) return <div style={{ padding: '16px' }}>กำลังโหลดคอร์ส...</div>;
+  if (loading) return <div style={{ padding: '16px', fontFamily: 'Inter, system-ui, sans-serif' }}>กำลังโหลดคอร์ส...</div>;
 
   return (
-    <div style={containerStyle}>
-      <div style={{ ...cardStyle, background: 'linear-gradient(120deg, #ddf8ec, #f8fffa)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+    <div style={layout.container}>
+      <div style={{ ...layout.card, background: `linear-gradient(120deg, ${palette.navy}, #0b1224)`, color: '#fff' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ flex: 1 }}>
-            <h2 style={{ margin: '0 0 6px' }}>{heroText.title}</h2>
-            <p style={{ margin: 0, color: '#2a3d33' }}>{heroText.subtitle}</p>
-            <ul style={{ margin: '10px 0 0', paddingLeft: '18px', color: '#3c5247', lineHeight: 1.6 }}>
-              <li>รองรับเปิดจาก Rich Menu ปุ่ม “ดูคอร์ส” (<code>?action=courses</code>)</li>
-              <li>แสดงราคา/สิทธิ์เข้าเรียน/Capacity และชื่อผู้สอน/สาขา</li>
-              <li>แสดงรอบเรียนจริงที่บันทึกไว้ในฐานข้อมูลผ่าน API <code>/courses/sessions</code></li>
-            </ul>
-          </div>
-          <div style={{ minWidth: '220px' }}>
-            <div style={{ ...cardStyle, background: '#fff', border: '1px dashed #0f5132' }}>
-              <div style={{ fontWeight: 700, marginBottom: '6px' }}>จุดกดซื้อ</div>
-              <ol style={{ margin: 0, paddingLeft: '18px', lineHeight: 1.6 }}>
-                <li>เลือกคอร์ส → ตรวจสอบรอบเรียน</li>
-                <li>กด “ซื้อ/จองคอร์ส” → call API <code>/orders</code></li>
-                <li>เปิดหน้าชำระเงิน Omise → รอ webhook ยืนยัน</li>
-              </ol>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', fontSize: '13px' }}>
+              <span>📡</span> Live on LINE LIFF
             </div>
+            <h2 style={{ margin: '12px 0 6px' }}>{heroText.title}</h2>
+            <p style={{ margin: 0, color: '#e5e7eb', lineHeight: 1.6 }}>{heroText.subtitle}</p>
+          </div>
+          <div style={{ minWidth: '240px', display: 'grid', gap: '8px' }}>
+            <button
+              type="button"
+              style={{
+                padding: '12px 16px',
+                background: '#fff',
+                color: palette.ink,
+                border: 'none',
+                borderRadius: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 12px 24px rgba(0,0,0,0.15)',
+              }}
+            >
+              เปิดดูคอร์สทั้งหมด
+            </button>
+            <button
+              type="button"
+              style={{
+                padding: '12px 16px',
+                background: 'transparent',
+                color: '#cbd5f5',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              วิธีจองและชำระเงิน Omise
+            </button>
           </div>
         </div>
       </div>
 
       {error && (
-        <div style={{ ...cardStyle, border: '1px solid #f5c2c7', background: '#fff5f5', color: '#842029', marginTop: '12px' }}>
+        <div style={{ ...layout.card, border: '1px solid #f5c2c7', background: '#fff5f5', color: '#842029', marginTop: '12px' }}>
           {error}
         </div>
       )}
 
       {courses.length === 0 && !error && (
-        <div style={{ ...cardStyle, marginTop: '12px' }}>
+        <div style={{ ...layout.card, marginTop: '12px' }}>
           <p style={{ margin: 0 }}>ยังไม่มีคอร์สในระบบ กรุณาสร้างคอร์สจากหลังบ้านก่อน</p>
         </div>
       )}
 
-      <div style={{ display: 'grid', gap: '12px', marginTop: '12px' }}>
+      <div style={{ display: 'grid', gap: '14px', marginTop: '12px' }}>
         {courses.map((course) => {
           const courseSessions = sessionsByCourse[course.id] || [];
+          const coverImage = getCoverImage(course);
+          const placeholder = getPlaceholder(course.title);
 
           return (
-            <div key={course.id} style={{ ...cardStyle }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <h3 style={{ margin: 0 }}>{course.title}</h3>
-                    <span
-                      style={{
-                        padding: '4px 10px',
-                        borderRadius: '12px',
-                        background: course.is_free ? '#e6f4ea' : '#fff3cd',
-                        color: course.is_free ? '#0f5132' : '#856404',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                      }}
-                    >
-                      {course.is_free ? 'คอร์สฟรี' : 'คอร์สเสียเงิน'}
-                    </span>
-                    {!course.is_free && (
-                      <span style={{ color: '#1f2f26', fontWeight: 700 }}>{formatPrice(course)}</span>
-                    )}
-                  </div>
-                  {course.description && (
-                    <p style={{ margin: '6px 0 10px', color: '#2f4436', lineHeight: 1.5 }}>{course.description}</p>
+            <div key={course.id} style={{ ...layout.card, padding: '0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 320px) 1fr', gap: '0', alignItems: 'stretch' }}>
+                <div
+                  style={{
+                    minHeight: '220px',
+                    background: coverImage
+                      ? `linear-gradient(120deg, rgba(17,24,39,0.35), rgba(17,24,39,0.1)), url(${coverImage}) center/cover no-repeat`
+                      : `linear-gradient(135deg, ${placeholder.color} 0%, ${placeholder.color}dd 100%)`,
+                    position: 'relative',
+                  }}
+                >
+                  {!coverImage && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '56px', fontWeight: 800, opacity: 0.3 }}>
+                      {placeholder.initial}
+                    </div>
                   )}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
-                    <div style={{ background: '#f6fbf8', padding: '8px', borderRadius: '8px', border: '1px solid #e8eeeb' }}>
-                      <div style={{ fontWeight: 700 }}>สาขา</div>
-                      <div style={{ color: '#415a4f' }}>{course.branch_name || 'ระบุในหลังบ้าน'}</div>
-                    </div>
-                    <div style={{ background: '#f6fbf8', padding: '8px', borderRadius: '8px', border: '1px solid #e8eeeb' }}>
-                      <div style={{ fontWeight: 700 }}>ผู้สอน</div>
-                      <div style={{ color: '#415a4f' }}>{course.instructor_name || 'ยังไม่กำหนด'}</div>
-                    </div>
-                    <div style={{ background: '#f6fbf8', padding: '8px', borderRadius: '8px', border: '1px solid #e8eeeb' }}>
-                      <div style={{ fontWeight: 700 }}>Capacity</div>
-                      <div style={{ color: '#415a4f' }}>{course.capacity} ที่นั่ง</div>
-                    </div>
-                    <div style={{ background: '#f6fbf8', padding: '8px', borderRadius: '8px', border: '1px solid #e8eeeb' }}>
-                      <div style={{ fontWeight: 700 }}>สิทธิ์เข้าเรียน</div>
-                      <div style={{ color: '#415a4f' }}>เข้าได้ {course.access_times} ครั้ง</div>
-                    </div>
+                  <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'grid', gap: '6px' }}>
+                    <span style={{ background: course.is_free ? 'rgba(34,197,94,0.95)' : 'rgba(17,24,39,0.85)', color: '#fff', padding: '8px 12px', borderRadius: '12px', fontWeight: 800, fontSize: '13px' }}>
+                      {course.is_free ? 'คอร์สฟรี' : formatPrice(course)}
+                    </span>
+                    <span style={{ background: 'rgba(255,255,255,0.12)', color: '#f8fafc', padding: '6px 10px', borderRadius: '10px', fontSize: '12px', fontWeight: 700 }}>
+                      สิทธิ์เข้าเรียน {course.access_times} ครั้ง
+                    </span>
                   </div>
                 </div>
-                <div style={{ minWidth: '240px', alignSelf: 'flex-start', display: 'grid', gap: '8px' }}>
-                  <div style={{ background: '#fdfaf4', border: '1px solid #f3e3c2', borderRadius: '10px', padding: '10px' }}>
-                    <div style={{ fontWeight: 700, marginBottom: '4px' }}>ตารางรอบเรียน (ข้อมูลจริง)</div>
+
+                <div style={{ padding: '16px 16px 18px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'flex-start' }}>
+                    <h3 style={{ margin: 0, color: palette.ink }}>{course.title}</h3>
+                    <span style={{ padding: '6px 10px', background: palette.accentSoft, color: palette.accentDark, borderRadius: '12px', fontSize: '12px', fontWeight: 700 }}>
+                      {course.channel || 'Onsite / Online'}
+                    </span>
+                  </div>
+
+                  {course.description && (
+                    <p style={{ margin: '8px 0 12px', color: palette.muted, lineHeight: 1.6 }}>
+                      {course.description}
+                    </p>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+                    {[{ label: 'สาขา', value: course.branch_name || 'ระบุในหลังบ้าน' }, { label: 'ผู้สอน', value: course.instructor_name || 'ยังไม่กำหนด' }, { label: 'Capacity', value: `${course.capacity} ที่นั่ง` }].map((item) => (
+                      <div key={item.label} style={{ background: palette.soft, padding: '10px 12px', borderRadius: '10px', border: `1px solid ${palette.border}` }}>
+                        <div style={{ fontSize: '11px', color: palette.muted, letterSpacing: '0.3px', marginBottom: '4px' }}>{item.label}</div>
+                        <div style={{ color: palette.slate, fontWeight: 700 }}>{item.value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ marginTop: '12px', background: '#0b1224', color: '#e5e7eb', borderRadius: '12px', padding: '12px', border: '1px solid #1f2a44' }}>
+                    <div style={{ fontWeight: 700, marginBottom: '6px' }}>ตารางรอบเรียน (ข้อมูลจริง)</div>
                     {courseSessions.length > 0 ? (
-                      <ul style={{ margin: 0, paddingLeft: '18px', lineHeight: 1.5, color: '#4b412b', display: 'grid', gap: '8px' }}>
+                      <ul style={{ margin: 0, paddingLeft: '18px', lineHeight: 1.5, display: 'grid', gap: '8px' }}>
                         {courseSessions.map((session) => (
                           <li key={session.id} style={{ listStyleType: 'disc' }}>
-                            <div style={{ fontWeight: 700 }}>{session.session_name || 'รอบเรียน'}</div>
-                            <div style={{ fontSize: '13px' }}>
+                            <div style={{ fontWeight: 700 }}>
+                              {session.session_name || 'รอบเรียน'}
+                            </div>
+                            <div style={{ fontSize: '13px', color: '#cbd5e1' }}>
                               {formatDate(session.start_date)} · {formatTime(session.start_time)}
                               {session.end_time ? ` - ${formatTime(session.end_time)}` : ''}
                               {session.day_of_week ? ` (${session.day_of_week})` : ''}
                             </div>
-                            <div style={{ fontSize: '13px', color: '#3f4d3f' }}>
+                            <div style={{ fontSize: '13px', color: '#cbd5e1' }}>
                               {session.branch_name || course.branch_name || 'ไม่ระบุสาขา'} · {session.instructor_name || course.instructor_name || 'ไม่ระบุผู้สอน'}
                             </div>
-                            <div style={{ fontSize: '12px', color: '#6c6148' }}>
+                            <div style={{ fontSize: '12px', color: '#a5b4fc' }}>
                               ว่าง {Math.max((session.available_spots ?? 0), 0)} / {session.max_capacity || course.capacity} ที่นั่ง · สถานะ {session.status}
                             </div>
                           </li>
                         ))}
                       </ul>
                     ) : (
-                      <div style={{ fontSize: '13px', color: '#6c6148' }}>ยังไม่มีรอบเรียนที่เปิดรับสำหรับคอร์สนี้</div>
+                      <div style={{ fontSize: '13px', color: '#cbd5e1' }}>ยังไม่มีรอบเรียนที่เปิดรับสำหรับคอร์สนี้</div>
                     )}
                   </div>
-                  <div style={{ marginTop: '2px', display: 'grid', gap: '6px' }}>
+
+                  <div style={{ marginTop: '12px', display: 'grid', gap: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
                     <button
                       type="button"
                       style={{
-                        padding: '10px 12px',
-                        background: '#00b900',
+                        padding: '12px 14px',
+                        background: `linear-gradient(135deg, ${palette.accent} 0%, ${palette.accentDark} 100%)`,
                         color: '#fff',
                         border: 'none',
-                        borderRadius: '8px',
-                        fontWeight: 700,
+                        borderRadius: '12px',
+                        fontWeight: 800,
                         cursor: 'pointer',
-                        width: '100%',
                       }}
                     >
                       ซื้อ / จองคอร์ส
@@ -213,14 +265,13 @@ function Courses() {
                     <button
                       type="button"
                       style={{
-                        padding: '10px 12px',
-                        background: '#ffffff',
-                        color: '#0f5132',
-                        border: '1px solid #cbe5d5',
-                        borderRadius: '8px',
+                        padding: '12px 14px',
+                        background: '#fff',
+                        color: palette.slate,
+                        border: `1px solid ${palette.border}`,
+                        borderRadius: '12px',
                         fontWeight: 700,
                         cursor: 'pointer',
-                        width: '100%',
                       }}
                     >
                       ดูรายละเอียดคอร์ส
