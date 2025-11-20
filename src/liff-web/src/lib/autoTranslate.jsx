@@ -10,8 +10,6 @@ const languageOptions = [
 
 const TranslationContext = createContext({});
 const translationCache = new Map();
-const TRANSLATE_ENDPOINT =
-  import.meta?.env?.VITE_TRANSLATE_ENDPOINT ?? 'https://libretranslate.de/translate';
 let hasTranslationError = false;
 
 async function translateText(text, targetLanguage) {
@@ -21,19 +19,9 @@ async function translateText(text, targetLanguage) {
   const cacheKey = `${targetLanguage}:${text}`;
   if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
 
-  if (!TRANSLATE_ENDPOINT) return text;
-
   try {
-    const response = await fetch(TRANSLATE_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q: text, source: 'en', target: targetLanguage, format: 'text' }),
-    });
-
-    if (!response.ok) throw new Error(`Translation request failed: ${response.status}`);
-
-    const data = await response.json();
-    const translated = data?.translatedText || text;
+    const translator = await import('./localTranslator');
+    const translated = translator.translateText(text, targetLanguage);
     translationCache.set(cacheKey, translated);
     return translated;
   } catch (error) {
