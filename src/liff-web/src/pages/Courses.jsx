@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import CourseCard from '../components/CourseCard';
 import FilterBar from '../components/FilterBar';
 import { fetchCourses } from '../lib/courseApi';
-import { useAutoTranslate, useTranslatedText } from '../lib/autoTranslate';
+import { useAutoTranslate } from '../lib/autoTranslate';
 
 function Courses() {
   const location = useLocation();
@@ -13,22 +14,7 @@ function Courses() {
   const [instructor, setInstructor] = useState('');
   const [status, setStatus] = useState('idle');
   const { language } = useAutoTranslate();
-  const labels = useTranslatedText(
-    useMemo(
-      () => ({
-        title: 'All courses',
-        subtitle: 'Search and filter by branch and instructor',
-        loading: 'Loading all courses...',
-        error: 'Unable to fetch courses',
-        empty: 'No courses match your search',
-        branchFallback: 'Unspecified branch',
-        instructorFallback: 'Unspecified instructor',
-        courseLabel: 'Course',
-        sessionTopicFallback: 'Session',
-      }),
-      [],
-    ),
-  );
+  const { t } = useTranslation();
 
   useEffect(() => {
     let active = true;
@@ -38,10 +24,10 @@ function Courses() {
     const highlight = params.get('filter');
 
     const copy = {
-      branchFallback: labels.branchFallback,
-      instructorFallback: labels.instructorFallback,
-      courseLabel: labels.courseLabel,
-      sessionTopicFallback: labels.sessionTopicFallback,
+      branchFallback: t('branch.unspecified'),
+      instructorFallback: t('instructor.unspecified'),
+      courseLabel: t('course.course'),
+      sessionTopicFallback: t('course.session'),
     };
 
     fetchCourses({ limit: 100, language, copy })
@@ -62,7 +48,7 @@ function Courses() {
     return () => {
       active = false;
     };
-  }, [language, labels, location.search]);
+  }, [language, t, location.search]);
 
   const branches = useMemo(() => [...new Set(courses.map((c) => c.branchName).filter(Boolean))], [courses]);
   const instructors = useMemo(
@@ -86,8 +72,8 @@ function Courses() {
     <div style={{ display: 'grid', gap: 18 }}>
       <div className="section-heading">
         <div>
-          <h2>{labels.title}</h2>
-          <div className="helper-text">{labels.subtitle}</div>
+          <h2>{t('course.all')}</h2>
+          <div className="helper-text">{t('filter.searchFilter')}</div>
         </div>
       </div>
 
@@ -102,14 +88,14 @@ function Courses() {
         instructors={instructors}
       />
 
-      {status === 'loading' && <div className="helper-text">{labels.loading}</div>}
-      {status === 'error' && <div className="helper-text">{labels.error}</div>}
+      {status === 'loading' && <div className="helper-text">{t('course.loadingAll')}</div>}
+      {status === 'error' && <div className="helper-text">{t('course.errorFetch')}</div>}
 
       <div className="grid">
         {filtered.map((course) => (
           <CourseCard key={course.id} course={course} />
         ))}
-        {status === 'ready' && filtered.length === 0 && <div className="helper-text">{labels.empty}</div>}
+        {status === 'ready' && filtered.length === 0 && <div className="helper-text">{t('course.noCoursesMatch')}</div>}
       </div>
     </div>
   );

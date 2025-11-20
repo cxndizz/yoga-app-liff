@@ -1,20 +1,8 @@
-import React, { useMemo } from 'react';
-import { useTranslatedText } from '../lib/autoTranslate';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 function FilterBar({ search, onSearch, category, onCategory, instructor, onInstructor, categories, instructors }) {
-  const labels = useTranslatedText(
-    useMemo(
-      () => ({
-        searchLabel: 'Search course name or keywords',
-        searchPlaceholder: 'Try Yin, Mobility, Meditation',
-        branchLabel: 'Branch / Location',
-        branchAll: 'All locations',
-        instructorLabel: 'Instructor',
-        instructorAll: 'All instructors',
-      }),
-      [],
-    ),
-  );
+  const { t } = useTranslation();
 
   return (
     <div
@@ -42,12 +30,12 @@ function FilterBar({ search, onSearch, category, onCategory, instructor, onInstr
         </div>
         <div style={{ flex: 1 }}>
           <label htmlFor="search" style={{ display: 'block', color: 'var(--muted)', marginBottom: 6 }}>
-            {labels.searchLabel}
+            {t('filter.searchPlaceholder')}
           </label>
           <input
             id="search"
             className="input"
-            placeholder={labels.searchPlaceholder}
+            placeholder={t('filter.searchHint')}
             value={search}
             onChange={(e) => onSearch(e.target.value)}
           />
@@ -56,9 +44,9 @@ function FilterBar({ search, onSearch, category, onCategory, instructor, onInstr
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
         <div>
-          <div style={{ color: 'var(--muted)', marginBottom: 6 }}>{labels.branchLabel}</div>
+          <div style={{ color: 'var(--muted)', marginBottom: 6 }}>{t('filter.branch')}</div>
           <select className="input" value={category} onChange={(e) => onCategory(e.target.value)}>
-            <option value="">{labels.branchAll}</option>
+            <option value="">{t('filter.allLocations')}</option>
             {categories.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
@@ -67,9 +55,9 @@ function FilterBar({ search, onSearch, category, onCategory, instructor, onInstr
           </select>
         </div>
         <div>
-          <div style={{ color: 'var(--muted)', marginBottom: 6 }}>{labels.instructorLabel}</div>
+          <div style={{ color: 'var(--muted)', marginBottom: 6 }}>{t('filter.instructor')}</div>
           <select className="input" value={instructor} onChange={(e) => onInstructor(e.target.value)}>
-            <option value="">{labels.instructorAll}</option>
+            <option value="">{t('filter.allInstructors')}</option>
             {instructors.map((name) => (
               <option key={name} value={name}>
                 {name}

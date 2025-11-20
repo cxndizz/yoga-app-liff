@@ -1,22 +1,16 @@
-import React, { useMemo } from 'react';
-import { useAutoTranslate, useTranslatedText } from '../lib/autoTranslate';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { useAutoTranslate } from '../lib/autoTranslate';
 
 function LanguageSwitcher({ inline = false }) {
   const { language, setLanguage, languageOptions } = useAutoTranslate();
-  const labels = useTranslatedText(
-    useMemo(
-      () => ({
-        language: 'Language',
-      }),
-      [],
-    ),
-  );
+  const { t } = useTranslation();
 
   return (
     <label
       style={{ display: 'flex', alignItems: 'center', gap: 8, color: inline ? 'inherit' : '#fff', fontWeight: 600 }}
     >
-      <span style={{ fontSize: '0.95rem' }}>{labels.language}</span>
+      <span style={{ fontSize: '0.95rem' }}>{t('common.language')}</span>
       <select
         value={language}
         onChange={(e) => setLanguage(e.target.value)}
