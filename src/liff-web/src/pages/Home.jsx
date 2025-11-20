@@ -76,7 +76,6 @@ function Home() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
           <div className="badge">Omise Payment</div>
           <div className="badge">Hybrid / Onsite / Online</div>
-          <div className="badge">Access Control พร้อม DB เดิม</div>
         </div>
         <div style={{ fontSize: '1.05rem', color: '#e6e9f3' }}>
           ประสบการณ์จองและชำระเงินที่ไหลลื่น — ใช้ Omise Payment เชื่อมต่อกับ SchemaDB เดิม รองรับทั้งผู้ใช้ที่
