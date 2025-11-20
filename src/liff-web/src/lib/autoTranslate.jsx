@@ -10,7 +10,9 @@ const languageOptions = [
 
 const TranslationContext = createContext({});
 const translationCache = new Map();
-const TRANSLATE_ENDPOINT = 'https://libretranslate.de/translate';
+const TRANSLATE_ENDPOINT =
+  import.meta?.env?.VITE_TRANSLATE_ENDPOINT ?? 'https://libretranslate.de/translate';
+let hasTranslationError = false;
 
 async function translateText(text, targetLanguage) {
   if (!text) return '';
@@ -19,18 +21,29 @@ async function translateText(text, targetLanguage) {
   const cacheKey = `${targetLanguage}:${text}`;
   if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
 
-  const response = await fetch(TRANSLATE_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ q: text, source: 'en', target: targetLanguage, format: 'text' }),
-  });
+  if (!TRANSLATE_ENDPOINT) return text;
 
-  if (!response.ok) throw new Error('Translation request failed');
+  try {
+    const response = await fetch(TRANSLATE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: text, source: 'en', target: targetLanguage, format: 'text' }),
+    });
 
-  const data = await response.json();
-  const translated = data?.translatedText || text;
-  translationCache.set(cacheKey, translated);
-  return translated;
+    if (!response.ok) throw new Error(`Translation request failed: ${response.status}`);
+
+    const data = await response.json();
+    const translated = data?.translatedText || text;
+    translationCache.set(cacheKey, translated);
+    return translated;
+  } catch (error) {
+    if (!hasTranslationError) {
+      console.warn('Translation unavailable, showing original text instead.', error);
+      hasTranslationError = true;
+    }
+    translationCache.set(cacheKey, text);
+    return text;
+  }
 }
 
 async function translateMap(stringsMap = {}, targetLanguage = 'en') {
