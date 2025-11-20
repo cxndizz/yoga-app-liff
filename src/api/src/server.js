@@ -21,6 +21,12 @@ const settingsRoutes = require('./routes/settings');
 const app = express();
 const port = process.env.PORT || 4000;
 
+const parseLimit = (value, fallback) => {
+  if (value === undefined || value === null) return fallback;
+  const parsed = parseInt(value, 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+};
+
 app.use(bodyParser.json({ limit: '15mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '15mb' }));
 
@@ -78,6 +84,75 @@ app.post('/courses/list', async (req, res) => {
   } catch (err) {
     console.error('Error fetching courses', err);
     res.status(500).json({ message: 'Error fetching courses' });
+  }
+});
+
+app.post('/courses/sessions', async (req, res) => {
+  try {
+    const { course_id, course_ids, status = 'open', start_date_from, start_date_to, limit = 200 } = req.body || {};
+
+    let query = `
+      SELECT cs.id,
+             cs.course_id,
+             cs.session_name,
+             cs.start_date,
+             cs.start_time,
+             cs.end_time,
+             cs.day_of_week,
+             cs.max_capacity,
+             cs.current_enrollments,
+             cs.status,
+             (cs.max_capacity - cs.current_enrollments) AS available_spots,
+             c.title AS course_title,
+             COALESCE(cs.branch_id, c.branch_id) AS branch_id,
+             b.name AS branch_name,
+             COALESCE(cs.instructor_id, c.instructor_id) AS instructor_id,
+             i.name AS instructor_name
+      FROM course_sessions cs
+      LEFT JOIN courses c ON cs.course_id = c.id
+      LEFT JOIN branches b ON COALESCE(cs.branch_id, c.branch_id) = b.id
+      LEFT JOIN instructors i ON COALESCE(cs.instructor_id, c.instructor_id) = i.id
+      WHERE 1=1
+    `;
+
+    const params = [];
+
+    if (course_id) {
+      params.push(course_id);
+      query += ` AND cs.course_id = $${params.length}`;
+    } else if (Array.isArray(course_ids) && course_ids.length > 0) {
+      params.push(course_ids);
+      query += ` AND cs.course_id = ANY($${params.length})`;
+    }
+
+    if (status) {
+      params.push(status);
+      query += ` AND cs.status = $${params.length}`;
+    }
+
+    if (start_date_from) {
+      params.push(start_date_from);
+      query += ` AND cs.start_date >= $${params.length}`;
+    }
+
+    if (start_date_to) {
+      params.push(start_date_to);
+      query += ` AND cs.start_date <= $${params.length}`;
+    }
+
+    query += ' ORDER BY cs.start_date ASC, cs.start_time ASC';
+
+    const limitValue = parseLimit(limit, 200);
+    if (limitValue) {
+      params.push(limitValue);
+      query += ` LIMIT $${params.length}`;
+    }
+
+    const result = await db.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching course sessions', err);
+    res.status(500).json({ message: 'Error fetching course sessions' });
   }
 });
 
