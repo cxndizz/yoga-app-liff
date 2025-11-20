@@ -89,7 +89,8 @@ function Courses() {
   const fetchInstructors = async () => {
     try {
       const res = await axios.post(`${apiBase}/api/admin/instructors/list`, {});
-      setInstructors(res.data?.instructors || []);
+      // API already returns the full instructors array
+      setInstructors(res.data || []);
     } catch (err) {
       console.error('Error fetching instructors:', err);
     }
