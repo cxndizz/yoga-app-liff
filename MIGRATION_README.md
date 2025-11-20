@@ -30,6 +30,7 @@ psql -U your_db_user -d your_db_name -f docker/db/migrations/001_add_missing_tab
 psql -U your_db_user -d your_db_name -f docker/db/migrations/002_fix_branches_schema.sql
 psql -U your_db_user -d your_db_name -f docker/db/migrations/003_fix_instructors_schema.sql
 psql -U your_db_user -d your_db_name -f docker/db/migrations/005_fix_courses_schema.sql
+psql -U your_db_user -d your_db_name -f docker/db/migrations/006_add_updated_at_to_courses.sql
 ```
 
 ### วิธีที่ 3: รันผ่าน Docker (ถ้าใช้ Docker)
@@ -39,6 +40,7 @@ docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations
 docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations/002_fix_branches_schema.sql
 docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations/003_fix_instructors_schema.sql
 docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations/005_fix_courses_schema.sql
+docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations/006_add_updated_at_to_courses.sql
 ```
 
 ## การตรวจสอบหลังรัน Migration
