@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import CourseCard from '../components/CourseCard';
 import FilterBar from '../components/FilterBar';
 import { fetchCourses } from '../lib/courseApi';
-import { useI18n } from '../lib/i18n';
+import { useAutoTranslate, useTranslatedText } from '../lib/autoTranslate';
 
 function Courses() {
   const location = useLocation();
@@ -12,7 +12,23 @@ function Courses() {
   const [branch, setBranch] = useState('');
   const [instructor, setInstructor] = useState('');
   const [status, setStatus] = useState('idle');
-  const { t, language } = useI18n();
+  const { language } = useAutoTranslate();
+  const labels = useTranslatedText(
+    useMemo(
+      () => ({
+        title: 'All courses',
+        subtitle: 'Search and filter by branch and instructor',
+        loading: 'Loading all courses...',
+        error: 'Unable to fetch courses',
+        empty: 'No courses match your search',
+        branchFallback: 'Unspecified branch',
+        instructorFallback: 'Unspecified instructor',
+        courseLabel: 'Course',
+        sessionTopicFallback: 'Session',
+      }),
+      [],
+    ),
+  );
 
   useEffect(() => {
     let active = true;
@@ -22,10 +38,10 @@ function Courses() {
     const highlight = params.get('filter');
 
     const copy = {
-      branchFallback: t('fallback.branch'),
-      instructorFallback: t('fallback.instructor'),
-      courseLabel: t('fallback.courseLabel'),
-      sessionTopicFallback: t('session.topicFallback'),
+      branchFallback: labels.branchFallback,
+      instructorFallback: labels.instructorFallback,
+      courseLabel: labels.courseLabel,
+      sessionTopicFallback: labels.sessionTopicFallback,
     };
 
     fetchCourses({ limit: 100, language, copy })
@@ -46,7 +62,7 @@ function Courses() {
     return () => {
       active = false;
     };
-  }, [language, location.search, t]);
+  }, [language, labels, location.search]);
 
   const branches = useMemo(() => [...new Set(courses.map((c) => c.branchName).filter(Boolean))], [courses]);
   const instructors = useMemo(
@@ -70,8 +86,8 @@ function Courses() {
     <div style={{ display: 'grid', gap: 18 }}>
       <div className="section-heading">
         <div>
-          <h2>{t('courses.title')}</h2>
-          <div className="helper-text">{t('courses.subtitle')}</div>
+          <h2>{labels.title}</h2>
+          <div className="helper-text">{labels.subtitle}</div>
         </div>
       </div>
 
@@ -86,16 +102,14 @@ function Courses() {
         instructors={instructors}
       />
 
-      {status === 'loading' && <div className="helper-text">{t('courses.loading')}</div>}
-      {status === 'error' && <div className="helper-text">{t('courses.error')}</div>}
+      {status === 'loading' && <div className="helper-text">{labels.loading}</div>}
+      {status === 'error' && <div className="helper-text">{labels.error}</div>}
 
       <div className="grid">
         {filtered.map((course) => (
           <CourseCard key={course.id} course={course} />
         ))}
-        {status === 'ready' && filtered.length === 0 && (
-          <div className="helper-text">{t('courses.empty')}</div>
-        )}
+        {status === 'ready' && filtered.length === 0 && <div className="helper-text">{labels.empty}</div>}
       </div>
     </div>
   );

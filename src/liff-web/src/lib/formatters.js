@@ -4,8 +4,8 @@ const localeMap = {
   zh: 'zh-CN',
 };
 
-const formatPriceTHB = (priceCents = 0, isFree = false, { language = 'en', t } = {}) => {
-  if (isFree) return t?.('price.free') ?? 'Free access';
+const formatPriceTHB = (priceCents = 0, isFree = false, { language = 'en', freeLabel = 'Free access' } = {}) => {
+  if (isFree) return freeLabel;
   const amount = Number(priceCents || 0) / 100;
   const locale = localeMap[language] || localeMap.en;
   return new Intl.NumberFormat(locale, {
@@ -15,10 +15,18 @@ const formatPriceTHB = (priceCents = 0, isFree = false, { language = 'en', t } =
   }).format(amount);
 };
 
-const formatAccessTimes = (accessTimes, { language = 'en', t } = {}) => {
-  const single = t?.('access.single') ?? 'Access 1 time';
-  const unlimited = t?.('access.unlimited') ?? 'Unlimited access';
-  const pluralTemplate = t?.('access.multiple') ?? 'Access {count} times';
+const formatAccessTimes = (
+  accessTimes,
+  {
+    language = 'en',
+    singleLabel = 'Access 1 time',
+    unlimitedLabel = 'Unlimited access',
+    multipleTemplate = 'Access {count} times',
+  } = {},
+) => {
+  const single = singleLabel;
+  const unlimited = unlimitedLabel;
+  const pluralTemplate = multipleTemplate;
 
   if (!accessTimes) return single;
   if (accessTimes === -1) return unlimited;

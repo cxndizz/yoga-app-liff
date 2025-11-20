@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import LanguageSwitcher from './LanguageSwitcher';
-import { useI18n } from '../lib/i18n';
+import { useTranslatedText } from '../lib/autoTranslate';
 
 const NavLink = ({ to, label, onClick }) => (
   <Link
@@ -24,12 +24,24 @@ const NavLink = ({ to, label, onClick }) => (
 function Navbar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { t } = useI18n();
+
+  const labels = useTranslatedText(
+    useMemo(
+      () => ({
+        home: 'Home',
+        courses: 'Courses',
+        premium: 'Premium picks',
+        buyCourse: 'Buy courses',
+        brandTagline: 'Boutique LIFF Studio',
+      }),
+      [],
+    ),
+  );
 
   const links = [
-    { to: '/', label: t('nav.home') },
-    { to: '/courses', label: t('nav.courses') },
-    { to: '/courses?filter=premium', label: t('nav.premium') },
+    { to: '/', label: labels.home },
+    { to: '/courses', label: labels.courses },
+    { to: '/courses?filter=premium', label: labels.premium },
   ];
 
   return (
@@ -68,9 +80,9 @@ function Navbar() {
         </div>
         <div>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', letterSpacing: '0.01em' }}>
-            Yoga Luxe
-          </div>
-          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{t('nav.brandTagline')}</div>
+          Yoga Luxe
+        </div>
+        <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{labels.brandTagline}</div>
         </div>
       </div>
 
@@ -114,7 +126,7 @@ function Navbar() {
           onClick={() => navigate('/courses')}
           style={{ paddingInline: 18 }}
         >
-          {t('nav.buyCourse')}
+          {labels.buyCourse}
         </button>
       </nav>
 
@@ -138,7 +150,7 @@ function Navbar() {
           ))}
           <LanguageSwitcher />
           <button type="button" className="btn btn-primary" onClick={() => navigate('/courses')}>
-            {t('nav.buyCourse')}
+            {labels.buyCourse}
           </button>
         </div>
       )}

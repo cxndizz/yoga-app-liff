@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useI18n } from '../lib/i18n';
+import { useTranslatedText } from '../lib/autoTranslate';
 
 function Footer() {
-  const { t } = useI18n();
+  const labels = useTranslatedText(
+    useMemo(
+      () => ({
+        tagline: 'Boutique LIFF Studio • Luxury movement and mindfulness experiences',
+        about: 'About',
+        contact: 'Contact',
+        terms: 'Terms',
+        privacy: 'Privacy',
+        rights: '© 2024 Yoga Luxe LIFF. All rights reserved.',
+      }),
+      [],
+    ),
+  );
 
   return (
     <footer
@@ -20,23 +32,23 @@ function Footer() {
     >
       <div>
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.15rem' }}>Yoga Luxe</div>
-        <div style={{ color: 'var(--muted)', marginTop: 4 }}>{t('footer.tagline')}</div>
+        <div style={{ color: 'var(--muted)', marginTop: 4 }}>{labels.tagline}</div>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
         <Link to="/about" className="badge">
-          {t('footer.about')}
+          {labels.about}
         </Link>
         <Link to="/contact" className="badge">
-          {t('footer.contact')}
+          {labels.contact}
         </Link>
         <Link to="/terms" className="badge">
-          {t('footer.terms')}
+          {labels.terms}
         </Link>
         <Link to="/privacy" className="badge">
-          {t('footer.privacy')}
+          {labels.privacy}
         </Link>
       </div>
-      <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{t('footer.rights')}</div>
+      <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{labels.rights}</div>
     </footer>
   );
 }
