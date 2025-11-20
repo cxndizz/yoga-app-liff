@@ -12,12 +12,12 @@ function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const action = params.get('action');
-    if (action) {
-      if (action === 'courses') navigate('/courses');
-      else if (action === 'howto') navigate('/how-to');
-      else if (action === 'contact') navigate('/contact');
-      else navigate('/');
-    }
+    if (!action) return;
+
+    if (action === 'courses') navigate('/courses');
+    else if (action === 'howto') navigate('/how-to');
+    else if (action === 'contact') navigate('/contact');
+    // action = register|login จะคงอยู่ที่หน้าหลักเพื่อให้ banner แสดงพารามิเตอร์ที่ส่งมาจาก Rich Menu
   }, [location.search, navigate]);
 
   return (
