@@ -3,125 +3,266 @@ import axios from 'axios';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
-// Design tokens for an enterprise-grade look
+// Professional design system
 const palette = {
-  ink: '#0f172a',
-  navy: '#111827',
+  primary: '#1e40af',
+  primaryDark: '#1e3a8a',
+  secondary: '#64748b',
   accent: '#3b82f6',
-  accentDark: '#2563eb',
-  accentSoft: '#e0ecff',
-  slate: '#1f2937',
-  muted: '#6b7280',
-  border: '#e5e7eb',
+  success: '#059669',
+  warning: '#d97706',
+  danger: '#dc2626',
+  text: '#1f2937',
+  textMuted: '#6b7280',
+  textLight: '#9ca3af',
+  background: '#f8fafc',
   surface: '#ffffff',
-  soft: '#f8fafc',
+  border: '#e2e8f0',
+  borderLight: '#f1f5f9',
 };
 
-const layout = {
+const styles = {
   container: {
-    fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-    background: `radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.08), transparent 25%),
-      radial-gradient(circle at 80% 0%, rgba(16, 185, 129, 0.06), transparent 30%),
-      ${palette.soft}`,
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    backgroundColor: palette.background,
     minHeight: '100vh',
-    color: palette.ink,
+    color: palette.text,
   },
   header: {
-    background: `linear-gradient(130deg, ${palette.navy} 0%, ${palette.ink} 50%, #1d1f2b 100%)`,
+    backgroundColor: palette.primary,
     color: '#fff',
-    padding: '32px 18px 42px',
-    position: 'relative',
-    overflow: 'hidden',
+    padding: '32px 0',
+    marginBottom: '32px',
   },
-  main: {
-    padding: '0 18px 32px',
+  headerContent: {
     maxWidth: '1200px',
-    margin: '-60px auto 0',
+    margin: '0 auto',
+    padding: '0 16px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '16px',
+  },
+  badge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    color: 'rgba(255,255,255,0.9)',
+    padding: '6px 12px',
+    borderRadius: '6px',
+    fontSize: '14px',
+    fontWeight: '500',
+    marginBottom: '16px',
+  },
+  title: {
+    fontSize: '32px',
+    fontWeight: '700',
+    marginBottom: '8px',
+    lineHeight: '1.2',
+  },
+  subtitle: {
+    fontSize: '16px',
+    color: 'rgba(255,255,255,0.8)',
+    lineHeight: '1.5',
+    maxWidth: '600px',
+  },
+  mainContent: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 16px 32px',
   },
   card: {
-    background: palette.surface,
-    borderRadius: '18px',
+    backgroundColor: palette.surface,
+    borderRadius: '12px',
+    border: `1px solid ${palette.border}`,
     overflow: 'hidden',
-    boxShadow: '0 20px 45px rgba(15, 23, 42, 0.12)',
-    border: `1px solid ${palette.border}`,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
   },
-  subtleCard: {
-    background: palette.surface,
-    borderRadius: '14px',
-    padding: '16px',
-    boxShadow: '0 10px 32px rgba(15, 23, 42, 0.08)',
-    border: `1px solid ${palette.border}`,
-  },
-  select: {
-    padding: '12px 14px',
-    borderRadius: '10px',
-    border: `1px solid ${palette.border}`,
-    background: palette.soft,
-    fontSize: '14px',
-    minWidth: '180px',
-    cursor: 'pointer',
-    outline: 'none',
-    color: palette.slate,
-  },
-  buttonPrimary: {
-    padding: '12px 18px',
-    background: `linear-gradient(135deg, ${palette.accent} 0%, ${palette.accentDark} 100%)`,
-    color: '#fff',
-    border: 'none',
-    borderRadius: '12px',
-    fontWeight: 700,
-    fontSize: '15px',
-    cursor: 'pointer',
-    width: '100%',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-  },
-  buttonSecondary: {
-    padding: '12px 18px',
-    background: '#0b1224',
-    color: '#fff',
-    border: '1px solid rgba(255, 255, 255, 0.18)',
-    borderRadius: '12px',
-    fontWeight: 600,
-    fontSize: '14px',
-    cursor: 'pointer',
-    width: '100%',
-    transition: 'all 0.2s',
+  cardPadding: {
+    padding: '24px',
   },
   sectionTitle: {
-    fontSize: '22px',
-    fontWeight: 700,
-    color: palette.ink,
+    fontSize: '24px',
+    fontWeight: '600',
+    color: palette.text,
     marginBottom: '16px',
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: '12px',
+  },
+  icon: {
+    width: '20px',
+    height: '20px',
+    fill: 'currentColor',
+  },
+  filterContainer: {
+    display: 'flex',
+    gap: '16px',
+    flexWrap: 'wrap',
+    marginBottom: '24px',
+  },
+  select: {
+    padding: '8px 12px',
+    borderRadius: '6px',
+    border: `1px solid ${palette.border}`,
+    backgroundColor: palette.surface,
+    fontSize: '14px',
+    color: palette.text,
+    minWidth: '160px',
+  },
+  button: {
+    padding: '8px 16px',
+    borderRadius: '6px',
+    fontSize: '14px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    border: 'none',
+    transition: 'all 0.2s',
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  buttonPrimary: {
+    backgroundColor: palette.accent,
+    color: '#fff',
+  },
+  buttonSecondary: {
+    backgroundColor: palette.surface,
+    color: palette.text,
+    border: `1px solid ${palette.border}`,
+  },
+  grid: {
+    display: 'grid',
+    gap: '24px',
+  },
+  gridCols: {
+    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+  },
+  statsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '16px',
+    marginBottom: '32px',
+  },
+  statCard: {
+    backgroundColor: palette.surface,
+    padding: '20px',
+    borderRadius: '8px',
+    border: `1px solid ${palette.border}`,
+    textAlign: 'center',
+  },
+  statValue: {
+    fontSize: '32px',
+    fontWeight: '700',
+    color: palette.accent,
+    marginBottom: '4px',
+  },
+  statLabel: {
+    fontSize: '14px',
+    color: palette.textMuted,
+  },
+  courseCard: {
+    backgroundColor: palette.surface,
+    borderRadius: '12px',
+    border: `1px solid ${palette.border}`,
+    overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    transition: 'all 0.2s',
+  },
+  courseImage: {
+    height: '180px',
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#fff',
+  },
+  priceTag: {
+    position: 'absolute',
+    top: '12px',
+    right: '12px',
+    padding: '6px 12px',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: '600',
+  },
+  courseContent: {
+    padding: '20px',
+  },
+  courseTitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    color: palette.text,
+    marginBottom: '8px',
+    lineHeight: '1.4',
+  },
+  courseDescription: {
+    fontSize: '14px',
+    color: palette.textMuted,
+    lineHeight: '1.5',
+    marginBottom: '16px',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+  },
+  courseDetails: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px',
+    marginBottom: '16px',
+  },
+  detailItem: {
+    fontSize: '12px',
+    color: palette.textMuted,
+  },
+  detailValue: {
+    fontSize: '14px',
+    fontWeight: '500',
+    color: palette.text,
+  },
+  actionButtons: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '8px',
+  },
+  responsiveTable: {
+    '@media (max-width: 768px)': {
+      display: 'none',
+    },
+  },
+  mobileCards: {
+    display: 'none',
+    '@media (max-width: 768px)': {
+      display: 'block',
+    },
   },
 };
 
-// Helpers
+// Helper functions
 function formatPrice(course) {
   if (course.is_free) return 'ฟรี';
   const amount = (course.price_cents || 0) / 100;
-  return `฿${amount.toLocaleString('th-TH', { minimumFractionDigits: 0 })}`;
+  return `฿${amount.toLocaleString('th-TH')}`;
 }
 
 function formatDate(dateString) {
   if (!dateString) return 'ไม่ระบุวันที่';
   const dateObj = new Date(dateString);
   if (Number.isNaN(dateObj.getTime())) return dateString;
-  return dateObj.toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' });
+  return dateObj.toLocaleDateString('th-TH', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric' 
+  });
 }
 
 function formatTime(timeString) {
   if (!timeString) return '';
   return timeString.slice(0, 5);
-}
-
-function formatDateShort(dateString) {
-  if (!dateString) return '';
-  const dateObj = new Date(dateString);
-  if (Number.isNaN(dateObj.getTime())) return dateString;
-  return dateObj.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
 }
 
 function getCoverImage(course) {
@@ -131,17 +272,33 @@ function getCoverImage(course) {
 function getPlaceholder(courseTitle) {
   const colors = ['#0ea5e9', '#8b5cf6', '#14b8a6', '#f59e0b', '#6366f1'];
   const colorIndex = Math.abs((courseTitle || 'C').charCodeAt(0) % colors.length);
-  const color = colors[colorIndex];
-  const initial = courseTitle?.charAt(0)?.toUpperCase() || 'C';
-  return { color, initial };
+  return colors[colorIndex];
 }
+
+// Icon components (using SVG)
+const CourseIcon = () => (
+  <svg style={styles.icon} viewBox="0 0 20 20">
+    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const CalendarIcon = () => (
+  <svg style={styles.icon} viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+  </svg>
+);
+
+const TableIcon = () => (
+  <svg style={styles.icon} viewBox="0 0 20 20">
+    <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+  </svg>
+);
 
 function Home() {
   const [courses, setCourses] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
   const [selectedBranch, setSelectedBranch] = useState('all');
   const [selectedInstructor, setSelectedInstructor] = useState('all');
 
@@ -157,7 +314,7 @@ function Home() {
         setSessions(sessionsRes.data || []);
       } catch (err) {
         console.error(err);
-        setError('โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
+        setError('ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง');
       } finally {
         setLoading(false);
       }
@@ -203,86 +360,93 @@ function Home() {
     return sessions
       .filter((s) => new Date(s.start_date) >= now)
       .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
-      .slice(0, 8);
+      .slice(0, 10);
   }, [sessions]);
 
   const getCourseById = (courseId) => courses.find((c) => c.id === courseId);
 
   if (loading) {
     return (
-      <div style={layout.container}>
-        <div style={layout.header}>
-          <h1 style={{ margin: 0, fontSize: '30px', fontWeight: 800 }}>NeedHome Yoga & Wellness</h1>
-          <p style={{ margin: '8px 0 0', opacity: 0.85 }}>กำลังโหลดข้อมูลคอร์ส...</p>
+      <div style={styles.container}>
+        <div style={styles.header}>
+          <div style={styles.headerContent}>
+            <div>
+              <h1 style={styles.title}>Yoga Studio</h1>
+              <p style={styles.subtitle}>กำลังโหลดข้อมูล...</p>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={layout.container}>
-      <div style={layout.header}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gap: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
-            <div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'rgba(255,255,255,0.08)', borderRadius: '999px', fontSize: '13px', letterSpacing: '0.4px' }}>
-                <span style={{ fontSize: '16px' }}>✨</span>
-                Enterprise LIFF Experience
-              </div>
-              <h1 style={{ margin: '12px 0 6px', fontSize: '30px', fontWeight: 800 }}>
-                NeedHome Yoga & Wellness
-              </h1>
-              <p style={{ margin: 0, maxWidth: '640px', lineHeight: 1.6, opacity: 0.85 }}>
-                คัดสรรคลาสโยคะ พิลาทิส และเวิร์กช็อปที่ออกแบบมาเพื่อองค์กรและลูกค้า VIP เชื่อมต่อ LINE LIFF และระบบชำระเงินแบบไร้รอยต่อ
-              </p>
+    <div style={styles.container}>
+      {/* Header */}
+      <div style={styles.header}>
+        <div style={styles.headerContent}>
+          <div style={{ flex: 1 }}>
+            <div style={styles.badge}>
+              <span>•</span> ระบบจองคอร์ส
             </div>
-            <div style={{ minWidth: '220px', display: 'grid', gap: '8px' }}>
-              <button
-                type="button"
-                style={layout.buttonSecondary}
-                onMouseOver={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
-                onMouseOut={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
-              >
-                เปิดดูคอร์สทั้งหมด
-              </button>
-              <button
-                type="button"
-                style={{ ...layout.buttonSecondary, background: 'transparent', color: '#cbd5f5', border: '1px solid rgba(255,255,255,0.2)' }}
-                onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-                onMouseOut={(e) => (e.currentTarget.style.background = 'transparent')}
-              >
-                วิธีใช้งานระบบ LIFF
-              </button>
-            </div>
+            <h1 style={styles.title}>Yoga Studio</h1>
+            <p style={styles.subtitle}>
+              จองคอร์สโยคะและเวลเนส พร้อมระบบชำระเงินที่ปลอดภัย
+            </p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginTop: '8px' }}>
-            {[{ label: 'คอร์สทั้งหมด', value: courses.length || '-' }, { label: 'รอบที่กำลังจะมาถึง', value: upcomingSessions.length }, { label: 'สาขาที่เปิดสอน', value: branches.length || '-' }].map((item) => (
-              <div key={item.label} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '10px 12px' }}>
-                <div style={{ fontSize: '12px', opacity: 0.8 }}>{item.label}</div>
-                <div style={{ fontSize: '18px', fontWeight: 700 }}>{item.value}</div>
-              </div>
-            ))}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button style={{ ...styles.button, ...styles.buttonSecondary }}>
+              ดูคอร์สทั้งหมด
+            </button>
           </div>
         </div>
       </div>
 
-      <div style={layout.main}>
+      <div style={styles.mainContent}>
+        {/* Error Alert */}
         {error && (
-          <div style={{ ...layout.subtleCard, border: '1px solid #fecdd3', background: '#fff1f2', color: '#9f1239', marginBottom: '16px' }}>
+          <div style={{
+            ...styles.card,
+            ...styles.cardPadding,
+            borderColor: palette.danger,
+            backgroundColor: '#fee2e2',
+            color: palette.danger,
+            marginBottom: '24px'
+          }}>
             {error}
           </div>
         )}
 
-        {/* Filters */}
-        <div style={{ ...layout.card, padding: '16px', marginBottom: '20px' }}>
-          <div style={{ fontWeight: 700, marginBottom: '12px', color: palette.ink, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '18px' }}>🎛️</span> เลือกสาขาและผู้สอน
+        {/* Statistics */}
+        <div style={styles.statsGrid}>
+          <div style={styles.statCard}>
+            <div style={styles.statValue}>{courses.length}</div>
+            <div style={styles.statLabel}>คอร์สทั้งหมด</div>
           </div>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <div style={{ flex: '1 1 200px', minWidth: '160px' }}>
-              <label style={{ fontSize: '13px', color: palette.muted, display: 'block', marginBottom: '6px' }}>สาขา</label>
+          <div style={styles.statCard}>
+            <div style={styles.statValue}>{upcomingSessions.length}</div>
+            <div style={styles.statLabel}>รอบเรียนที่กำลังจะมา</div>
+          </div>
+          <div style={styles.statCard}>
+            <div style={styles.statValue}>{branches.length}</div>
+            <div style={styles.statLabel}>สาขา</div>
+          </div>
+          <div style={styles.statCard}>
+            <div style={styles.statValue}>{instructors.length}</div>
+            <div style={styles.statLabel}>ผู้สอน</div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div style={{ ...styles.card, ...styles.cardPadding, marginBottom: '24px' }}>
+          <h3 style={{ marginTop: 0, marginBottom: '16px', color: palette.text }}>ตัวกรอง</h3>
+          <div style={styles.filterContainer}>
+            <div>
+              <label style={{ fontSize: '14px', color: palette.textMuted, display: 'block', marginBottom: '4px' }}>
+                สาขา
+              </label>
               <select
-                style={layout.select}
+                style={styles.select}
                 value={selectedBranch}
                 onChange={(e) => setSelectedBranch(e.target.value)}
               >
@@ -292,10 +456,12 @@ function Home() {
                 ))}
               </select>
             </div>
-            <div style={{ flex: '1 1 200px', minWidth: '160px' }}>
-              <label style={{ fontSize: '13px', color: palette.muted, display: 'block', marginBottom: '6px' }}>ผู้สอน</label>
+            <div>
+              <label style={{ fontSize: '14px', color: palette.textMuted, display: 'block', marginBottom: '4px' }}>
+                ผู้สอน
+              </label>
               <select
-                style={layout.select}
+                style={styles.select}
                 value={selectedInstructor}
                 onChange={(e) => setSelectedInstructor(e.target.value)}
               >
@@ -306,21 +472,15 @@ function Home() {
               </select>
             </div>
             {(selectedBranch !== 'all' || selectedInstructor !== 'all') && (
-              <div style={{ flex: '0 0 auto' }}>
+              <div>
+                <label style={{ fontSize: '14px', color: 'transparent', display: 'block', marginBottom: '4px' }}>
+                  .
+                </label>
                 <button
-                  type="button"
+                  style={{ ...styles.button, ...styles.buttonSecondary }}
                   onClick={() => {
                     setSelectedBranch('all');
                     setSelectedInstructor('all');
-                  }}
-                  style={{
-                    padding: '12px 14px',
-                    background: palette.soft,
-                    border: `1px solid ${palette.border}`,
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    color: palette.muted,
                   }}
                 >
                   ล้างตัวกรอง
@@ -330,46 +490,67 @@ function Home() {
           </div>
         </div>
 
-        {/* Upcoming sessions */}
+        {/* Upcoming Sessions */}
         {upcomingSessions.length > 0 && (
-          <div style={{ marginBottom: '24px' }}>
-            <h2 style={layout.sectionTitle}>
-              <span style={{ fontSize: '24px' }}>📅</span>
-              ตารางเรียนที่กำลังจะมาถึง
+          <div style={{ marginBottom: '32px' }}>
+            <h2 style={styles.sectionTitle}>
+              <CalendarIcon />
+              รอบเรียนที่กำลังจะมาถึง
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '14px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+              gap: '16px' 
+            }}>
               {upcomingSessions.map((session) => {
                 const course = getCourseById(session.course_id);
                 return (
                   <div
                     key={session.id}
-                    style={{ ...layout.subtleCard, borderLeft: `4px solid ${palette.accent}`, padding: '14px' }}
+                    style={{
+                      ...styles.card,
+                      ...styles.cardPadding,
+                      borderLeft: `4px solid ${palette.accent}`,
+                      padding: '16px'
+                    }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px', gap: '10px' }}>
-                      <div>
-                        <div style={{ fontWeight: 700, color: palette.ink, fontSize: '15px' }}>
-                          {session.session_name || course?.title || 'รอบเรียน'}
-                        </div>
-                        <div style={{ fontSize: '13px', color: palette.muted }}>
-                          {course?.title || 'คอร์ส'}
-                        </div>
-                      </div>
-                      <div style={{ background: palette.accentSoft, color: palette.accentDark, padding: '6px 10px', borderRadius: '10px', fontSize: '12px', fontWeight: 700 }}>
-                        {formatDateShort(session.start_date)}
-                      </div>
+                    <div style={{ marginBottom: '8px' }}>
+                      <h4 style={{ 
+                        margin: '0 0 4px', 
+                        fontSize: '16px', 
+                        fontWeight: '600',
+                        color: palette.text 
+                      }}>
+                        {session.session_name || course?.title || 'รอบเรียน'}
+                      </h4>
+                      <p style={{ 
+                        margin: 0, 
+                        fontSize: '14px', 
+                        color: palette.textMuted 
+                      }}>
+                        {course?.title || 'คอร์ส'}
+                      </p>
                     </div>
-                    <div style={{ fontSize: '14px', color: palette.slate, marginBottom: '6px' }}>
-                      🕐 {formatTime(session.start_time)}{session.end_time ? ` - ${formatTime(session.end_time)}` : ''}
-                      {session.day_of_week && <span style={{ marginLeft: '8px', color: palette.muted }}>({session.day_of_week})</span>}
+                    <div style={{ fontSize: '14px', color: palette.text, marginBottom: '4px' }}>
+                      <strong>วันที่:</strong> {formatDate(session.start_date)}
                     </div>
-                    <div style={{ fontSize: '13px', color: palette.muted }}>
-                      📍 {session.branch_name || course?.branch_name || 'ไม่ระบุสาขา'}
+                    <div style={{ fontSize: '14px', color: palette.text, marginBottom: '4px' }}>
+                      <strong>เวลา:</strong> {formatTime(session.start_time)}
+                      {session.end_time && ` - ${formatTime(session.end_time)}`}
                     </div>
-                    <div style={{ fontSize: '13px', color: palette.muted, marginTop: '2px' }}>
-                      👤 {session.instructor_name || course?.instructor_name || 'ไม่ระบุผู้สอน'}
+                    <div style={{ fontSize: '14px', color: palette.text, marginBottom: '4px' }}>
+                      <strong>สาขา:</strong> {session.branch_name || course?.branch_name || 'ไม่ระบุ'}
                     </div>
-                    <div style={{ fontSize: '12px', color: palette.muted, marginTop: '10px', paddingTop: '10px', borderTop: `1px dashed ${palette.border}` }}>
-                      ว่าง {Math.max((session.available_spots ?? 0), 0)} / {session.max_capacity || course?.capacity || 0} ที่นั่ง
+                    <div style={{ fontSize: '14px', color: palette.text, marginBottom: '8px' }}>
+                      <strong>ผู้สอน:</strong> {session.instructor_name || course?.instructor_name || 'ไม่ระบุ'}
+                    </div>
+                    <div style={{
+                      fontSize: '12px',
+                      color: palette.textMuted,
+                      paddingTop: '8px',
+                      borderTop: `1px solid ${palette.borderLight}`
+                    }}>
+                      ที่ว่าง: {Math.max((session.available_spots ?? 0), 0)} / {session.max_capacity || course?.capacity || 0}
                     </div>
                   </div>
                 );
@@ -378,157 +559,121 @@ function Home() {
           </div>
         )}
 
-        {/* Course cards */}
+        {/* Courses */}
         <div>
-          <h2 style={layout.sectionTitle}>
-            <span style={{ fontSize: '24px' }}>🧘</span>
+          <h2 style={styles.sectionTitle}>
+            <CourseIcon />
             คอร์สทั้งหมด
             {filteredCourses.length !== courses.length && (
-              <span style={{ fontSize: '14px', fontWeight: 500, color: palette.muted }}>
-                ({filteredCourses.length} จาก {courses.length} คอร์ส)
+              <span style={{ fontSize: '16px', fontWeight: '400', color: palette.textMuted }}>
+                ({filteredCourses.length} จาก {courses.length})
               </span>
             )}
           </h2>
 
           {filteredCourses.length === 0 && !error && (
-            <div style={{ ...layout.subtleCard, textAlign: 'center', color: palette.muted }}>
-              {courses.length === 0 ? 'ยังไม่มีคอร์สในระบบ' : 'ไม่พบคอร์สตามเงื่อนไขที่เลือก'}
+            <div style={{ ...styles.card, ...styles.cardPadding, textAlign: 'center', color: palette.textMuted }}>
+              {courses.length === 0 ? 'ยังไม่มีคอร์สในระบบ' : 'ไม่พบคอร์สตามเงื่อนไข'}
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '18px' }}>
+          <div style={{ ...styles.grid, ...styles.gridCols }}>
             {filteredCourses.map((course) => {
               const courseSessions = sessionsByCourse[course.id] || [];
               const nextSession = courseSessions
                 .filter((s) => new Date(s.start_date) >= new Date())
                 .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))[0];
               const coverImage = getCoverImage(course);
-              const placeholder = getPlaceholder(course.title);
+              const placeholderColor = getPlaceholder(course.title);
 
               return (
-                <div key={course.id} style={layout.card}>
+                <div key={course.id} style={styles.courseCard}>
+                  {/* Course Image */}
                   <div
                     style={{
-                      height: '180px',
+                      ...styles.courseImage,
                       background: coverImage
-                        ? `linear-gradient(120deg, rgba(17,24,39,0.35), rgba(17,24,39,0.1)), url(${coverImage}) center/cover no-repeat`
-                        : `linear-gradient(135deg, ${placeholder.color} 0%, ${placeholder.color}cc 100%)`,
-                      position: 'relative',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#fff',
+                        ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url(${coverImage}) center/cover`
+                        : `linear-gradient(135deg, ${placeholderColor}, ${placeholderColor}cc)`,
                     }}
                   >
                     {!coverImage && (
-                      <div style={{ fontSize: '46px', fontWeight: 800, opacity: 0.28 }}>{placeholder.initial}</div>
+                      <span style={{ fontSize: '48px', opacity: 0.3 }}>
+                        {course.title?.charAt(0)?.toUpperCase() || 'C'}
+                      </span>
                     )}
-                    <div style={{ position: 'absolute', top: '12px', right: '12px', display: 'grid', gap: '6px' }}>
-                      <div style={{
-                        background: course.is_free ? 'rgba(34,197,94,0.95)' : 'rgba(17,24,39,0.85)',
+                    <div
+                      style={{
+                        ...styles.priceTag,
+                        backgroundColor: course.is_free ? palette.success : palette.primary,
                         color: '#fff',
-                        padding: '8px 12px',
-                        borderRadius: '12px',
-                        fontSize: '13px',
-                        fontWeight: 800,
-                        letterSpacing: '0.3px',
-                        textTransform: 'uppercase',
-                      }}>
-                        {course.is_free ? 'Free Access' : formatPrice(course)}
-                      </div>
-                      {nextSession && (
-                        <div style={{ background: 'rgba(255,255,255,0.16)', color: '#e0f2fe', padding: '6px 10px', borderRadius: '10px', fontSize: '12px', fontWeight: 600 }}>
-                          รอบถัดไป {formatDateShort(nextSession.start_date)}
-                        </div>
-                      )}
+                      }}
+                    >
+                      {formatPrice(course)}
                     </div>
                   </div>
 
-                  <div style={{ padding: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'flex-start' }}>
-                      <h3 style={{ margin: 0, fontSize: '18px', color: palette.ink, lineHeight: 1.4 }}>
-                        {course.title}
-                      </h3>
-                      <span style={{ padding: '6px 10px', background: palette.accentSoft, color: palette.accentDark, borderRadius: '12px', fontSize: '12px', fontWeight: 700 }}>
-                        {course.channel || 'Onsite / Online'}
+                  {/* Course Content */}
+                  <div style={styles.courseContent}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <h3 style={styles.courseTitle}>{course.title}</h3>
+                      <span style={{
+                        padding: '4px 8px',
+                        backgroundColor: palette.borderLight,
+                        color: palette.textMuted,
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                      }}>
+                        {course.channel || 'Onsite'}
                       </span>
                     </div>
 
                     {course.description && (
-                      <p style={{ margin: '10px 0 12px', color: palette.muted, fontSize: '14px', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {course.description}
-                      </p>
+                      <p style={styles.courseDescription}>{course.description}</p>
                     )}
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
-                      <div style={{ background: palette.soft, padding: '10px 12px', borderRadius: '10px', fontSize: '13px', border: `1px solid ${palette.border}` }}>
-                        <div style={{ color: palette.muted, fontSize: '11px', marginBottom: '4px', letterSpacing: '0.3px' }}>สาขา</div>
-                        <div style={{ color: palette.slate, fontWeight: 600 }}>{course.branch_name || '-'} </div>
+                    <div style={styles.courseDetails}>
+                      <div>
+                        <div style={styles.detailItem}>สาขา</div>
+                        <div style={styles.detailValue}>{course.branch_name || '-'}</div>
                       </div>
-                      <div style={{ background: palette.soft, padding: '10px 12px', borderRadius: '10px', fontSize: '13px', border: `1px solid ${palette.border}` }}>
-                        <div style={{ color: palette.muted, fontSize: '11px', marginBottom: '4px', letterSpacing: '0.3px' }}>ผู้สอน</div>
-                        <div style={{ color: palette.slate, fontWeight: 600 }}>{course.instructor_name || '-'}</div>
+                      <div>
+                        <div style={styles.detailItem}>ผู้สอน</div>
+                        <div style={styles.detailValue}>{course.instructor_name || '-'}</div>
+                      </div>
+                      <div>
+                        <div style={styles.detailItem}>ความจุ</div>
+                        <div style={styles.detailValue}>{course.capacity} คน</div>
+                      </div>
+                      <div>
+                        <div style={styles.detailItem}>สิทธิ์เข้าเรียน</div>
+                        <div style={styles.detailValue}>{course.access_times} ครั้ง</div>
                       </div>
                     </div>
 
                     {nextSession && (
-                      <div style={{ background: '#0b1224', color: '#e2e8f0', padding: '10px 12px', borderRadius: '12px', marginBottom: '12px', fontSize: '13px', display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}>
-                        <div>
-                          <div style={{ fontWeight: 700, color: '#ffffff' }}>รอบถัดไป</div>
-                          <div style={{ opacity: 0.85 }}>
-                            {formatDate(nextSession.start_date)} · {formatTime(nextSession.start_time)}
-                          </div>
-                        </div>
-                        <div style={{ fontSize: '12px', background: 'rgba(255,255,255,0.08)', padding: '6px 10px', borderRadius: '10px' }}>
-                          ว่าง {Math.max((nextSession.available_spots ?? 0), 0)} ที่นั่ง
-                        </div>
+                      <div style={{
+                        backgroundColor: palette.borderLight,
+                        padding: '12px',
+                        borderRadius: '6px',
+                        marginBottom: '16px',
+                        fontSize: '14px',
+                      }}>
+                        <strong>รอบถัดไป:</strong> {formatDate(nextSession.start_date)} เวลา {formatTime(nextSession.start_time)}
+                        <br />
+                        <span style={{ color: palette.textMuted }}>
+                          ที่ว่าง: {Math.max((nextSession.available_spots ?? 0), 0)} คน
+                        </span>
                       </div>
                     )}
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: palette.muted, marginBottom: '14px' }}>
-                      <span>👥 {course.capacity} ที่นั่ง</span>
-                      <span>🎟️ เข้าได้ {course.access_times} ครั้ง</span>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                      <button
-                        type="button"
-                        style={layout.buttonPrimary}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = '0 10px 24px rgba(59,130,246,0.35)';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = 'none';
-                        }}
-                      >
-                        ซื้อคอร์ส
+                    <div style={styles.actionButtons}>
+                      <button style={{ ...styles.button, ...styles.buttonPrimary }}>
+                        จองคอร์ส
                       </button>
-                      <button
-                        type="button"
-                        style={{
-                          padding: '12px 18px',
-                          background: palette.soft,
-                          color: palette.slate,
-                          border: `1px solid ${palette.border}`,
-                          borderRadius: '12px',
-                          fontWeight: 700,
-                          fontSize: '14px',
-                          cursor: 'pointer',
-                          width: '100%',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.border = `1px solid ${palette.accent}`;
-                          e.currentTarget.style.color = palette.accent;
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.border = `1px solid ${palette.border}`;
-                          e.currentTarget.style.color = palette.slate;
-                        }}
-                      >
-                        ดูรายละเอียด
+                      <button style={{ ...styles.button, ...styles.buttonSecondary }}>
+                        รายละเอียด
                       </button>
                     </div>
                   </div>
@@ -538,65 +683,89 @@ function Home() {
           </div>
         </div>
 
-        {/* All sessions */}
+        {/* Sessions Table */}
         {sessions.length > 0 && (
-          <div style={{ marginTop: '30px' }}>
-            <h2 style={layout.sectionTitle}>
-              <span style={{ fontSize: '24px' }}>📋</span>
+          <div style={{ marginTop: '32px' }}>
+            <h2 style={styles.sectionTitle}>
+              <TableIcon />
               ตารางการสอนทั้งหมด
             </h2>
-            <div style={{ ...layout.card, overflow: 'hidden' }}>
+            
+            {/* Desktop Table */}
+            <div style={{ ...styles.card, overflow: 'hidden', display: window.innerWidth > 768 ? 'block' : 'none' }}>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
                   <thead>
-                    <tr style={{ background: palette.soft }}>
-                      {['คอร์ส', 'วันที่', 'เวลา', 'สาขา', 'ผู้สอน', 'ที่ว่าง'].map((head) => (
-                        <th
-                          key={head}
-                          style={{ padding: '12px 16px', textAlign: head === 'ที่ว่าง' ? 'center' : 'left', fontWeight: 700, color: palette.ink, borderBottom: `2px solid ${palette.border}` }}
-                        >
-                          {head}
-                        </th>
-                      ))}
+                    <tr style={{ backgroundColor: palette.borderLight }}>
+                      <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', borderBottom: `1px solid ${palette.border}` }}>
+                        คอร์ส
+                      </th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', borderBottom: `1px solid ${palette.border}` }}>
+                        วันที่
+                      </th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', borderBottom: `1px solid ${palette.border}` }}>
+                        เวลา
+                      </th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', borderBottom: `1px solid ${palette.border}` }}>
+                        สาขา
+                      </th>
+                      <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', borderBottom: `1px solid ${palette.border}` }}>
+                        ผู้สอน
+                      </th>
+                      <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', borderBottom: `1px solid ${palette.border}` }}>
+                        ที่ว่าง
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {sessions
                       .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+                      .slice(0, 20) // Limit to 20 sessions for better performance
                       .map((session, index) => {
                         const course = getCourseById(session.course_id);
                         const isPast = new Date(session.start_date) < new Date();
                         return (
                           <tr
                             key={session.id}
-                            style={{ background: index % 2 === 0 ? '#fff' : '#f9fbff', opacity: isPast ? 0.6 : 1 }}
+                            style={{
+                              backgroundColor: index % 2 === 0 ? palette.surface : palette.borderLight,
+                              opacity: isPast ? 0.6 : 1,
+                            }}
                           >
-                            <td style={{ padding: '12px 16px', borderBottom: `1px solid ${palette.border}` }}>
-                              <div style={{ fontWeight: 600, color: palette.slate }}>{session.session_name || course?.title || '-'}</div>
-                              <div style={{ fontSize: '12px', color: palette.muted }}>{course?.title || '-'}</div>
+                            <td style={{ padding: '16px', borderBottom: `1px solid ${palette.border}` }}>
+                              <div style={{ fontWeight: '500' }}>
+                                {session.session_name || course?.title || '-'}
+                              </div>
+                              {session.session_name && (
+                                <div style={{ fontSize: '12px', color: palette.textMuted }}>
+                                  {course?.title || '-'}
+                                </div>
+                              )}
                             </td>
-                            <td style={{ padding: '12px 16px', borderBottom: `1px solid ${palette.border}`, color: palette.slate }}>
+                            <td style={{ padding: '16px', borderBottom: `1px solid ${palette.border}` }}>
                               {formatDate(session.start_date)}
-                              {session.day_of_week && <span style={{ color: palette.muted }}> ({session.day_of_week})</span>}
                             </td>
-                            <td style={{ padding: '12px 16px', borderBottom: `1px solid ${palette.border}`, color: palette.slate }}>
-                              {formatTime(session.start_time)}{session.end_time && ` - ${formatTime(session.end_time)}`}
+                            <td style={{ padding: '16px', borderBottom: `1px solid ${palette.border}` }}>
+                              {formatTime(session.start_time)}
+                              {session.end_time && ` - ${formatTime(session.end_time)}`}
                             </td>
-                            <td style={{ padding: '12px 16px', borderBottom: `1px solid ${palette.border}`, color: palette.slate }}>
+                            <td style={{ padding: '16px', borderBottom: `1px solid ${palette.border}` }}>
                               {session.branch_name || course?.branch_name || '-'}
                             </td>
-                            <td style={{ padding: '12px 16px', borderBottom: `1px solid ${palette.border}`, color: palette.slate }}>
+                            <td style={{ padding: '16px', borderBottom: `1px solid ${palette.border}` }}>
                               {session.instructor_name || course?.instructor_name || '-'}
                             </td>
-                            <td style={{ padding: '12px 16px', borderBottom: `1px solid ${palette.border}`, textAlign: 'center' }}>
-                              <span style={{
-                                background: (session.available_spots ?? 0) > 0 ? '#dbeafe' : '#fee2e2',
-                                color: (session.available_spots ?? 0) > 0 ? '#1d4ed8' : '#b91c1c',
-                                padding: '6px 10px',
-                                borderRadius: '10px',
-                                fontWeight: 700,
-                                fontSize: '12px',
-                              }}>
+                            <td style={{ padding: '16px', borderBottom: `1px solid ${palette.border}`, textAlign: 'center' }}>
+                              <span
+                                style={{
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '12px',
+                                  fontWeight: '500',
+                                  backgroundColor: (session.available_spots ?? 0) > 0 ? '#dcfce7' : '#fee2e2',
+                                  color: (session.available_spots ?? 0) > 0 ? '#166534' : '#991b1b',
+                                }}
+                              >
                                 {Math.max((session.available_spots ?? 0), 0)} / {session.max_capacity || course?.capacity || 0}
                               </span>
                             </td>
@@ -607,13 +776,45 @@ function Home() {
                 </table>
               </div>
             </div>
+
+            {/* Mobile Cards */}
+            <div style={{ display: window.innerWidth <= 768 ? 'block' : 'none' }}>
+              {sessions
+                .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
+                .slice(0, 10)
+                .map((session) => {
+                  const course = getCourseById(session.course_id);
+                  return (
+                    <div key={session.id} style={{ ...styles.card, ...styles.cardPadding, marginBottom: '16px' }}>
+                      <h4 style={{ marginTop: 0, marginBottom: '8px', fontSize: '16px' }}>
+                        {session.session_name || course?.title || 'รอบเรียน'}
+                      </h4>
+                      <div style={{ fontSize: '14px', marginBottom: '4px' }}>
+                        <strong>วันที่:</strong> {formatDate(session.start_date)}
+                      </div>
+                      <div style={{ fontSize: '14px', marginBottom: '4px' }}>
+                        <strong>เวลา:</strong> {formatTime(session.start_time)}
+                        {session.end_time && ` - ${formatTime(session.end_time)}`}
+                      </div>
+                      <div style={{ fontSize: '14px', marginBottom: '4px' }}>
+                        <strong>สาขา:</strong> {session.branch_name || course?.branch_name || '-'}
+                      </div>
+                      <div style={{ fontSize: '14px', marginBottom: '8px' }}>
+                        <strong>ผู้สอน:</strong> {session.instructor_name || course?.instructor_name || '-'}
+                      </div>
+                      <div style={{ 
+                        fontSize: '14px', 
+                        color: (session.available_spots ?? 0) > 0 ? palette.success : palette.danger,
+                        fontWeight: '500' 
+                      }}>
+                        ที่ว่าง: {Math.max((session.available_spots ?? 0), 0)} / {session.max_capacity || course?.capacity || 0}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
           </div>
         )}
-      </div>
-
-      <div style={{ background: palette.navy, color: '#e5e7eb', padding: '20px 16px', textAlign: 'center', marginTop: '40px' }}>
-        <p style={{ margin: '0 0 6px', fontSize: '14px', letterSpacing: '0.3px' }}>NeedHome Yoga & Wellness</p>
-        <p style={{ margin: 0, fontSize: '12px', opacity: 0.75 }}>ติดต่อทีมงานผ่าน LINE Official Account สำหรับข้อมูลเพิ่มเติม</p>
       </div>
     </div>
   );

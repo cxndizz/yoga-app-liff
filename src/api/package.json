@@ -1,5 +1,5 @@
 {
-  "name": "appdev-needhome-api",
+  "name": "appdev-api",
   "version": "1.0.0",
   "description": "Backend API for Line LIFF and admin web",
   "main": "src/server.js",

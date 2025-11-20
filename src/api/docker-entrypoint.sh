@@ -2,7 +2,7 @@
 set -e
 
 echo "====================================="
-echo "Starting NeedHome API Server"
+echo "Starting API Server"
 echo "====================================="
 
 # Wait for database

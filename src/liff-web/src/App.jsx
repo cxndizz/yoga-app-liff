@@ -14,19 +14,31 @@ function App() {
     const action = params.get('action');
     if (!action) return;
 
-    if (action === 'courses') navigate('/courses');
-    else if (action === 'howto') navigate('/how-to');
-    else if (action === 'contact') navigate('/contact');
-    // action = register|login จะคงอยู่ที่หน้าหลักเพื่อให้ banner แสดงพารามิเตอร์ที่ส่งมาจาก Rich Menu
+    // Handle Rich Menu navigation
+    if (action === 'register' || action === 'login') {
+      // For register/login, stay on home page but could add specific handling
+      navigate('/');
+    } else if (action === 'courses') {
+      navigate('/courses');
+    } else if (action === 'howto') {
+      navigate('/how-to');
+    } else if (action === 'contact') {
+      navigate('/contact');
+    }
   }, [location.search, navigate]);
 
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/courses" element={<Courses />} />
-      <Route path="/how-to" element={<HowTo />} />
-      <Route path="/contact" element={<Contact />} />
-    </Routes>
+    <div style={{
+      minHeight: '100vh',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    }}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/courses" element={<Courses />} />
+        <Route path="/how-to" element={<HowTo />} />
+        <Route path="/contact" element={<Contact />} />
+      </Routes>
+    </div>
   );
 }
 
