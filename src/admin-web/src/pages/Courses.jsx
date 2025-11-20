@@ -9,6 +9,8 @@ const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 const defaultFormValues = {
   title: '',
   description: '',
+  branch_id: '',
+  instructor_id: '',
   capacity: 10,
   is_free: false,
   price_cents: 0,
@@ -23,6 +25,8 @@ function Courses() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [form, setForm] = useState(() => ({ ...defaultFormValues }));
+  const [branches, setBranches] = useState([]);
+  const [instructors, setInstructors] = useState([]);
   const [coverPreview, setCoverPreview] = useState('');
   const [coverMeta, setCoverMeta] = useState(null);
   const [imageProcessing, setImageProcessing] = useState(false);
@@ -41,6 +45,8 @@ function Courses() {
 
   useEffect(() => {
     fetchCourses();
+    fetchBranches();
+    fetchInstructors();
   }, []);
 
   useEffect(() => {
@@ -71,6 +77,24 @@ function Courses() {
     }
   };
 
+  const fetchBranches = async () => {
+    try {
+      const res = await axios.post(`${apiBase}/api/admin/branches/list`, {});
+      setBranches(res.data || []);
+    } catch (err) {
+      console.error('Error fetching branches:', err);
+    }
+  };
+
+  const fetchInstructors = async () => {
+    try {
+      const res = await axios.post(`${apiBase}/api/admin/instructors/list`, {});
+      setInstructors(res.data?.instructors || []);
+    } catch (err) {
+      console.error('Error fetching instructors:', err);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -88,6 +112,8 @@ function Courses() {
         ...form,
         title: form.title.trim(),
         description: form.description.trim(),
+        branch_id: form.branch_id ? Number(form.branch_id) : null,
+        instructor_id: form.instructor_id ? Number(form.instructor_id) : null,
         capacity: Number(form.capacity),
         price_cents: form.is_free ? 0 : Number(form.price_cents),
         access_times: Number(form.access_times),
@@ -128,6 +154,8 @@ function Courses() {
     setForm({
       title: course.title || '',
       description: course.description || '',
+      branch_id: course.branch_id || '',
+      instructor_id: course.instructor_id || '',
       capacity: typeof course.capacity === 'number' ? course.capacity : defaultFormValues.capacity,
       is_free: !!course.is_free,
       price_cents: course.price_cents || 0,
@@ -289,6 +317,52 @@ function Courses() {
                 onChange={handleInputChange('capacity')}
                 disabled={submitting}
               />
+            </div>
+          </div>
+
+          <div className="form-grid form-grid--two">
+            <div className="field">
+              <label className="field__label">สาขา</label>
+              <select
+                className="input"
+                value={form.branch_id}
+                onChange={handleInputChange('branch_id')}
+                disabled={submitting || branches.length === 0}
+              >
+                <option value="">เลือกสาขา (ถ้ามี)</option>
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
+              </select>
+              {branches.length === 0 && (
+                <p style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
+                  ยังไม่มีข้อมูลสาขาในระบบ
+                </p>
+              )}
+            </div>
+
+            <div className="field">
+              <label className="field__label">ผู้สอน</label>
+              <select
+                className="input"
+                value={form.instructor_id}
+                onChange={handleInputChange('instructor_id')}
+                disabled={submitting || instructors.length === 0}
+              >
+                <option value="">เลือกผู้สอน (ถ้ามี)</option>
+                {instructors.map((instructor) => (
+                  <option key={instructor.id} value={instructor.id}>
+                    {instructor.name}
+                  </option>
+                ))}
+              </select>
+              {instructors.length === 0 && (
+                <p style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
+                  ยังไม่มีข้อมูลผู้สอนในระบบ
+                </p>
+              )}
             </div>
           </div>
 
@@ -476,6 +550,8 @@ function Courses() {
                   <th>รูป</th>
                   <th>ชื่อคอร์ส</th>
                   <th>รายละเอียด</th>
+                  <th>สาขา</th>
+                  <th>ผู้สอน</th>
                   <th>ประเภท</th>
                   <th style={{ textAlign: 'right' }}>ราคา</th>
                   <th style={{ textAlign: 'center' }}>ที่รับ</th>
@@ -513,6 +589,12 @@ function Courses() {
                     <td style={{ padding: '12px 8px', fontWeight: '500' }}>{course.title}</td>
                     <td style={{ padding: '12px 8px', color: '#6b7280', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {course.description || '-'}
+                    </td>
+                    <td style={{ padding: '12px 8px' }}>
+                      {course.branch_name || '-'}
+                    </td>
+                    <td style={{ padding: '12px 8px' }}>
+                      {course.instructor_name || '-'}
                     </td>
                     <td style={{ padding: '12px 8px' }}>
                       <span style={{

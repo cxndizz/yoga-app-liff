@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
@@ -31,8 +32,8 @@ const styles = {
   header: {
     backgroundColor: palette.primary,
     color: '#fff',
-    padding: '32px 0',
-    marginBottom: '32px',
+    padding: '24px 0',
+    marginBottom: '24px',
   },
   headerContent: {
     maxWidth: '1200px',
@@ -71,7 +72,7 @@ const styles = {
   mainContent: {
     maxWidth: '1200px',
     margin: '0 auto',
-    padding: '0 16px 32px',
+    padding: '0 16px 24px',
   },
   card: {
     backgroundColor: palette.surface,
@@ -81,10 +82,10 @@ const styles = {
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
   },
   cardPadding: {
-    padding: '24px',
+    padding: '18px',
   },
   sectionTitle: {
-    fontSize: '24px',
+    fontSize: '22px',
     fontWeight: '600',
     color: palette.text,
     marginBottom: '16px',
@@ -295,6 +296,7 @@ const TableIcon = () => (
 );
 
 function Home() {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -395,7 +397,10 @@ function Home() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button style={{ ...styles.button, ...styles.buttonSecondary }}>
+            <button
+              style={{ ...styles.button, ...styles.buttonSecondary }}
+              onClick={() => navigate('/courses')}
+            >
               ดูคอร์สทั้งหมด
             </button>
           </div>
@@ -669,10 +674,16 @@ function Home() {
                     )}
 
                     <div style={styles.actionButtons}>
-                      <button style={{ ...styles.button, ...styles.buttonPrimary }}>
+                      <button
+                        style={{ ...styles.button, ...styles.buttonPrimary }}
+                        onClick={() => navigate(`/courses?courseId=${course.id}`)}
+                      >
                         จองคอร์ส
                       </button>
-                      <button style={{ ...styles.button, ...styles.buttonSecondary }}>
+                      <button
+                        style={{ ...styles.button, ...styles.buttonSecondary }}
+                        onClick={() => navigate(`/courses?courseId=${course.id}`)}
+                      >
                         รายละเอียด
                       </button>
                     </div>
