@@ -4,8 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { getSessionSnapshot, persistSession } from './session';
 import { decodeJwtPayload, isTokenExpired, shouldRefreshToken } from './tokenUtils';
 import { useAdminAuth } from './AdminAuthContext';
-
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { apiBase } from '../config';
 
 const setAxiosAuthHeader = (token) => {
   if (token) {
