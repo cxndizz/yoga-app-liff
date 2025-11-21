@@ -69,7 +69,7 @@ function Courses() {
   );
 
   return (
-    <div style={{ display: 'grid', gap: 18 }}>
+    <div className="page-stack">
       <div className="section-heading">
         <div>
           <h2>{t('course.all')}</h2>
@@ -91,7 +91,7 @@ function Courses() {
       {status === 'loading' && <div className="helper-text">{t('course.loadingAll')}</div>}
       {status === 'error' && <div className="helper-text">{t('course.errorFetch')}</div>}
 
-      <div className="grid">
+      <div className="grid" role="list">
         {filtered.map((course) => (
           <CourseCard key={course.id} course={course} />
         ))}

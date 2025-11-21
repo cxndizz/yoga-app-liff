@@ -56,7 +56,7 @@ function Home() {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+    <div className="page-stack">
       <HeroCarousel
         slides={slides}
         isLoading={status === 'loading'}
@@ -68,10 +68,10 @@ function Home() {
         }}
       />
 
-      <section>
+      <section aria-labelledby="featured-heading">
         <div className="section-heading">
           <div>
-            <h2>{t('course.featured')}</h2>
+            <h2 id="featured-heading">{t('course.featured')}</h2>
             <div className="helper-text">{t('course.featuredSubtitle')}</div>
           </div>
           <button type="button" className="btn btn-outline" onClick={() => navigate('/courses')}>
@@ -82,7 +82,7 @@ function Home() {
         {status === 'loading' && <div className="helper-text">{t('course.loadingCourses')}</div>}
         {status === 'error' && <div className="helper-text">{t('course.errorLoad')}</div>}
 
-        <div className="grid">
+        <div className="grid" role="list">
           {featured.map((course) => (
             <CourseCard key={course.id} course={course} />
           ))}
@@ -90,13 +90,15 @@ function Home() {
         </div>
       </section>
 
-      <section className="card-surface" style={{ padding: 20, borderRadius: 18, display: 'grid', gap: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+      <section className="card-surface section-card" aria-labelledby="omise-feature">
+        <div className="flow-row">
           <div className="badge">{t('hero.omisePayment')}</div>
           <div className="badge">{t('hero.hybridTypes')}</div>
         </div>
-        <div style={{ fontSize: '1.05rem', color: '#e6e9f3' }}>{t('hero.omiseDescription')}</div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <div id="omise-feature" className="meta-text" style={{ fontSize: '1.05rem' }}>
+          {t('hero.omiseDescription')}
+        </div>
+        <div className="action-row">
           <button type="button" className="btn btn-primary" onClick={() => navigate('/courses')}>
             {t('hero.startBrowsing')}
           </button>
@@ -109,10 +111,10 @@ function Home() {
         </div>
       </section>
 
-      <section className="card-surface" style={{ padding: 20, borderRadius: 18, display: 'grid', gap: 12 }}>
+      <section className="card-surface section-card" aria-labelledby="my-courses-heading">
         <div className="section-heading" style={{ marginBottom: 0 }}>
           <div>
-            <h2>{t('myCourses.title')}</h2>
+            <h2 id="my-courses-heading">{t('myCourses.title')}</h2>
             <div className="helper-text">{t('myCourses.homeSubtitle')}</div>
           </div>
           <button type="button" className="btn btn-primary" onClick={() => navigate('/my-courses')}>
@@ -120,7 +122,7 @@ function Home() {
           </button>
         </div>
         <div className="helper-text">{t('myCourses.homeHint')}</div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        <div className="chip-row">
           <span className="badge">{t('checkout.studentInfo')}</span>
           <span className="badge">{t('checkout.paymentMethod')}</span>
           <span className="badge">{t('myCourses.statusPending')}</span>

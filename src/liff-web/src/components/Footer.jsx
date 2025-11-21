@@ -7,23 +7,14 @@ function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer
-      className="card-surface"
-      style={{
-        width: 'min(1200px, 92vw)',
-        margin: '48px auto 24px',
-        padding: '18px',
-        borderRadius: '20px',
-        display: 'grid',
-        gridTemplateColumns: '1fr',
-        gap: 12,
-      }}
-    >
+    <footer className="card-surface footer" aria-label={t('footer.navigation', { defaultValue: 'Footer navigation' })}>
       <div>
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.15rem' }}>{t('nav.brand')}</div>
-        <div style={{ color: 'var(--muted)', marginTop: 4 }}>Boutique LIFF Studio • Luxury movement and mindfulness experiences</div>
+        <div className="helper-text" style={{ marginTop: 4 }}>
+          Boutique LIFF Studio • Luxury movement and mindfulness experiences
+        </div>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+      <div className="footer-links">
         <Link to="/about" className="badge">
           {t('footer.about')}
         </Link>
@@ -37,7 +28,7 @@ function Footer() {
           {t('footer.privacy')}
         </Link>
       </div>
-      <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{t('footer.copyright', { year: currentYear })}</div>
+      <div className="footer-note">{t('footer.copyright', { year: currentYear })}</div>
     </footer>
   );
 }

@@ -30,7 +30,7 @@ function MyCourses() {
   };
 
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
+    <div className="page-stack">
       <div className="section-heading">
         <div>
           <h2>{t('myCourses.title')}</h2>
@@ -43,7 +43,7 @@ function MyCourses() {
         </div>
       </div>
 
-      <div className="grid">
+      <div className="grid" role="list">
         {courses.map((course) => (
           <div key={course.id} className="card-surface mycourse-card">
             <div className="mycourse-cover" aria-hidden>
@@ -84,7 +84,7 @@ function MyCourses() {
                     {formatPrice(course.priceCents, course.isFree)}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <div className="action-row" style={{ justifyContent: 'flex-end' }}>
                   {course.paymentStatus === 'pending' && (
                     <button
                       type="button"
@@ -108,7 +108,7 @@ function MyCourses() {
         ))}
       </div>
 
-      <div className="card-surface" style={{ padding: 16 }}>
+      <div className="card-surface section-card" style={{ padding: 16 }}>
         <div className="helper-text">{t('myCourses.mockData')}</div>
       </div>
     </div>

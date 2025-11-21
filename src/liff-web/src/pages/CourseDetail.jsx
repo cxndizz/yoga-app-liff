@@ -52,9 +52,9 @@ function CourseDetail() {
   const seatLabel = t('access.seatsLeftDetail', { left: course.seatsLeft, capacity: course.capacity });
 
   return (
-    <div style={{ display: 'grid', gap: 18 }}>
+    <div className="page-stack">
       <div
-        className="card-surface"
+        className="card-surface card-media"
         style={{
           position: 'relative',
           overflow: 'hidden',
@@ -106,14 +106,14 @@ function CourseDetail() {
         </div>
       </div>
 
-      <div className="card-surface" style={{ padding: 18, display: 'grid', gap: 12 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="card-surface section-card" style={{ padding: 18 }}>
+        <div className="action-row" style={{ justifyContent: 'space-between' }}>
           <div>
             <div style={{ color: 'var(--muted)' }}>{t('course.priceAccess')}</div>
             <div style={{ fontSize: '1.4rem', fontWeight: 800 }}>{priceLabel}</div>
             <div style={{ color: 'var(--muted)' }}>{accessLabel}</div>
           </div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <div className="action-row">
             <button type="button" className="btn btn-outline" onClick={() => navigate('/courses')}>
               {t('course.browseOther')}
             </button>
@@ -156,10 +156,10 @@ function CourseDetail() {
         </div>
       </div>
 
-      <section>
+      <section aria-labelledby="session-heading">
         <div className="section-heading">
           <div>
-            <h2>{t('course.sessions')}</h2>
+            <h2 id="session-heading">{t('course.sessions')}</h2>
             <div className="helper-text">{t('session.timetable')}</div>
           </div>
         </div>

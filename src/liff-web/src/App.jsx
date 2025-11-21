@@ -34,7 +34,7 @@ function App() {
     <div className="app-shell">
       <div className="nav-spacer" />
       <Navbar />
-      <main className="content-area">
+      <main className="content-area" role="main" id="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/courses" element={<Courses />} />

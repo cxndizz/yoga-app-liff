@@ -80,13 +80,13 @@ function Checkout() {
   if (status === 'error' || !course) return <div className="helper-text">{t('course.notFound')}</div>;
 
   return (
-    <div style={{ display: 'grid', gap: 16 }}>
+    <div className="page-stack">
       <div className="section-heading">
         <div>
           <h2>{t('checkout.title')}</h2>
           <div className="helper-text">{t('checkout.subtitle')}</div>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="action-row">
           <button type="button" className="btn btn-outline" onClick={() => navigate(-1)}>
             {t('common.back')}
           </button>
@@ -97,7 +97,7 @@ function Checkout() {
       </div>
 
       <div className="checkout-grid">
-        <div className="card-surface" style={{ padding: 16, display: 'grid', gap: 14 }}>
+        <div className="card-surface section-card" style={{ padding: 16 }}>
           <div style={{ display: 'grid', gap: 10 }}>
             <div className="badge">{t('checkout.studentInfo')}</div>
             <div className="helper-text">{t('checkout.contactHint')}</div>
@@ -155,8 +155,8 @@ function Checkout() {
           </label>
         </div>
 
-        <div className="card-surface" style={{ padding: 16, display: 'grid', gap: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
+        <div className="card-surface section-card" style={{ padding: 16 }}>
+          <div className="action-row" style={{ justifyContent: 'space-between' }}>
             <div>
               <div className="badge">{t('checkout.paymentMethod')}</div>
               <div className="helper-text">{t('checkout.paymentHint')}</div>
@@ -212,7 +212,7 @@ function Checkout() {
             <div className="pill success" style={{ display: 'grid', gap: 6 }}>
               <div style={{ fontWeight: 700 }}>{t('checkout.mockSuccess')}</div>
               <div className="helper-text">{t('checkout.mockSuccessHint')}</div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div className="action-row">
                 <button type="button" className="btn btn-outline" onClick={() => navigate('/my-courses')}>
                   {t('checkout.viewMyCourses')}
                 </button>
@@ -224,8 +224,8 @@ function Checkout() {
           )}
         </div>
 
-        <div className="card-surface" style={{ padding: 16, display: 'grid', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
+        <div className="card-surface section-card" style={{ padding: 16 }}>
+          <div className="action-row" style={{ justifyContent: 'space-between' }}>
             <div>
               <div className="badge">{t('checkout.summary')}</div>
               <div className="helper-text">{t('checkout.summaryHint')}</div>
