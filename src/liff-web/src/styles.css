@@ -172,12 +172,207 @@ a {
   grid-template-columns: 1fr;
 }
 
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+.form-field {
+  display: grid;
+  gap: 6px;
+  color: var(--soft-white);
+  font-weight: 600;
+}
+
+.form-error {
+  color: #fbcfe8;
+  font-size: 0.9rem;
+}
+
+.payment-options {
+  display: grid;
+  gap: 10px;
+}
+
+.payment-card {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.payment-card:hover {
+  border-color: var(--rose);
+}
+
+.payment-card.active {
+  border-color: var(--rose);
+  box-shadow: var(--shadow);
+}
+
+.payment-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.transfer-box {
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  display: grid;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.transfer-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+}
+
+.transfer-card {
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pill {
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pill.success {
+  border-color: #34d399;
+  color: #bbf7d0;
+}
+
+.pill.warning {
+  border-color: #f97316;
+  color: #ffedd5;
+}
+
+.summary-card {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.summary-card img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.summary-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+}
+
+.summary-line.total {
+  font-size: 1.1rem;
+}
+
+.mini-session-list {
+  display: grid;
+  gap: 8px;
+}
+
+.mini-session {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mycourse-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.mycourse-cover img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+.mycourse-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 14px 14px;
+}
+
+.mycourse-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.mycourse-header h3 {
+  margin: 4px 0;
+  font-family: var(--font-heading);
+}
+
+.mycourse-meta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.mycourse-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 @media (min-width: 640px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .hero-grid {
     grid-template-columns: 1.1fr 0.9fr;
+  }
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .checkout-grid {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+  .mycourse-card {
+    grid-template-columns: 0.9fr 1.1fr;
+  }
+  .mycourse-cover img {
+    height: 100%;
   }
 }
 
@@ -196,6 +391,15 @@ a {
   }
   .only-mobile {
     display: none !important;
+  }
+  .checkout-grid {
+    grid-template-columns: 1.1fr 0.9fr 1fr;
+  }
+  .transfer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mycourse-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

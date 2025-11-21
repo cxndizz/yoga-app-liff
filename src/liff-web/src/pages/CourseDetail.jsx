@@ -117,7 +117,13 @@ function CourseDetail() {
             <button type="button" className="btn btn-outline" onClick={() => navigate('/courses')}>
               {t('course.browseOther')}
             </button>
-            <button type="button" className="btn btn-primary">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() =>
+                navigate(course.isFree ? `/courses/${courseId}/checkout` : `/courses/${courseId}/checkout`)
+              }
+            >
               {course.isFree ? t('common.registerNow') : t('common.payOmise')}
             </button>
           </div>

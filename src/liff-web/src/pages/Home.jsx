@@ -103,6 +103,27 @@ function Home() {
           <button type="button" className="btn btn-outline" onClick={() => navigate('/courses?filter=premium')}>
             {t('course.premium')}
           </button>
+          <button type="button" className="btn btn-outline" onClick={() => navigate('/my-courses')}>
+            {t('nav.myCourses')}
+          </button>
+        </div>
+      </section>
+
+      <section className="card-surface" style={{ padding: 20, borderRadius: 18, display: 'grid', gap: 12 }}>
+        <div className="section-heading" style={{ marginBottom: 0 }}>
+          <div>
+            <h2>{t('myCourses.title')}</h2>
+            <div className="helper-text">{t('myCourses.homeSubtitle')}</div>
+          </div>
+          <button type="button" className="btn btn-primary" onClick={() => navigate('/my-courses')}>
+            {t('checkout.viewMyCourses')}
+          </button>
+        </div>
+        <div className="helper-text">{t('myCourses.homeHint')}</div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <span className="badge">{t('checkout.studentInfo')}</span>
+          <span className="badge">{t('checkout.paymentMethod')}</span>
+          <span className="badge">{t('myCourses.statusPending')}</span>
         </div>
       </section>
     </div>

@@ -11,6 +11,7 @@
     "buyCourse": "Buy course",
     "bookCourse": "Book this course",
     "payOmise": "Pay via Omise",
+    "myCourses": "My courses",
     "language": "Language",
     "search": "Search",
     "filter": "Filter"
@@ -78,6 +79,7 @@
   "nav": {
     "home": "Home",
     "courses": "Courses",
+    "myCourses": "My courses",
     "brand": "Yoga Luxe"
   },
   "footer": {
@@ -86,5 +88,55 @@
     "terms": "Terms",
     "privacy": "Privacy",
     "copyright": "© {{year}} Yoga Luxe. All rights reserved."
+  },
+  "checkout": {
+    "title": "Checkout & payment",
+    "subtitle": "Fill in your name and phone number before paying. Omise is not connected yet, so this is a mock screen.",
+    "viewMyCourses": "View my courses",
+    "studentInfo": "Student information",
+    "contactHint": "We use this to confirm bookings and send reminders via Line and SMS.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone number",
+    "email": "Email (optional)",
+    "note": "Note to instructor (optional)",
+    "notePlaceholder": "Allergic to nuts, prefer front row, need parking...",
+    "paymentMethod": "Payment method",
+    "paymentHint": "Select how you want to pay. Bank transfer is available now while Omise is being wired up.",
+    "recommended": "Recommended",
+    "mockOnly": "Mock only",
+    "bankInstruction": "Bank transfer / PromptPay",
+    "bankInstructionDetail": "Transfer then send your slip to admin chat. We confirm and activate your seat.",
+    "processing": "Processing...",
+    "mockPay": "Create mock payment",
+    "terms": "By proceeding you agree to our studio terms.",
+    "mockPending": "Waiting for slip verification (mock).",
+    "mockSuccess": "Mock payment confirmed",
+    "mockSuccessHint": "We recorded this booking locally. In production, Omise webhook will unlock your access.",
+    "summary": "Order summary",
+    "summaryHint": "Seat, access count, and learner name",
+    "selectedCourse": "Selected course",
+    "beneficiary": "Booked for",
+    "toBeFilled": "Please fill name",
+    "total": "Total",
+    "mockData": "Mock data only — Omise integration pending",
+    "required": "Required"
+  },
+  "myCourses": {
+    "title": "My courses",
+    "subtitle": "Access passes and bookings tied to your LINE account",
+    "homeSubtitle": "Track payments, seats, and recorded classes in one place",
+    "homeHint": "Tap to view passes you already bought or pending payments.",
+    "statusPending": "Pending payment",
+    "statusPaid": "Paid",
+    "nextSession": "Next session",
+    "remaining": "Remaining access",
+    "reference": "Ref: {{ref}}",
+    "amount": "Amount",
+    "payNow": "Complete payment",
+    "goToCourse": "Open course",
+    "mockData": "Mock data for UI only while Omise is being connected.",
+    "streaming": "Streaming access",
+    "homeCta": "Open my courses"
   }
 }
