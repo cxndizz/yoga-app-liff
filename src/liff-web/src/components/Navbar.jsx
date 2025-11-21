@@ -30,6 +30,7 @@ function Navbar() {
     { to: '/', label: t('nav.home') },
     { to: '/courses', label: t('nav.courses') },
     { to: '/courses?filter=premium', label: t('course.premium') },
+    { to: '/my-courses', label: t('nav.myCourses') },
   ];
 
   return (
@@ -111,10 +112,10 @@ function Navbar() {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => navigate('/courses')}
+          onClick={() => navigate('/my-courses')}
           style={{ paddingInline: 18 }}
         >
-          {t('common.buyCourse')}
+          {t('nav.myCourses')}
         </button>
       </nav>
 
@@ -137,8 +138,8 @@ function Navbar() {
             <NavLink key={link.to} to={link.to} label={link.label} onClick={() => setOpen(false)} />
           ))}
           <LanguageSwitcher />
-          <button type="button" className="btn btn-primary" onClick={() => navigate('/courses')}>
-            {t('common.buyCourse')}
+          <button type="button" className="btn btn-primary" onClick={() => navigate('/my-courses')}>
+            {t('nav.myCourses')}
           </button>
         </div>
       )}

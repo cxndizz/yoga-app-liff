@@ -11,6 +11,7 @@
     "buyCourse": "购买课程",
     "bookCourse": "预订此课程",
     "payOmise": "使用 Omise 支付",
+    "myCourses": "我的课程",
     "language": "语言",
     "search": "搜索",
     "filter": "筛选"
@@ -78,6 +79,7 @@
   "nav": {
     "home": "首页",
     "courses": "课程",
+    "myCourses": "我的课程",
     "brand": "Yoga Luxe"
   },
   "footer": {
@@ -86,5 +88,55 @@
     "terms": "条款",
     "privacy": "隐私",
     "copyright": "© {{year}} Yoga Luxe. 保留所有权利。"
+  },
+  "checkout": {
+    "title": "结账与付款",
+    "subtitle": "付款前请填写姓名和电话。尚未接入 Omise，此处为模拟界面。",
+    "viewMyCourses": "查看我的课程",
+    "studentInfo": "学员信息",
+    "contactHint": "用于确认预约并通过 Line / SMS 发送提醒。",
+    "firstName": "名",
+    "lastName": "姓",
+    "phone": "手机号",
+    "email": "邮箱（可选）",
+    "note": "给教练的备注（可选）",
+    "notePlaceholder": "例如 过敏、需要车位、想坐前排",
+    "paymentMethod": "支付方式",
+    "paymentHint": "目前支持转账/PromptPay，Omise 刷卡稍后开放。",
+    "recommended": "推荐",
+    "mockOnly": "模拟",
+    "bankInstruction": "银行转账 / PromptPay",
+    "bankInstructionDetail": "转账后把凭证发给管理员，审核后开通席位。",
+    "processing": "处理中...",
+    "mockPay": "创建模拟付款",
+    "terms": "继续操作即表示同意工作室条款。",
+    "mockPending": "等待凭证审核（模拟）",
+    "mockSuccess": "已记录模拟付款",
+    "mockSuccessHint": "正式版将使用 Omise webhook 自动解锁权限。",
+    "summary": "订单摘要",
+    "summaryHint": "席位、权限次数、学员姓名",
+    "selectedCourse": "所选课程",
+    "beneficiary": "预订给",
+    "toBeFilled": "请填写姓名",
+    "total": "合计",
+    "mockData": "仅为模拟数据，Omise 尚未连接",
+    "required": "必填"
+  },
+  "myCourses": {
+    "title": "我的课程",
+    "subtitle": "与你的 LINE 账号绑定的预约与权益",
+    "homeSubtitle": "在这里查看付款状态、席位与录播课程",
+    "homeHint": "点击查看已购买或待付款的课程。",
+    "statusPending": "待付款",
+    "statusPaid": "已付款",
+    "nextSession": "下一节课",
+    "remaining": "剩余次数",
+    "reference": "参考号: {{ref}}",
+    "amount": "金额",
+    "payNow": "去付款",
+    "goToCourse": "打开课程",
+    "mockData": "当前为模拟数据，等待 Omise 接入。",
+    "streaming": "录播访问",
+    "homeCta": "打开我的课程"
   }
 }

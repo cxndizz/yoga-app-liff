@@ -3,6 +3,8 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import Home from './pages/Home';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
+import Checkout from './pages/Checkout';
+import MyCourses from './pages/MyCourses';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
@@ -21,6 +23,7 @@ function App() {
       login: '/',
       howto: '/',
       contact: '/',
+      mycourses: '/my-courses',
     };
 
     const destination = actionRoutes[action];
@@ -36,6 +39,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:courseId" element={<CourseDetail />} />
+          <Route path="/courses/:courseId/checkout" element={<Checkout />} />
+          <Route path="/my-courses" element={<MyCourses />} />
         </Routes>
       </main>
       <Footer />
