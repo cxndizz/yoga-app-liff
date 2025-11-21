@@ -30,7 +30,6 @@ function Navbar() {
     { to: '/', label: t('nav.home') },
     { to: '/courses', label: t('nav.courses') },
     { to: '/courses?filter=premium', label: t('course.premium') },
-    { to: '/my-courses', label: t('nav.myCourses') },
   ];
 
   return (
@@ -47,7 +46,8 @@ function Navbar() {
         alignItems: 'center',
         justifyContent: 'space-between',
         gap: '12px',
-        backdropFilter: 'blur(10px)',
+        background: 'var(--navy-900)',
+        border: '1px solid var(--border)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -132,6 +132,7 @@ function Navbar() {
             flexDirection: 'column',
             gap: '8px',
             width: 'min(90vw, 260px)',
+            background: 'var(--navy-900)',
           }}
         >
           {links.map((link) => (
