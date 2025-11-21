@@ -25,7 +25,7 @@ services:
       dockerfile: ../../docker/api/Dockerfile
     container_name: yoga_lineoa_api
     env_file:
-      - ./src/api/.env.example
+      - ./src/api/.env
     environment:
       DATABASE_URL: postgres://appuser:applocalpass@db:5432/appdb
       PORT: 4000

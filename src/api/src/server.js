@@ -30,7 +30,11 @@ const parseLimit = (value, fallback) => {
 app.use(bodyParser.json({ limit: '15mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '15mb' }));
 
-const allowedOrigins = [process.env.CORS_ORIGIN_LIFF, process.env.CORS_ORIGIN_ADMIN].filter(Boolean);
+const allowedOrigins = [
+  process.env.CORS_ORIGIN_LIFF,
+  process.env.CORS_ORIGIN_ADMIN,
+  process.env.CORS_ORIGIN_LOCAL
+].filter(Boolean);
 
 app.use(
   cors({
