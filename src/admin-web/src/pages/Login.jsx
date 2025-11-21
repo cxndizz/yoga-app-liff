@@ -3,8 +3,7 @@ import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getSessionSnapshot } from '../auth/session';
 import { useAdminAuth } from '../auth/AdminAuthContext';
-
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { apiBase } from '../config';
 
 const initialForm = {
   email: '',

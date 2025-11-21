@@ -11,8 +11,7 @@ import Enrollments from './pages/Enrollments';
 import Login from './pages/Login';
 import { withAdminGuard } from './auth/AdminGuard';
 import { useAdminAuth } from './auth/AdminAuthContext';
-
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { apiBase } from './config';
 
 const AdminLayout = () => {
   const navigate = useNavigate();

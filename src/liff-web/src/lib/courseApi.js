@@ -2,8 +2,14 @@ import axios from 'axios';
 
 import { formatDateDisplay, formatTimeDisplay } from './formatters';
 
+const apiBase = import.meta.env.VITE_API_BASE_URL;
+
+if (!apiBase) {
+  throw new Error('VITE_API_BASE_URL is required for LIFF web requests');
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '',
+  baseURL: apiBase,
   headers: { 'Content-Type': 'application/json' },
   timeout: 12000,
 });

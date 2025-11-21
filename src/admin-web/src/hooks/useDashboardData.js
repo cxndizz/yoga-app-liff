@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { apiBase } from '../config';
 const DEFAULT_INTERVAL = 60_000;
 
 const getErrorMessage = (error) => {

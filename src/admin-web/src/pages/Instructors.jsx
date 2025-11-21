@@ -3,8 +3,7 @@ import axios from 'axios';
 import TablePagination from '../components/common/TablePagination';
 import usePagination from '../hooks/usePagination';
 import { convertImageFileToWebP } from '../utils/image';
-
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+import { apiBase } from '../config';
 
 function Instructors() {
   const [instructors, setInstructors] = useState([]);
