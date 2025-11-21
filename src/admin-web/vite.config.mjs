@@ -10,6 +10,7 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       '127.0.0.1',
+      /.ngrok-free\.app$/,
       ...(process.env.VITE_ALLOWED_HOSTS || '')
         .split(',')
         .map((host) => host.trim())
