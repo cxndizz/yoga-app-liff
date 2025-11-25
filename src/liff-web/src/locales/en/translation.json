@@ -120,7 +120,32 @@
     "toBeFilled": "Please fill name",
     "total": "Total",
     "mockData": "Mock data only — Omise integration pending",
-    "required": "Required"
+    "required": "Required",
+    "assist": {
+      "firstName": "Use 2-50 characters and avoid emojis.",
+      "lastName": "Match how it appears on your ID for receipts.",
+      "phone": "Digits only, 9-15 numbers, e.g. 0812345678 or +66812345678.",
+      "email": "Optional but helps us send receipts (name@example.com).",
+      "note": "Optional. Keep it under 200 characters for clear instructions."
+    },
+    "success": {
+      "firstName": "Looks good — ready to print on your receipt.",
+      "lastName": "Surname captured clearly.",
+      "phone": "Reachable number confirmed.",
+      "email": "Email looks valid for receipts.",
+      "note": "Note saved for the instructor."
+    },
+    "errors": {
+      "firstNameRequired": "Enter your first name (2-50 letters).",
+      "firstNameLength": "First name should be between 2 and 50 characters.",
+      "lastNameRequired": "Enter your last name (2-50 letters).",
+      "lastNameLength": "Last name should be between 2 and 50 characters.",
+      "nameCharacters": "Use letters and spaces only, e.g. Napasorn Sukjai.",
+      "phoneRequired": "Add a phone number we can reach you on (9-15 digits).",
+      "phoneFormat": "Use digits only, like 0812345678 or +66812345678.",
+      "emailFormat": "Use a valid email such as name@example.com.",
+      "noteLength": "Keep the note under 200 characters."
+    }
   },
   "myCourses": {
     "title": "My courses",
