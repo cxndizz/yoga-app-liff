@@ -119,6 +119,8 @@ router.post('/get', async (_req, res) => {
         banner_url: null,
         logo_initials: 'YL',
         primary_color: '#0b1a3c',
+        secondary_color: '#4cafb9',
+        background_color: '#f7f8fb',
       });
     }
 
@@ -139,6 +141,8 @@ router.post('/update', requireAdminAuth(['super_admin']), async (req, res) => {
       banner_url,
       logo_initials,
       primary_color,
+      secondary_color,
+      background_color,
     } = req.body;
 
     // Check if customization exists
@@ -155,16 +159,28 @@ router.post('/update', requireAdminAuth(['super_admin']), async (req, res) => {
              banner_url = COALESCE($4, banner_url),
              logo_initials = COALESCE($5, logo_initials),
              primary_color = COALESCE($6, primary_color),
+             secondary_color = COALESCE($7, secondary_color),
+             background_color = COALESCE($8, background_color),
              updated_at = NOW()
-         WHERE id = $7
+         WHERE id = $9
          RETURNING *`,
-        [app_name, app_description, logo_url, banner_url, logo_initials, primary_color, checkResult.rows[0].id]
+        [
+          app_name,
+          app_description,
+          logo_url,
+          banner_url,
+          logo_initials,
+          primary_color,
+          secondary_color,
+          background_color,
+          checkResult.rows[0].id,
+        ]
       );
     } else {
       // Insert new customization
       result = await db.query(
-        `INSERT INTO app_customization (app_name, app_description, logo_url, banner_url, logo_initials, primary_color)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO app_customization (app_name, app_description, logo_url, banner_url, logo_initials, primary_color, secondary_color, background_color)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING *`,
         [
           app_name || 'Yoga Luxe',
@@ -173,6 +189,8 @@ router.post('/update', requireAdminAuth(['super_admin']), async (req, res) => {
           banner_url,
           logo_initials || 'YL',
           primary_color || '#0b1a3c',
+          secondary_color || '#4cafb9',
+          background_color || '#f7f8fb',
         ]
       );
     }
