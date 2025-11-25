@@ -109,6 +109,8 @@
     "bankInstructionDetail": "Transfer then send your slip to admin chat. We confirm and activate your seat.",
     "processing": "Processing...",
     "mockPay": "Create mock payment",
+    "processingLock": "Button disabled while we simulate your payment",
+    "disabledPayment": "Card payments unlock after Omise integration. Use bank transfer for now.",
     "terms": "By proceeding you agree to our studio terms.",
     "mockPending": "Waiting for slip verification (mock).",
     "mockSuccess": "Mock payment confirmed",

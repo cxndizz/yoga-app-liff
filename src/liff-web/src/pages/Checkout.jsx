@@ -380,25 +380,45 @@ function Checkout() {
           </div>
 
           <div className="payment-options">
-            {mockPaymentChannels.map((channel) => (
-              <button
-                key={channel.id}
-                type="button"
-                className={`payment-card ${paymentMethod === channel.id ? 'active' : ''} ${channel.disabled ? 'disabled' : ''}`}
-                onClick={() => !channel.disabled && setPaymentMethod(channel.id)}
-                disabled={channel.disabled}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left' }}>
-                    <div style={{ fontWeight: 700 }}>{channel.label}</div>
-                    <div className="helper-text">{channel.description}</div>
-                    <div style={{ color: '#e7b1a0', fontSize: '0.9rem' }}>{channel.eta}</div>
+            {mockPaymentChannels.map((channel) => {
+              const helperId = `${channel.id}-helper`;
+              const disabledId = channel.disabled ? `${channel.id}-disabled` : undefined;
+              const describedBy = [helperId, disabledId].filter(Boolean).join(' ');
+              const disabledReason = channel.disabledReason || t('checkout.disabledPayment');
+
+              return (
+                <button
+                  key={channel.id}
+                  type="button"
+                  className={`payment-card ${paymentMethod === channel.id ? 'active' : ''} ${channel.disabled ? 'disabled' : ''}`}
+                  onClick={() => !channel.disabled && setPaymentMethod(channel.id)}
+                  disabled={channel.disabled}
+                  aria-pressed={paymentMethod === channel.id}
+                  aria-disabled={channel.disabled}
+                  aria-describedby={describedBy || undefined}
+                  title={channel.disabled ? disabledReason : undefined}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, textAlign: 'left' }}>
+                      <div style={{ fontWeight: 700 }}>{channel.label}</div>
+                      <div className="helper-text" id={helperId}>
+                        {channel.description}
+                      </div>
+                      <div style={{ color: '#e7b1a0', fontSize: '0.9rem' }}>{channel.eta}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                      {channel.recommended && <span className="badge">{t('checkout.recommended')}</span>}
+                      {channel.disabled && <span className="badge">{t('checkout.mockOnly')}</span>}
+                    </div>
                   </div>
-                  {channel.recommended && <span className="badge">{t('checkout.recommended')}</span>}
-                  {channel.disabled && <span className="badge">{t('checkout.mockOnly')}</span>}
-                </div>
-              </button>
-            ))}
+                  {channel.disabled && (
+                    <div className="helper-text" id={disabledId} role="note" style={{ marginTop: 8 }}>
+                      {disabledReason}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <div className="transfer-box">
@@ -417,9 +437,21 @@ function Checkout() {
           </div>
 
           <div style={{ display: 'grid', gap: 10 }}>
-            <button type="button" className="btn btn-primary" onClick={handleMockPay} disabled={isProcessing}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleMockPay}
+              disabled={isProcessing}
+              aria-describedby={isProcessing ? 'mock-pay-disabled' : undefined}
+              title={isProcessing ? t('checkout.processingLock') : undefined}
+            >
               {primaryActionLabel}
             </button>
+            {isProcessing && (
+              <div className="helper-text" id="mock-pay-disabled" role="status">
+                {t('checkout.processingLock')}
+              </div>
+            )}
             <div className="helper-text">{t('checkout.terms')}</div>
           </div>
 

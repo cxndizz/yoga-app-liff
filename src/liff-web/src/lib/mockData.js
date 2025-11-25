@@ -65,6 +65,7 @@ export const mockPaymentChannels = [
     description: 'เปิดใช้งานเมื่อเชื่อมต่อ Omise แล้ว — หน้านี้จำลองการชำระเงิน',
     eta: 'ชำระแล้วเปิดสิทธิ์อัตโนมัติ',
     disabled: true,
+    disabledReason: 'เชื่อมต่อ Omise เพื่อเปิดชำระผ่านบัตร',
   },
 ];
 
