@@ -14,6 +14,65 @@ const normalizeData = (data = {}) => ({
   background_color: data.background_color || '#f7f8fb',
 });
 
+const fieldDefinitions = [
+  {
+    key: 'app_name',
+    label: 'ชื่อแอป / App name',
+    requirement: 'Required',
+    helper: 'ใช้เป็นชื่อเพจและหัวข้อหลักที่ลูกค้าเห็น',
+    example: 'โยคะยามเช้า (Morning Flow)',
+  },
+  {
+    key: 'app_description',
+    label: 'รายละเอียดสั้น / Short description',
+    requirement: 'Optional',
+    helper: 'ข้อความต้อนรับหรือสรุปบริการสั้นๆ',
+    example: 'สตูดิโอโยคะบน LIFF จองง่าย จ่ายปลอดภัย',
+  },
+  {
+    key: 'logo_url',
+    label: 'โลโก้ / Logo',
+    requirement: 'Optional (แนะนำ)',
+    helper: 'ใช้ PNG พื้นใสเพื่อความคมชัด',
+    example: 'อัปโหลด PNG พื้นใส 512x512',
+  },
+  {
+    key: 'banner_url',
+    label: 'ปก / Hero banner',
+    requirement: 'Optional',
+    helper: 'ภาพปกหน้าแรกหรือ Section Highlight',
+    example: 'ภาพแนวนอน 1600x900px',
+  },
+  {
+    key: 'logo_initials',
+    label: 'ตัวย่อโลโก้ / Logo initials',
+    requirement: 'Required',
+    helper: 'ใช้เมื่อไม่มีโลโก้ไฟล์ภาพ',
+    example: 'YL หรือ YO',
+  },
+  {
+    key: 'primary_color',
+    label: 'สีแบรนด์หลัก / Primary brand color',
+    requirement: 'Required',
+    helper: 'ใช้กับปุ่ม CTA หลักและหัวข้อสำคัญ',
+    example: '#0B1A3C หรือ hsla(222, 65%, 15%, 1)',
+  },
+  {
+    key: 'secondary_color',
+    label: 'สีแบรนด์รอง / Secondary brand color',
+    requirement: 'Required',
+    helper: 'ใช้กับปุ่มรอง/เส้นขอบ เพื่อเสริมการเน้น',
+    example: '#4CAF50 หรือ hsla(122, 39%, 49%, 1)',
+  },
+  {
+    key: 'background_color',
+    label: 'สีพื้นหลัง / Background',
+    requirement: 'Required',
+    helper: 'ควรรักษา contrast ให้อ่านง่ายกับตัวอักษร',
+    example: '#F7F8FB หรือ hsla(225, 33%, 96%, 1)',
+  },
+];
+
 function Customization() {
   const [formData, setFormData] = useState(normalizeData());
   const [initialData, setInitialData] = useState(null);
@@ -48,6 +107,101 @@ function Customization() {
     const b = parseInt(hex.substring(4, 6), 16);
     if ([r, g, b].some((num) => Number.isNaN(num))) return '';
     return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  const hexToHsla = (value) => {
+    if (!value) return '';
+    const normalized = value.startsWith('#') ? value.slice(1) : value;
+    if (![3, 6].includes(normalized.length)) return '';
+
+    const hex = normalized.length === 3
+      ? normalized
+          .split('')
+          .map((char) => char + char)
+          .join('')
+      : normalized;
+
+    const r = parseInt(hex.substring(0, 2), 16) / 255;
+    const g = parseInt(hex.substring(2, 4), 16) / 255;
+    const b = parseInt(hex.substring(4, 6), 16) / 255;
+    if ([r, g, b].some((num) => Number.isNaN(num))) return '';
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const delta = max - min;
+    let h = 0;
+    let s = 0;
+    const l = (max + min) / 2;
+
+    if (delta !== 0) {
+      s = delta / (1 - Math.abs(2 * l - 1));
+      switch (max) {
+        case r:
+          h = ((g - b) / delta) % 6;
+          break;
+        case g:
+          h = (b - r) / delta + 2;
+          break;
+        default:
+          h = (r - g) / delta + 4;
+          break;
+      }
+      h = Math.round(h * 60);
+      if (h < 0) h += 360;
+    }
+
+    const hue = Number.isNaN(h) ? 0 : h;
+    const saturation = Math.max(0, Math.min(100, Math.round(s * 100)));
+    const lightness = Math.max(0, Math.min(100, Math.round(l * 100)));
+    return `hsla(${hue}, ${saturation}%, ${lightness}%, 1)`;
+  };
+
+  const hslaToHex = (value) => {
+    if (!value) return null;
+    const match = value.match(/hsla?\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*(?:,\s*([\d.]+)\s*)?\)/i);
+    if (!match) return null;
+
+    const h = parseFloat(match[1]);
+    const s = parseFloat(match[2]) / 100;
+    const l = parseFloat(match[3]) / 100;
+    if ([h, s, l].some((num) => Number.isNaN(num))) return null;
+
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = l - c / 2;
+    let rPrime = 0;
+    let gPrime = 0;
+    let bPrime = 0;
+
+    if (h >= 0 && h < 60) {
+      rPrime = c;
+      gPrime = x;
+    } else if (h >= 60 && h < 120) {
+      rPrime = x;
+      gPrime = c;
+    } else if (h >= 120 && h < 180) {
+      gPrime = c;
+      bPrime = x;
+    } else if (h >= 180 && h < 240) {
+      gPrime = x;
+      bPrime = c;
+    } else if (h >= 240 && h < 300) {
+      rPrime = x;
+      bPrime = c;
+    } else {
+      rPrime = c;
+      bPrime = x;
+    }
+
+    const toHex = (component) => {
+      const hex = Math.round((component + m) * 255)
+        .toString(16)
+        .padStart(2, '0');
+      return hex;
+    };
+
+    const hex = `#${toHex(rPrime)}${toHex(gPrime)}${toHex(bPrime)}`;
+    return hex;
   };
 
   const handleCopy = async (text, label) => {
@@ -303,12 +457,52 @@ function Customization() {
   const ColorField = ({ label, name }) => {
     const hexValue = formData[name];
     const rgbValue = hexToRgb(hexValue);
+    const [hslaValue, setHslaValue] = useState(hexToHsla(hexValue));
+
+    useEffect(() => {
+      setHslaValue(hexToHsla(hexValue));
+    }, [hexValue]);
+
+    const handleHexInput = (value) => {
+      if (!value) {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: '',
+        }));
+        return;
+      }
+
+      const normalized = value.startsWith('#') ? value : `#${value}`;
+      setFormData((prev) => ({
+        ...prev,
+        [name]: normalized,
+      }));
+    };
+
+    const handleHslaInput = (value) => {
+      setHslaValue(value);
+      if (!value) {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: '',
+        }));
+        return;
+      }
+      const nextHex = hslaToHex(value);
+      if (nextHex) {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: nextHex,
+        }));
+      }
+    };
 
     return (
       <div className="field">
-        <label className="field__label" htmlFor={name}>
-          {label}
-        </label>
+        <div className="field__label" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>{label}</span>
+          <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>Required</span>
+        </div>
         <div className="theme-color-picker">
           <input
             type="color"
@@ -317,20 +511,17 @@ function Customization() {
             value={hexValue}
             onChange={handleChange}
             className="theme-color-picker__swatch"
+            aria-label={`${label} color picker`}
           />
           <div className="theme-color-picker__inputs">
             <div className="copyable-input">
               <input
                 type="text"
                 value={hexValue}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    [name]: e.target.value,
-                  }))
-                }
+                onChange={(e) => handleHexInput(e.target.value)}
                 className="input"
-                placeholder="#0b1a3c"
+                placeholder="#4CAF50"
+                aria-label={`${label} hex`}
               />
               <button
                 type="button"
@@ -338,6 +529,24 @@ function Customization() {
                 onClick={() => handleCopy(hexValue, 'ค่า HEX')}
               >
                 คัดลอก HEX
+              </button>
+            </div>
+            <div className="copyable-input">
+              <input
+                type="text"
+                value={hslaValue || ''}
+                onChange={(e) => handleHslaInput(e.target.value)}
+                className="input"
+                placeholder="hsla(152, 68%, 51%, 1)"
+                aria-label={`${label} hsla`}
+              />
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={() => handleCopy(hslaValue || '', 'ค่า HSLA')}
+                disabled={!hslaValue}
+              >
+                คัดลอก HSLA
               </button>
             </div>
             <div className="copyable-input">
@@ -351,6 +560,10 @@ function Customization() {
                 คัดลอก RGB
               </button>
             </div>
+            <p className="field__hint" style={{ marginTop: 4 }}>
+              ใช้ color picker หรือกรอก #RRGGBB / HSLA (เช่น #4CAF50, hsla(152, 68%, 51%, 1)).
+              แนะนำให้ตรวจสอบ contrast ของปุ่ม CTA กับพื้นหลังให้ผ่านมาตรฐาน WCAG 4.5:1
+            </p>
           </div>
         </div>
       </div>
@@ -361,6 +574,50 @@ function Customization() {
     <div className="page-card page-card--wide">
       {alertMessage}
       <form id="customization-form" onSubmit={handleSubmit} className="form-grid form-grid--balanced">
+        <section className="page-card__section page-card__section--muted">
+          <div className="section-heading">
+            <h2 className="section-heading__title">Field overview / รายการฟิลด์</h2>
+            <p className="section-heading__muted">
+              ระบุทุกฟิลด์ที่มีอยู่ พร้อม Required/Optional, label ชัดเจน และตัวอย่าง placeholder ที่ใช้ในหน้า LIFF
+            </p>
+          </div>
+          <div style={{ display: 'grid', gap: 12 }}>
+            {fieldDefinitions.map((item) => (
+              <div
+                key={item.key}
+                style={{
+                  padding: 12,
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 12,
+                  background: 'var(--color-surface)',
+                }}
+                aria-label={`${item.label} metadata`}
+              >
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <strong>{item.label}</strong>
+                  <span
+                    style={{
+                      fontSize: 12,
+                      padding: '2px 8px',
+                      borderRadius: 999,
+                      background: 'var(--color-background)',
+                      border: '1px solid var(--color-border)',
+                    }}
+                  >
+                    {item.requirement}
+                  </span>
+                </div>
+                <p className="field__hint" style={{ margin: '6px 0' }}>
+                  {item.helper}
+                </p>
+                <p className="field__hint" style={{ color: 'var(--color-text)' }}>
+                  Placeholder: <span style={{ fontWeight: 600 }}>{item.example}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <section className="page-card__section">
           <div className="section-heading">
             <h2 className="section-heading__title">Brand Assets</h2>
@@ -370,8 +627,8 @@ function Customization() {
           </div>
 
           <AssetDropzone
-            label="โลโก้แบรนด์"
-            description="รองรับ PNG, JPEG, WEBP สูงสุด 5MB แนะนำพื้นหลังโปร่งใส"
+            label="โลโก้แบรนด์ / Brand logo (Optional)"
+            description="รองรับ PNG, JPEG, WEBP สูงสุด 5MB ตัวอย่าง: อัปโหลด PNG พื้นใส 512x512"
             value={formData.logo_url}
             maxSizeMB={5}
             allowedTypes={['image/png', 'image/jpeg', 'image/jpg', 'image/webp']}
@@ -382,8 +639,8 @@ function Customization() {
           />
 
           <AssetDropzone
-            label="แบนเนอร์หน้าแรก"
-            description="รองรับ PNG, JPEG, WEBP สูงสุด 8MB สำหรับ Hero/Banner"
+            label="แบนเนอร์หน้าแรก / Hero banner (Optional)"
+            description="รองรับ PNG, JPEG, WEBP สูงสุด 8MB ตัวอย่าง: ภาพแนวนอน 1600x900px"
             value={formData.banner_url}
             maxSizeMB={8}
             allowedTypes={['image/png', 'image/jpeg', 'image/jpg', 'image/webp']}
@@ -395,7 +652,7 @@ function Customization() {
 
           <div className="field">
             <label className="field__label" htmlFor="logo_initials">
-              ตัวย่อโลโก้ <span style={{ color: 'var(--color-danger)' }}>*</span>
+              ตัวย่อโลโก้ / Logo initials <span style={{ color: 'var(--color-danger)' }}>* Required</span>
             </label>
             <input
               type="text"
@@ -406,9 +663,11 @@ function Customization() {
               className="input"
               required
               maxLength={10}
-              placeholder="เช่น YL"
+              placeholder="เช่น YL หรือ YO"
             />
-            <p className="field__hint">ตัวอักษรสั้นๆ ที่จะแสดงในโลโก้เมื่อไม่มีรูปภาพ (สูงสุด 10 ตัวอักษร)</p>
+            <p className="field__hint">
+              ใช้เมื่อไม่มีโลโก้ภาพ ตัวอย่าง: "YL" หรือ "YO" (สูงสุด 10 ตัวอักษร ตัวพิมพ์ใหญ่/ไทยได้)
+            </p>
           </div>
 
           <div className="theme-colors">
@@ -436,7 +695,7 @@ function Customization() {
 
           <div className="field">
             <label className="field__label" htmlFor="app_name">
-              ชื่อแอป <span style={{ color: 'var(--color-danger)' }}>*</span>
+              ชื่อแอป / App name <span style={{ color: 'var(--color-danger)' }}>* Required</span>
             </label>
             <input
               type="text"
@@ -446,22 +705,29 @@ function Customization() {
               onChange={handleChange}
               className="input"
               required
-              placeholder="เช่น Yoga Luxe"
+              placeholder="เช่น โยคะยามเช้า | Yoga Morning"
+              maxLength={60}
             />
+            <p className="field__hint">ใช้เป็นชื่อเพจ/Heading สูงสุด 60 ตัวอักษร แนะนำให้มีทั้งไทย/อังกฤษหากต้องการ</p>
           </div>
 
           <div className="field">
-            <label className="field__label" htmlFor="app_description">รายละเอียดแอป</label>
+            <label className="field__label" htmlFor="app_description">
+              รายละเอียดสั้น / Short description <span style={{ color: 'var(--color-text-muted)' }}>Optional</span>
+            </label>
             <textarea
               id="app_description"
               name="app_description"
               value={formData.app_description}
               onChange={handleChange}
               className="textarea"
-              placeholder="เช่น Boutique LIFF Studio"
+              placeholder="เช่น สตูดิโอโยคะบน LIFF พร้อมชำระเงิน Omise"
               rows="4"
+              maxLength={180}
             />
-            <p className="field__hint">แนะนำบริการของคุณสั้นๆ เพื่อให้ผู้ใช้เข้าใจในทันที</p>
+            <p className="field__hint">
+              ใช้เป็นข้อความต้อนรับ/คำอธิบายสั้น ความยาวไม่เกิน 180 ตัวอักษร เพื่อให้เข้าใจบริการในทันที
+            </p>
           </div>
 
           <div className="field">

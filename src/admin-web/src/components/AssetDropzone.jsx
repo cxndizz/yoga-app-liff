@@ -19,15 +19,22 @@ function AssetDropzone({
   const [error, setError] = useState(null);
   const [preview, setPreview] = useState(value || '');
   const [uploading, setUploading] = useState(false);
+  const [uploadState, setUploadState] = useState({ type: 'idle', message: '' });
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     setPreview(value || '');
+    if (value) {
+      setUploadState({ type: 'success', message: 'อัปโหลดสำเร็จแล้ว' });
+    } else {
+      setUploadState({ type: 'idle', message: '' });
+    }
   }, [value]);
 
   const resetState = () => {
     setError(null);
     setDragActive(false);
+    setUploadState({ type: 'idle', message: '' });
   };
 
   const buildError = (code, extra = {}) => ({ code, ...extra });
@@ -97,10 +104,12 @@ function AssetDropzone({
 
   const handleFile = async (file) => {
     setError(null);
+    setUploadState({ type: 'uploading', message: 'กำลังอัปโหลดไฟล์...' });
 
     const validationError = validateFile(file);
     if (validationError) {
       setError(validationError);
+      setUploadState({ type: 'error', message: getErrorMessage(validationError) });
       return;
     }
 
@@ -113,6 +122,7 @@ function AssetDropzone({
         await validateAspectRatio(file, dataUrl);
       } catch (ratioError) {
         setError(ratioError);
+        setUploadState({ type: 'error', message: getErrorMessage(ratioError) });
         return;
       }
 
@@ -121,14 +131,21 @@ function AssetDropzone({
         const uploadedUrl = await onUpload(file);
         setPreview(uploadedUrl || dataUrl);
         setError(null);
+        setUploadState({ type: 'success', message: 'อัปโหลดสำเร็จแล้ว' });
       } catch (uploadError) {
-        setError(buildError('upload_failed', { message: uploadError?.message }));
+        const errorState = buildError('upload_failed', { message: uploadError?.message });
+        setError(errorState);
+        setUploadState({ type: 'error', message: getErrorMessage(errorState) });
       } finally {
         setUploading(false);
       }
     };
 
-    reader.onerror = () => setError(buildError('unreadable_file'));
+    reader.onerror = () => {
+      const nextError = buildError('unreadable_file');
+      setError(nextError);
+      setUploadState({ type: 'error', message: getErrorMessage(nextError) });
+    };
     reader.readAsDataURL(file);
   };
 
@@ -230,6 +247,14 @@ function AssetDropzone({
           </div>
         )}
       </div>
+      {uploadState.message && (
+        <p
+          className={`field__hint${uploadState.type === 'error' ? ' field__error' : ''}`}
+          style={{ marginTop: 8 }}
+        >
+          {uploadState.message}
+        </p>
+      )}
       {error && <p className="field__error">{getErrorMessage(error)}</p>}
     </div>
   );
