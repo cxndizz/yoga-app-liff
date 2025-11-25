@@ -6,6 +6,15 @@ const fs = require('fs');
 const db = require('../db');
 const { requireAdminAuth } = require('../middleware/adminAuth');
 
+const buildAbsoluteUrl = (req, relativePath) => {
+  if (!relativePath) return null;
+  if (/^https?:\/\//i.test(relativePath)) return relativePath;
+
+  const baseUrl = process.env.PUBLIC_API_BASE_URL || `${req.protocol}://${req.get('host')}`;
+  const normalizedPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
+  return `${baseUrl}${normalizedPath}`;
+};
+
 // Configure multer for logo uploads
 const logoStorage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -72,11 +81,12 @@ router.post('/upload-logo', requireAdminAuth(['super_admin']), uploadLogo.single
     }
 
     // Generate the URL for the uploaded file
-    const logoUrl = `/uploads/logos/${req.file.filename}`;
+    const logoPath = `/uploads/logos/${req.file.filename}`;
 
     res.json({
       success: true,
-      logo_url: logoUrl,
+      logo_url: buildAbsoluteUrl(req, logoPath),
+      logo_path: logoPath,
       message: 'Logo uploaded successfully'
     });
   } catch (err) {
@@ -92,11 +102,12 @@ router.post('/upload-banner', requireAdminAuth(['super_admin']), uploadBanner.si
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
-    const bannerUrl = `/uploads/banners/${req.file.filename}`;
+    const bannerPath = `/uploads/banners/${req.file.filename}`;
 
     res.json({
       success: true,
-      banner_url: bannerUrl,
+      banner_url: buildAbsoluteUrl(req, bannerPath),
+      banner_path: bannerPath,
       message: 'Banner uploaded successfully'
     });
   } catch (err) {
@@ -124,11 +135,20 @@ const getLatestCustomization = async () => {
   return result.rows[0];
 };
 
+const withAbsoluteAssetUrls = (req, customization) => {
+  if (!customization) return customization;
+  return {
+    ...customization,
+    logo_url: buildAbsoluteUrl(req, customization.logo_url),
+    banner_url: buildAbsoluteUrl(req, customization.banner_url),
+  };
+};
+
 // Get app customization settings (public - for LIFF app)
-router.post('/get', async (_req, res) => {
+router.post('/get', async (req, res) => {
   try {
     const customization = await getLatestCustomization();
-    res.json(customization);
+    res.json(withAbsoluteAssetUrls(req, customization));
   } catch (err) {
     console.error('Error fetching customization:', err);
     res.status(500).json({ message: 'Error fetching customization settings' });
@@ -145,7 +165,7 @@ router.get('/stream', async (req, res) => {
   const sendUpdate = async () => {
     try {
       const customization = await getLatestCustomization();
-      res.write(`data: ${JSON.stringify(customization)}\n\n`);
+      res.write(`data: ${JSON.stringify(withAbsoluteAssetUrls(req, customization))}\n\n`);
     } catch (err) {
       console.error('Error streaming customization:', err);
       res.write(`event: error\ndata: {"message":"Error fetching customization"}\n\n`);

@@ -295,16 +295,18 @@ function Customization() {
       });
 
       const uploadedUrl = response.data?.[urlKey];
-      if (response.data.success && uploadedUrl) {
-        const absoluteUrl = `${apiBase}${uploadedUrl}`;
+      const relativePath = response.data?.[`${fieldName}_path`] || response.data?.[`${type}_path`];
+      const normalizedUrl = uploadedUrl || (relativePath ? `${apiBase}${relativePath}` : '');
+
+      if (response.data.success && normalizedUrl) {
         setFormData((prev) => ({
           ...prev,
-          [urlKey]: absoluteUrl,
+          [urlKey]: normalizedUrl,
         }));
         const successText = type === 'logo' ? 'อัปโหลดโลโก้สำเร็จ' : 'อัปโหลดแบนเนอร์สำเร็จ';
         setMessage({ text: successText, type: 'success' });
         showToast({ text: successText, type: 'success' });
-        return absoluteUrl;
+        return normalizedUrl;
       }
 
       throw new Error(response.data?.message || 'ไม่สามารถอัปโหลดไฟล์ได้');
