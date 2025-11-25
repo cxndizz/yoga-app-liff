@@ -21,7 +21,7 @@
   --radius-sm: 12px;
 
   --bp-sm: 640px;
-  --bp-md: 900px;
+  --bp-md: 1024px;
   --bp-lg: 1200px;
 }
 
@@ -156,6 +156,73 @@ a {
 
 .nav-spacer {
   height: 74px;
+}
+
+.mobile-action-bar {
+  display: none;
+}
+
+@media (max-width: 639px) {
+  .content-area {
+    width: 94vw;
+    padding: 18px 0 110px;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .card-surface {
+    border-radius: 18px;
+    padding: 14px;
+  }
+
+  .hero-grid,
+  .checkout-grid,
+  .form-grid,
+  .transfer-grid,
+  .mycourse-card {
+    gap: 14px;
+    grid-template-columns: 1fr;
+  }
+
+  .summary-card {
+    grid-template-columns: 80px 1fr;
+  }
+
+  .summary-card img {
+    width: 80px;
+    height: 80px;
+  }
+
+  .mobile-action-bar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: rgba(11, 26, 60, 0.95);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
+    align-items: center;
+    gap: 12px;
+    z-index: 50;
+  }
+
+  .mobile-action-bar__meta {
+    display: grid;
+    gap: 4px;
+  }
+
+  .mobile-action-bar .btn {
+    flex: 1;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
 }
 
 .status-banner {
@@ -392,7 +459,7 @@ a {
   }
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1024px) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }

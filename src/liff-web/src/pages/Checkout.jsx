@@ -75,6 +75,8 @@ function Checkout() {
   const accessLabel = useMemo(() => formatAccessTimes(course?.accessTimes || 0), [course, formatAccessTimes]);
   const seatsLeft = course ? t('access.seatsLeftDetail', { left: course.seatsLeft, capacity: course.capacity }) : '';
   const fullName = `${form.firstName} ${form.lastName}`.trim();
+  const primaryActionLabel = flowState === 'processing' ? t('checkout.processing') : t('checkout.mockPay');
+  const isProcessing = flowState === 'processing';
 
   if (status === 'loading') return <div className="helper-text">{t('course.loadingDetails')}</div>;
   if (status === 'error' || !course) return <div className="helper-text">{t('course.notFound')}</div>;
@@ -201,8 +203,8 @@ function Checkout() {
           </div>
 
           <div style={{ display: 'grid', gap: 10 }}>
-            <button type="button" className="btn btn-primary" onClick={handleMockPay}>
-              {flowState === 'processing' ? t('checkout.processing') : t('checkout.mockPay')}
+            <button type="button" className="btn btn-primary" onClick={handleMockPay} disabled={isProcessing}>
+              {primaryActionLabel}
             </button>
             <div className="helper-text">{t('checkout.terms')}</div>
           </div>
@@ -276,6 +278,16 @@ function Checkout() {
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="mobile-action-bar">
+        <div className="mobile-action-bar__meta">
+          <span style={{ fontWeight: 800 }}>{priceLabel}</span>
+          <span className="helper-text">{fullName || t('checkout.toBeFilled')}</span>
+        </div>
+        <button type="button" className="btn btn-primary" onClick={handleMockPay} disabled={isProcessing}>
+          {primaryActionLabel}
+        </button>
       </div>
     </div>
   );
