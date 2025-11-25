@@ -7,10 +7,12 @@ import Checkout from './pages/Checkout';
 import MyCourses from './pages/MyCourses';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import useLiffUser from './hooks/useLiffUser';
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { status: authStatus, errorMessage } = useLiffUser();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -35,6 +37,18 @@ function App() {
       <div className="nav-spacer" />
       <Navbar />
       <main className="content-area">
+        {(authStatus === 'loading' || authStatus === 'redirecting') && (
+          <div className="status-banner">
+            {authStatus === 'redirecting'
+              ? 'กำลังนำคุณเข้าสู่ระบบ LINE...'
+              : 'กำลังเชื่อมต่อบัญชี LINE ของคุณ...'}
+          </div>
+        )}
+        {authStatus === 'error' && (
+          <div className="status-banner status-banner--error">
+            ไม่สามารถเชื่อมต่อ LINE ได้: {errorMessage}
+          </div>
+        )}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/courses" element={<Courses />} />
