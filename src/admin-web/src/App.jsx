@@ -8,6 +8,7 @@ import Branches from './pages/Branches';
 import Instructors from './pages/Instructors';
 import CourseSessions from './pages/CourseSessions';
 import Enrollments from './pages/Enrollments';
+import Customization from './pages/Customization';
 import Login from './pages/Login';
 import { withAdminGuard } from './auth/AdminGuard';
 import { useAdminAuth } from './auth/AdminAuthContext';
@@ -49,6 +50,7 @@ const AdminLayout = () => {
     { label: 'Branches', to: '/branches', roles: ['super_admin'] },
     { label: 'Instructors', to: '/instructors', roles: ['super_admin', 'branch_admin'] },
     { label: 'Users', to: '/users', roles: ['super_admin'] },
+    { label: 'Customization', to: '/customization', roles: ['super_admin'] },
   ];
 
   const visibleNavItems = navItems.filter((item) => !item.roles || item.roles.includes(role));
@@ -158,6 +160,10 @@ const GuardedUsers = withAdminGuard(Users, {
   allowedRoles: ['super_admin'],
 });
 
+const GuardedCustomization = withAdminGuard(Customization, {
+  allowedRoles: ['super_admin'],
+});
+
 function App() {
   return (
     <Routes>
@@ -171,6 +177,7 @@ function App() {
         <Route path="/branches" element={<GuardedBranches />} />
         <Route path="/instructors" element={<GuardedInstructors />} />
         <Route path="/users" element={<GuardedUsers />} />
+        <Route path="/customization" element={<GuardedCustomization />} />
       </Route>
     </Routes>
   );
