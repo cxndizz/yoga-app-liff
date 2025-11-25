@@ -16,7 +16,7 @@ function AssetDropzone({
   recommendedText,
 }) {
   const [dragActive, setDragActive] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
   const [preview, setPreview] = useState(value || '');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
@@ -26,29 +26,50 @@ function AssetDropzone({
   }, [value]);
 
   const resetState = () => {
-    setError('');
+    setError(null);
     setDragActive(false);
+  };
+
+  const buildError = (code, extra = {}) => ({ code, ...extra });
+
+  const getErrorMessage = (errorState) => {
+    if (!errorState) return '';
+
+    switch (errorState.code) {
+      case 'unsupported_type':
+        return `ไม่รองรับประเภทไฟล์นี้ รองรับ ${allowedTypes.join(', ')}`;
+      case 'file_too_large':
+        return `ขนาดไฟล์ต้องไม่เกิน ${maxSizeMB}MB (ปัจจุบัน ${formatMB(errorState.size)}MB)`;
+      case 'invalid_ratio': {
+        const ratioText = (errorState.ratio || 0).toFixed(2);
+        return `สัดส่วนไฟล์ควรใกล้เคียง ${recommendedRatio.width}:${recommendedRatio.height} (ปัจจุบัน ${ratioText}:1)`;
+      }
+      case 'unreadable_file':
+        return 'ไม่สามารถอ่านไฟล์จากเครื่องได้';
+      case 'no_file':
+        return 'ไม่พบไฟล์ที่เลือก';
+      case 'upload_failed':
+        return errorState.message || 'เกิดข้อผิดพลาดระหว่างอัปโหลด';
+      default:
+        return errorState.message || 'เกิดข้อผิดพลาด';
+    }
   };
 
   const validateFile = (file) => {
     if (!file) {
-      setError('ไม่พบไฟล์ที่เลือก');
-      return false;
+      return buildError('no_file');
     }
 
     if (!allowedTypes.includes(file.type)) {
-      setError(`กรุณาอัปโหลดไฟล์ประเภท ${allowedTypes.join(', ')}`);
-      return false;
+      return buildError('unsupported_type');
     }
 
     const maxBytes = maxSizeMB * 1024 * 1024;
     if (file.size > maxBytes) {
-      setError(`ขนาดไฟล์ต้องไม่เกิน ${maxSizeMB}MB (ปัจจุบัน ${formatMB(file.size)}MB)`);
-      return false;
+      return buildError('file_too_large', { size: file.size });
     }
 
-    setError('');
-    return true;
+    return null;
   };
 
   const validateAspectRatio = (file, dataUrl) =>
@@ -65,19 +86,23 @@ function AssetDropzone({
         const delta = Math.abs(ratio - expected);
         const tolerance = 0.05; // allow small deviation
         if (delta > tolerance) {
-          reject(
-            `สัดส่วนไฟล์ควรใกล้เคียง ${recommendedRatio.width}:${recommendedRatio.height} (ปัจจุบัน ${(ratio).toFixed(2)}:1)`
-          );
+          reject(buildError('invalid_ratio', { ratio }));
         } else {
           resolve();
         }
       };
-      img.onerror = () => reject('ไม่สามารถอ่านขนาดรูปภาพได้');
+      img.onerror = () => reject(buildError('unreadable_file'));
       img.src = dataUrl;
     });
 
   const handleFile = async (file) => {
-    if (!validateFile(file)) return;
+    setError(null);
+
+    const validationError = validateFile(file);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -87,7 +112,7 @@ function AssetDropzone({
       try {
         await validateAspectRatio(file, dataUrl);
       } catch (ratioError) {
-        setError(typeof ratioError === 'string' ? ratioError : ratioError?.message);
+        setError(ratioError);
         return;
       }
 
@@ -95,15 +120,15 @@ function AssetDropzone({
         setUploading(true);
         const uploadedUrl = await onUpload(file);
         setPreview(uploadedUrl || dataUrl);
-        setError('');
+        setError(null);
       } catch (uploadError) {
-        setError(uploadError?.message || 'เกิดข้อผิดพลาดระหว่างอัปโหลด');
+        setError(buildError('upload_failed', { message: uploadError?.message }));
       } finally {
         setUploading(false);
       }
     };
 
-    reader.onerror = () => setError('ไม่สามารถอ่านไฟล์จากเครื่องได้');
+    reader.onerror = () => setError(buildError('unreadable_file'));
     reader.readAsDataURL(file);
   };
 
@@ -205,7 +230,7 @@ function AssetDropzone({
           </div>
         )}
       </div>
-      {error && <p className="field__error">{error}</p>}
+      {error && <p className="field__error">{getErrorMessage(error)}</p>}
     </div>
   );
 }
