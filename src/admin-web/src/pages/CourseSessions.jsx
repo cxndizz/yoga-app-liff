@@ -104,7 +104,7 @@ function CourseSessions() {
   }, [branches]);
 
   const selectedCourse = selectedCourseId ? courseMap[selectedCourseId] : null;
-  const canSchedule = Boolean(selectedCourseId && selectedInstructorId && selectedBranchId);
+  const canSchedule = Boolean(selectedCourseId && selectedBranchId);
 
   useEffect(() => {
     if (selectedCourse) {
@@ -284,8 +284,8 @@ function CourseSessions() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (!formData.branch_id || !formData.instructor_id) {
-        alert('กรุณาเลือกสาขาและผู้สอนสำหรับรอบเรียนนี้');
+      if (!formData.branch_id) {
+        alert('กรุณาเลือกสาขาสำหรับรอบเรียนนี้');
         return;
       }
 
@@ -293,7 +293,7 @@ function CourseSessions() {
         ...formData,
         course_id: Number(formData.course_id),
         branch_id: Number(formData.branch_id),
-        instructor_id: Number(formData.instructor_id),
+        instructor_id: formData.instructor_id ? Number(formData.instructor_id) : null,
         max_capacity: formData.max_capacity ? Number(formData.max_capacity) : null
       };
 
@@ -372,13 +372,13 @@ function CourseSessions() {
   };
 
   const handleAddNewClick = () => {
-    if (!selectedInstructorId || !selectedBranchId) {
-      alert('กรุณาเลือกผู้สอนและสาขาก่อนเพิ่มรอบเรียน');
+    if (!selectedBranchId) {
+      alert('กรุณาเลือกสาขาก่อนเพิ่มรอบเรียน');
       return;
     }
     setEditingSession(null);
     resetForm({
-      instructor_id: selectedInstructorId,
+      instructor_id: selectedInstructorId || '',
       branch_id: selectedBranchId,
       course_id: selectedCourseId || ''
     });
@@ -425,7 +425,7 @@ function CourseSessions() {
 
   const handleBulkCreate = async () => {
     if (!canSchedule) {
-      alert('กรุณาเลือกสาขา ผู้สอน และคอร์สที่จะสร้างรอบเรียน');
+      alert('กรุณาเลือกสาขาและคอร์สที่จะสร้างรอบเรียน');
       return;
     }
     if (selectedSlotEntries.length === 0) {
@@ -452,7 +452,7 @@ function CourseSessions() {
           status: bulkStatus,
           notes: bulkNotes || null,
           branch_id: Number(selectedBranchId),
-          instructor_id: Number(selectedInstructorId)
+          instructor_id: selectedInstructorId ? Number(selectedInstructorId) : null
         };
         await axios.post(`${apiBase}/api/admin/course-sessions`, payload);
       }
@@ -481,7 +481,7 @@ function CourseSessions() {
         <div className="page__actions">
           <button
             onClick={handleAddNewClick}
-            disabled={!selectedInstructorId || !selectedBranchId}
+            disabled={!selectedBranchId}
             className="btn btn--primary"
           >
             เพิ่มรอบเรียนใหม่
@@ -490,9 +490,19 @@ function CourseSessions() {
       </div>
 
       <div className="page-card">
+        <div style={{ marginBottom: '20px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px', color: '#111827' }}>
+            🔍 กรองและจัดการรอบเรียน
+          </h3>
+          <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>
+            เลือกสาขาและคอร์สที่ต้องการจัดตารางเรียน (ผู้สอนเป็นตัวเลือก)
+          </p>
+        </div>
         <div className="form-grid form-grid--two">
           <div className="field">
-            <label className="field__label">เลือกสาขา</label>
+            <label className="field__label">
+              🏢 สาขา <span style={{ color: '#dc2626', fontWeight: 'bold' }}>*</span>
+            </label>
             <select
               value={selectedBranchId}
               onChange={(e) => {
@@ -500,6 +510,7 @@ function CourseSessions() {
                 setSelectedCourseId('');
               }}
               className="select"
+              style={{ fontWeight: selectedBranchId ? '600' : 'normal' }}
             >
               <option value="">ทุกสาขา</option>
               {branches.map((branch) => (
@@ -510,7 +521,9 @@ function CourseSessions() {
             </select>
           </div>
           <div className="field">
-            <label className="field__label">เลือกผู้สอน</label>
+            <label className="field__label">
+              👤 ผู้สอน <span style={{ fontSize: '12px', color: '#6b7280', fontWeight: 'normal' }}>(ไม่บังคับ - ใช้สำหรับกรอง)</span>
+            </label>
             <select
               value={selectedInstructorId}
               onChange={(e) => {
@@ -518,6 +531,7 @@ function CourseSessions() {
                 setSelectedCourseId('');
               }}
               className="select"
+              style={{ fontWeight: selectedInstructorId ? '600' : 'normal' }}
             >
               <option value="">ผู้สอนทั้งหมด</option>
               {instructors.map((instructor) => (
@@ -529,14 +543,17 @@ function CourseSessions() {
           </div>
 
           <div className="field" style={{ gridColumn: '1 / -1' }}>
-            <label className="field__label">เลือกคอร์สที่ต้องการวางตาราง</label>
+            <label className="field__label">
+              📚 คอร์ส <span style={{ color: '#dc2626', fontWeight: 'bold' }}>*</span>
+            </label>
             <select
               value={selectedCourseId}
               onChange={(e) => setSelectedCourseId(e.target.value)}
-              disabled={!selectedInstructorId || !selectedBranchId}
+              disabled={!selectedBranchId}
               className="select"
+              style={{ fontWeight: selectedCourseId ? '600' : 'normal' }}
             >
-              <option value="">เลือกคอร์ส</option>
+              <option value="">เลือกคอร์สที่ต้องการสร้างรอบเรียน</option>
               {filteredCourses.map((course) => (
                 <option key={course.id} value={course.id}>
                   {course.title}{course.instructor_name ? ` · ${course.instructor_name}` : ''}
@@ -544,23 +561,59 @@ function CourseSessions() {
               ))}
             </select>
             {showAllCoursesFallback && (
-              <span style={{ fontSize: '12px', color: '#6b7280' }}>
-                ยังไม่มีคอร์สที่ตรงกับตัวกรองนี้ ระบบจะแสดงทุกคอร์สให้เลือก
-              </span>
+              <div style={{
+                marginTop: '8px',
+                padding: '8px 12px',
+                background: '#f3f4f6',
+                borderRadius: '6px',
+                fontSize: '12px',
+                color: '#6b7280'
+              }}>
+                💡 ไม่พบคอร์สที่ตรงกับตัวกรอง แสดงคอร์สทั้งหมดให้เลือก
+              </div>
             )}
-            {!selectedBranchId || !selectedInstructorId ? (
-              <span style={{ fontSize: '12px', color: '#b45309' }}>
-                กรุณาเลือกทั้งสาขาและผู้สอนก่อนเลือกคอร์สและลงตาราง
-              </span>
+            {!selectedBranchId ? (
+              <div style={{
+                marginTop: '8px',
+                padding: '10px 12px',
+                background: '#fef3c7',
+                borderLeft: '3px solid #f59e0b',
+                borderRadius: '6px',
+                fontSize: '13px',
+                color: '#92400e'
+              }}>
+                ⚠️ กรุณาเลือกสาขาก่อนเพื่อเลือกคอร์สและสร้างรอบเรียน
+              </div>
             ) : null}
           </div>
         </div>
 
         {!canSchedule && (
-          <div className="page-alert page-alert--error" style={{ background: '#fef3c7', borderColor: '#f59e0b', color: '#92400e' }}>
-            กรุณาเลือกสาขา ผู้สอน และคอร์สก่อนทำการเลือกวันที่จากปฏิทิน
+          <div style={{
+            marginTop: '16px',
+            padding: '14px 16px',
+            background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+            borderLeft: '4px solid #f59e0b',
+            borderRadius: '8px',
+            fontSize: '14px',
+            color: '#92400e',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            <span style={{ fontSize: '20px' }}>📋</span>
+            <div>
+              <strong>กรุณาเลือกสาขาและคอร์ส</strong> ก่อนทำการเลือกวันที่จากปฏิทินด้านล่าง
+            </div>
           </div>
         )}
+
+        <div style={{ marginTop: '24px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px', color: '#111827' }}>
+            📅 เลือกวันที่จากปฏิทิน
+          </h3>
+        </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'stretch' }}>
           <div style={{ flex: '2 1 480px', borderRight: '1px dashed #e5e7eb', paddingRight: '16px' }}>
@@ -569,16 +622,18 @@ function CourseSessions() {
                 onClick={() => setCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
                 className="btn btn--ghost btn--small"
                 aria-label="เดือนก่อนหน้า"
+                style={{ padding: '8px 16px', fontSize: '16px' }}
               >
-                ←
+                ← ก่อนหน้า
               </button>
-              <strong>{calendarMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</strong>
+              <strong style={{ fontSize: '15px', color: '#2563eb' }}>{calendarMonth.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })}</strong>
               <button
                 onClick={() => setCalendarMonth((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
                 className="btn btn--ghost btn--small"
                 aria-label="เดือนถัดไป"
+                style={{ padding: '8px 16px', fontSize: '16px' }}
               >
-                →
+                ถัดไป →
               </button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
@@ -704,22 +759,36 @@ function CourseSessions() {
             <div style={{
               background: '#fff',
               borderRadius: '12px',
-              border: '1px solid #e5e7eb',
+              border: '2px solid #e5e7eb',
               padding: '16px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '10px'
+              gap: '10px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <strong>วันที่เลือก {selectedSlotEntries.length} วัน</strong>
+                <strong style={{ fontSize: '15px', color: '#111827' }}>
+                  🗓️ วันที่เลือก {selectedSlotEntries.length > 0 && (
+                    <span style={{
+                      background: '#2563eb',
+                      color: '#fff',
+                      borderRadius: '999px',
+                      padding: '2px 10px',
+                      fontSize: '13px',
+                      marginLeft: '6px'
+                    }}>
+                      {selectedSlotEntries.length}
+                    </span>
+                  )}
+                </strong>
                 {selectedSlotEntries.length > 0 && (
                   <button
                     type="button"
                     onClick={() => setSelectedSlots({})}
                     className="btn btn--text"
-                    style={{ color: '#2563eb' }}
+                    style={{ color: '#dc2626', fontSize: '13px', fontWeight: 600 }}
                   >
-                    ล้างทั้งหมด
+                    🗑️ ล้างทั้งหมด
                   </button>
                 )}
               </div>
@@ -824,9 +893,16 @@ function CourseSessions() {
                   onClick={handleBulkCreate}
                   disabled={bulkSubmitting || !canSchedule || selectedSlotEntries.length === 0}
                   className="btn btn--primary"
-                  style={{ background: bulkSubmitting || !canSchedule ? '#9ca3af' : '#16a34a' }}
+                  style={{
+                    background: bulkSubmitting || !canSchedule || selectedSlotEntries.length === 0 ? '#9ca3af' : 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    padding: '12px 20px',
+                    boxShadow: bulkSubmitting || !canSchedule || selectedSlotEntries.length === 0 ? 'none' : '0 4px 6px rgba(22, 163, 74, 0.3)',
+                    transition: 'all 0.2s'
+                  }}
                 >
-                  {bulkSubmitting ? 'กำลังบันทึก...' : 'สร้างรอบเรียนตามวันที่ที่เลือก'}
+                  {bulkSubmitting ? '⏳ กำลังบันทึก...' : `✅ สร้างรอบเรียน ${selectedSlotEntries.length} วัน`}
                 </button>
               </div>
             </div>
@@ -842,7 +918,9 @@ function CourseSessions() {
           <form onSubmit={handleSubmit}>
             <div className="form-grid form-grid--two">
               <div className="field">
-                <label className="field__label">สาขา *</label>
+                <label className="field__label">
+                  สาขา <span style={{ color: '#dc2626' }}>*</span>
+                </label>
                 <select
                   value={formData.branch_id}
                   onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
@@ -859,14 +937,13 @@ function CourseSessions() {
               </div>
 
               <div className="field">
-                <label className="field__label">ผู้สอน *</label>
+                <label className="field__label">ผู้สอน (ไม่บังคับ)</label>
                 <select
                   value={formData.instructor_id}
                   onChange={(e) => setFormData({ ...formData, instructor_id: e.target.value })}
-                  required
                   className="select"
                 >
-                  <option value="">-- เลือกผู้สอน --</option>
+                  <option value="">-- ไม่ระบุผู้สอน --</option>
                   {instructors.map((instructor) => (
                     <option key={instructor.id} value={instructor.id}>
                       {instructor.name}
@@ -878,7 +955,9 @@ function CourseSessions() {
 
             <div className="form-grid">
               <div className="field">
-                <label className="field__label">คอร์สเรียน *</label>
+                <label className="field__label">
+                  คอร์สเรียน <span style={{ color: '#dc2626' }}>*</span>
+                </label>
                 <select
                   value={formData.course_id}
                   onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
