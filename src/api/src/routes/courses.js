@@ -26,6 +26,8 @@ router.post('/list', async (req, res) => {
              (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id) as total_enrollments,
              (SELECT COUNT(*) FROM course_sessions cs WHERE cs.course_id = c.id) as session_count,
              CASE
+               WHEN c.course_type = 'standalone' AND c.unlimited_capacity = true THEN
+                 NULL
                WHEN c.course_type = 'standalone' THEN
                  COALESCE(c.max_students, 0) - (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id AND ce.status = 'active')
                ELSE
@@ -101,6 +103,8 @@ router.post('/detail', async (req, res) => {
               (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id) as total_enrollments,
               (SELECT COUNT(*) FROM course_sessions cs WHERE cs.course_id = c.id) as session_count,
               CASE
+                WHEN c.course_type = 'standalone' AND c.unlimited_capacity = true THEN
+                  NULL
                 WHEN c.course_type = 'standalone' THEN
                   COALESCE(c.max_students, 0) - (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id AND ce.status = 'active')
                 ELSE
@@ -145,7 +149,8 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
       is_featured = false,
       course_type = 'scheduled',
       max_students,
-      enrollment_deadline
+      enrollment_deadline,
+      unlimited_capacity = false
     } = req.body;
 
     if (!title) {
@@ -153,9 +158,9 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
     }
 
     // Validation for standalone courses
-    if (course_type === 'standalone' && !max_students) {
+    if (course_type === 'standalone' && !unlimited_capacity && !max_students) {
       return res.status(400).json({
-        message: 'max_students is required for standalone courses'
+        message: 'max_students is required for standalone courses unless unlimited_capacity is enabled'
       });
     }
 
@@ -164,15 +169,15 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
          title, description, branch_id, instructor_id, capacity,
          is_free, price_cents, cover_image_url, access_times, channel,
          status, duration_minutes, level, tags, is_featured,
-         course_type, max_students, enrollment_deadline
+         course_type, max_students, enrollment_deadline, unlimited_capacity
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
        RETURNING *`,
       [
         title, description || null, branch_id || null, instructor_id || null, capacity,
         is_free, price_cents, cover_image_url || null, access_times, channel,
         status, duration_minutes || null, level || null, tags, is_featured,
-        course_type, max_students || null, enrollment_deadline || null
+        course_type, max_students || null, enrollment_deadline || null, unlimited_capacity
       ]
     );
 
@@ -205,7 +210,8 @@ router.post('/update', requireAdminAuth(['super_admin', 'branch_admin']), async 
       is_featured,
       course_type,
       max_students,
-      enrollment_deadline
+      enrollment_deadline,
+      unlimited_capacity
     } = req.body || {};
 
     if (!id) {
@@ -245,14 +251,15 @@ router.post('/update', requireAdminAuth(['super_admin', 'branch_admin']), async 
            course_type = COALESCE($16, course_type),
            max_students = COALESCE($17, max_students),
            enrollment_deadline = COALESCE($18, enrollment_deadline),
+           unlimited_capacity = COALESCE($19, unlimited_capacity),
            updated_at = NOW()
-       WHERE id = $19
+       WHERE id = $20
        RETURNING *`,
       [
         title, description, branch_id, instructor_id, capacity,
         is_free, price_cents, cover_image_url, access_times, channel,
         status, duration_minutes, level, tags, is_featured,
-        course_type, max_students, enrollment_deadline, id
+        course_type, max_students, enrollment_deadline, unlimited_capacity, id
       ]
     );
 

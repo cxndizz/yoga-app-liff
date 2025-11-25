@@ -18,6 +18,7 @@ const defaultFormValues = {
   course_type: 'scheduled',
   max_students: 20,
   enrollment_deadline: '',
+  unlimited_capacity: false,
 };
 
 function Courses() {
@@ -107,8 +108,8 @@ function Courses() {
     }
 
     // Validation for standalone courses
-    if (form.course_type === 'standalone' && !form.max_students) {
-      setError('กรุณาระบุจำนวนผู้เรียนสูงสุดสำหรับคอร์สแบบ Standalone');
+    if (form.course_type === 'standalone' && !form.unlimited_capacity && !form.max_students) {
+      setError('กรุณาระบุจำนวนผู้เรียนสูงสุด หรือเลือก "ไม่จำกัดจำนวนคนซื้อ"');
       return;
     }
 
@@ -128,8 +129,9 @@ function Courses() {
         access_times: Number(form.access_times),
         cover_image_url: form.cover_image_url || null,
         course_type: form.course_type,
-        max_students: form.course_type === 'standalone' ? Number(form.max_students) : null,
+        max_students: form.course_type === 'standalone' && !form.unlimited_capacity ? Number(form.max_students) : null,
         enrollment_deadline: form.course_type === 'standalone' && form.enrollment_deadline ? form.enrollment_deadline : null,
+        unlimited_capacity: form.course_type === 'standalone' ? form.unlimited_capacity : false,
       };
 
       if (editingCourse) {
@@ -176,6 +178,7 @@ function Courses() {
       course_type: course.course_type || 'scheduled',
       max_students: course.max_students || defaultFormValues.max_students,
       enrollment_deadline: course.enrollment_deadline || '',
+      unlimited_capacity: !!course.unlimited_capacity,
     });
     setCoverPreview(course.cover_image_url || '');
     setCoverMeta(null);
@@ -466,38 +469,79 @@ function Courses() {
           {/* Conditional Fields Based on Course Type */}
           {form.course_type === 'standalone' ? (
             // Standalone Course Fields
-            <div className="form-grid form-grid--two">
+            <>
               <div className="field">
-                <label className="field__label">จำนวนผู้เรียนสูงสุด (ทั้งหมด) *</label>
-                <input
-                  type="number"
-                  className="input"
-                  min="1"
-                  value={form.max_students}
-                  onChange={handleInputChange('max_students')}
-                  disabled={submitting}
-                  placeholder="เช่น 50"
-                  required
-                />
-                <p style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
-                  จำกัดจำนวนผู้เรียนทั้งหมดที่สามารถลงทะเบียนได้
-                </p>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '14px',
+                  background: form.unlimited_capacity ? '#f0fdf4' : '#f9fafb',
+                  border: `2px solid ${form.unlimited_capacity ? '#10b981' : '#e5e7eb'}`,
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={form.unlimited_capacity}
+                    onChange={handleInputChange('unlimited_capacity')}
+                    disabled={submitting}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontWeight: '600', fontSize: '15px', color: form.unlimited_capacity ? '#059669' : '#111827' }}>
+                      ไม่จำกัดจำนวนคนซื้อ (Unlimited Capacity)
+                    </span>
+                    <p style={{ marginTop: '4px', fontSize: '13px', color: '#6b7280' }}>
+                      คอร์สจะเปิดให้ซื้อได้ตลอด ไม่มี Limit (ยังคงป้องกันการซื้อซ้ำต่อผู้ใช้)
+                    </p>
+                  </div>
+                </label>
               </div>
 
-              <div className="field">
-                <label className="field__label">วันปิดรับสมัคร (ถ้ามี)</label>
-                <input
-                  type="datetime-local"
-                  className="input"
-                  value={form.enrollment_deadline}
-                  onChange={handleInputChange('enrollment_deadline')}
-                  disabled={submitting}
-                />
-                <p style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
-                  ไม่บังคับ - หากไม่ระบุจะเปิดรับสมัครตลอด
-                </p>
+              <div className="form-grid form-grid--two">
+                <div className="field">
+                  <label className="field__label">
+                    จำนวนผู้เรียนสูงสุด (ทั้งหมด) {!form.unlimited_capacity && '*'}
+                  </label>
+                  <input
+                    type="number"
+                    className="input"
+                    min="1"
+                    value={form.max_students}
+                    onChange={handleInputChange('max_students')}
+                    disabled={submitting || form.unlimited_capacity}
+                    placeholder={form.unlimited_capacity ? 'ไม่จำกัด' : 'เช่น 50'}
+                    required={!form.unlimited_capacity}
+                    style={{
+                      background: form.unlimited_capacity ? '#f3f4f6' : '#fff',
+                      cursor: form.unlimited_capacity ? 'not-allowed' : 'text'
+                    }}
+                  />
+                  <p style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
+                    {form.unlimited_capacity
+                      ? 'ไม่จำกัดจำนวนผู้เรียน - ปิดการใช้งานเนื่องจากเปิดใช้ Unlimited Capacity'
+                      : 'จำกัดจำนวนผู้เรียนทั้งหมดที่สามารถลงทะเบียนได้'
+                    }
+                  </p>
+                </div>
+
+                <div className="field">
+                  <label className="field__label">วันปิดรับสมัคร (ถ้ามี)</label>
+                  <input
+                    type="datetime-local"
+                    className="input"
+                    value={form.enrollment_deadline}
+                    onChange={handleInputChange('enrollment_deadline')}
+                    disabled={submitting}
+                  />
+                  <p style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
+                    ไม่บังคับ - หากไม่ระบุจะเปิดรับสมัครตลอด
+                  </p>
+                </div>
               </div>
-            </div>
+            </>
           ) : (
             // Scheduled Course Fields (kept for backward compatibility)
             null
@@ -749,7 +793,9 @@ function Courses() {
                     </td>
                     <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                       {(course.course_type || 'scheduled') === 'standalone'
-                        ? `${course.max_students || 0}`
+                        ? (course.unlimited_capacity
+                            ? <span style={{ color: '#059669', fontWeight: '600' }}>ไม่จำกัด</span>
+                            : `${course.max_students || 0}`)
                         : course.capacity
                       }
                     </td>
