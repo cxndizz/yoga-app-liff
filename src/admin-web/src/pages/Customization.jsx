@@ -10,6 +10,8 @@ const normalizeData = (data = {}) => ({
   banner_url: data.banner_url || '',
   logo_initials: data.logo_initials || '',
   primary_color: data.primary_color || '#0b1a3c',
+  secondary_color: data.secondary_color || '#4cafb9',
+  background_color: data.background_color || '#f7f8fb',
 });
 
 function Customization() {
@@ -26,6 +28,35 @@ function Customization() {
     setToast(nextToast);
     if (nextToast.text) {
       setTimeout(() => setToast({ text: '', type: '' }), 3200);
+    }
+  };
+
+  const hexToRgb = (value) => {
+    if (!value) return '';
+    const normalized = value.startsWith('#') ? value.slice(1) : value;
+    if (![3, 6].includes(normalized.length)) return '';
+
+    const hex = normalized.length === 3
+      ? normalized
+          .split('')
+          .map((char) => char + char)
+          .join('')
+      : normalized;
+
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    if ([r, g, b].some((num) => Number.isNaN(num))) return '';
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  const handleCopy = async (text, label) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast({ text: `${label} คัดลอกแล้ว`, type: 'success' });
+    } catch (error) {
+      console.error('Error copying text:', error);
+      showToast({ text: 'คัดลอกไม่สำเร็จ', type: 'error' });
     }
   };
 
@@ -221,6 +252,111 @@ function Customization() {
         color: '#fff',
       };
 
+  const previewThemeBlock = (
+    <div
+      className="theme-preview"
+      style={{ backgroundColor: formData.background_color }}
+      aria-label="ตัวอย่างสีธีม"
+    >
+      <div
+        className="theme-preview__card"
+        style={{
+          borderColor: formData.secondary_color,
+          boxShadow: `0 8px 20px ${formData.primary_color}1a`,
+        }}
+      >
+        <div className="theme-preview__badge" style={{ backgroundColor: formData.secondary_color }}>
+          ตัวอย่างการ์ด
+        </div>
+        <p className="theme-preview__title" style={{ color: formData.primary_color }}>
+          Yoga Luxe Card
+        </p>
+        <p className="theme-preview__subtitle">สีจะอัปเดตตามที่เลือกทันที</p>
+        <div className="theme-preview__actions">
+          <button
+            type="button"
+            className="btn"
+            style={{
+              backgroundColor: formData.primary_color,
+              color: '#fff',
+              borderColor: formData.primary_color,
+              boxShadow: `0 6px 16px ${formData.primary_color}29`,
+            }}
+          >
+            Primary CTA
+          </button>
+          <button
+            type="button"
+            className="btn btn--ghost"
+            style={{
+              color: formData.secondary_color,
+              borderColor: formData.secondary_color,
+            }}
+          >
+            Secondary CTA
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const ColorField = ({ label, name }) => {
+    const hexValue = formData[name];
+    const rgbValue = hexToRgb(hexValue);
+
+    return (
+      <div className="field">
+        <label className="field__label" htmlFor={name}>
+          {label}
+        </label>
+        <div className="theme-color-picker">
+          <input
+            type="color"
+            id={name}
+            name={name}
+            value={hexValue}
+            onChange={handleChange}
+            className="theme-color-picker__swatch"
+          />
+          <div className="theme-color-picker__inputs">
+            <div className="copyable-input">
+              <input
+                type="text"
+                value={hexValue}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    [name]: e.target.value,
+                  }))
+                }
+                className="input"
+                placeholder="#0b1a3c"
+              />
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={() => handleCopy(hexValue, 'ค่า HEX')}
+              >
+                คัดลอก HEX
+              </button>
+            </div>
+            <div className="copyable-input">
+              <input type="text" value={rgbValue} readOnly className="input" placeholder="rgb(0, 0, 0)" />
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={() => handleCopy(rgbValue || '', 'ค่า RGB')}
+                disabled={!rgbValue}
+              >
+                คัดลอก RGB
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const formContent = (
     <div className="page-card page-card--wide">
       {alertMessage}
@@ -275,27 +411,20 @@ function Customization() {
             <p className="field__hint">ตัวอักษรสั้นๆ ที่จะแสดงในโลโก้เมื่อไม่มีรูปภาพ (สูงสุด 10 ตัวอักษร)</p>
           </div>
 
-          <div className="field">
-            <label className="field__label" htmlFor="primary_color">สีหลัก</label>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <input
-                type="color"
-                id="primary_color"
-                name="primary_color"
-                value={formData.primary_color}
-                onChange={handleChange}
-                style={{ width: '72px', height: '44px', cursor: 'pointer', borderRadius: '10px', border: '1px solid var(--color-border)' }}
-              />
-              <input
-                type="text"
-                value={formData.primary_color}
-                onChange={(e) => setFormData((prev) => ({ ...prev, primary_color: e.target.value }))}
-                className="input"
-                placeholder="#0b1a3c"
-                style={{ flex: 1, minWidth: 160 }}
-              />
+          <div className="theme-colors">
+            <div className="section-heading" style={{ marginBottom: 8 }}>
+              <h3 className="section-heading__title" style={{ marginBottom: 4 }}>
+                Theme Colors
+              </h3>
+              <p className="section-heading__muted">กำหนดสีหลัก สีรอง และพื้นหลัง พร้อมคัดลอกค่าสีได้ทันที</p>
             </div>
-            <p className="field__hint">สีหลักที่ใช้ในโลโก้ (รูปแบบ HEX เช่น #0b1a3c)</p>
+            <ColorField label="สีหลัก (Primary)" name="primary_color" />
+            <ColorField label="สีรอง (Secondary)" name="secondary_color" />
+            <ColorField label="สีพื้นหลัง (Background)" name="background_color" />
+            <div className="field">
+              <label className="field__label">ตัวอย่างสีธีม</label>
+              {previewThemeBlock}
+            </div>
           </div>
         </section>
 
