@@ -340,28 +340,30 @@ function Customization() {
       </div>
       <div className="page__actions">
         <button
-          type="button"
-          className="btn btn--ghost"
-          onClick={() => setShowPreview(true)}
-          disabled={loading || saving || uploading}
-        >
-          ดูตัวอย่างเต็ม
-        </button>
-        <button
-          type="button"
-          className="btn btn--ghost"
-          onClick={handleReset}
-          disabled={loading || saving || uploading}
-        >
-          รีเซ็ตค่า
-        </button>
-        <button
           type="submit"
           form="customization-form"
           className="btn btn--primary"
           disabled={loading || saving || uploading}
+          aria-busy={saving}
         >
-          {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
+          {saving ? '⏳ กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
+        </button>
+        <button
+          type="button"
+          className="btn btn--ghost btn--icon"
+          onClick={() => setShowPreview(true)}
+          disabled={loading || saving || uploading}
+        >
+          <span aria-hidden="true">👁</span>
+          ดูตัวอย่างเต็ม
+        </button>
+        <button
+          type="button"
+          className="btn btn--subtle"
+          onClick={handleReset}
+          disabled={loading || saving || uploading}
+        >
+          รีเซ็ตค่า
         </button>
       </div>
     </div>
@@ -771,16 +773,25 @@ function Customization() {
         </section>
 
         <div className="form-actions">
+          <button type="submit" className="btn btn--primary" disabled={saving || uploading} aria-busy={saving}>
+            {saving ? '⏳ กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
+          </button>
           <button
             type="button"
-            className="btn btn--ghost"
+            className="btn btn--ghost btn--icon"
+            onClick={() => setShowPreview(true)}
+            disabled={saving || uploading}
+          >
+            <span aria-hidden="true">👁</span>
+            ดูตัวอย่าง
+          </button>
+          <button
+            type="button"
+            className="btn btn--subtle"
             onClick={handleReset}
             disabled={saving || uploading}
           >
             รีเซ็ตค่า
-          </button>
-          <button type="submit" className="btn btn--primary" disabled={saving || uploading}>
-            {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
           </button>
         </div>
       </form>
