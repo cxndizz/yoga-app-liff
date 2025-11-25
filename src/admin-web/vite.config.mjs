@@ -8,9 +8,9 @@ export default defineConfig({
     port: 3001,
     host: '0.0.0.0',
     allowedHosts: [
-      'localhost',
-      '127.0.0.1',
-      'admin.fortestonlyme.online'
-    ],
+      'localhost', 
+      '127.0.0.1', 
+      'admin.fortestonlyme.online' 
+   ],
   }
 });

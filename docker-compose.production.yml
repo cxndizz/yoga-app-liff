@@ -1,0 +1,76 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: yoga_lineoa_db
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: yoga_secure_pass_2024  # เปลี่ยนเป็นรหัสผ่านที่ปลอดภัย
+      POSTGRES_DB: appdb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - yoga_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./src/api
+      dockerfile: ../../docker/api/Dockerfile
+    container_name: yoga_lineoa_api
+    env_file:
+      - ./src/api/.env.production
+    environment:
+      DATABASE_URL: postgres://appuser:yoga_secure_pass_2024@db:5432/appdb
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:4000:4000"
+    networks:
+      - yoga_network
+    restart: unless-stopped
+
+  liff-web:
+    build:
+      context: ./src/liff-web
+      dockerfile: ../../docker/liff-web/Dockerfile
+    container_name: yoga_lineoa_liff_web
+    env_file:
+      - ./src/liff-web/.env.production
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - yoga_network
+    restart: unless-stopped
+
+  admin-web:
+    build:
+      context: ./src/admin-web
+      dockerfile: ../../docker/admin-web/Dockerfile
+    container_name: yoga_lineoa_admin_web
+    env_file:
+      - ./src/admin-web/.env.production
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:3001:3001"
+    networks:
+      - yoga_network
+    restart: unless-stopped
+
+networks:
+  yoga_network:
+    driver: bridge
+
+volumes:
+  db_data:
