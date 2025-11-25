@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
+import axios from 'axios';
 
 const NavLink = ({ to, label, onClick }) => (
   <Link
@@ -25,6 +26,29 @@ function Navbar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [customization, setCustomization] = useState({
+    app_name: t('nav.brand'),
+    app_description: 'Boutique LIFF Studio',
+    logo_url: null,
+    logo_initials: 'YL',
+    primary_color: '#0b1a3c',
+  });
+
+  useEffect(() => {
+    const fetchCustomization = async () => {
+      try {
+        const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+        const response = await axios.post(`${apiBase}/api/customization/get`);
+        if (response.data) {
+          setCustomization(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching customization:', error);
+        // Use default values on error
+      }
+    };
+    fetchCustomization();
+  }, []);
 
   const links = [
     { to: '/', label: t('nav.home') },
@@ -59,19 +83,23 @@ function Navbar() {
             border: '1px solid var(--border)',
             display: 'grid',
             placeItems: 'center',
-            background: 'linear-gradient(135deg, rgba(231, 177, 160, 0.35), rgba(231, 177, 160, 0.05))',
-            color: '#0b1a3c',
+            background: customization.logo_url
+              ? `url(${customization.logo_url}) center/cover`
+              : 'linear-gradient(135deg, rgba(231, 177, 160, 0.35), rgba(231, 177, 160, 0.05))',
+            color: customization.primary_color,
             fontWeight: 800,
             letterSpacing: '-0.02em',
           }}
         >
-          YL
+          {!customization.logo_url && customization.logo_initials}
         </div>
         <div>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', letterSpacing: '0.01em' }}>
-          {t('nav.brand')}
-        </div>
-        <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Boutique LIFF Studio</div>
+            {customization.app_name}
+          </div>
+          <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
+            {customization.app_description}
+          </div>
         </div>
       </div>
 

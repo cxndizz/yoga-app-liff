@@ -17,6 +17,7 @@ const enrollmentsRoutes = require('./routes/enrollments');
 const customersRoutes = require('./routes/customers');
 const contentRoutes = require('./routes/content');
 const settingsRoutes = require('./routes/settings');
+const customizationRoutes = require('./routes/customization');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -65,6 +66,7 @@ app.use('/api/admin/enrollments', enrollmentsRoutes);
 app.use('/api/admin/customers', customersRoutes);
 app.use('/api/admin/content', contentRoutes);
 app.use('/api/admin/settings', settingsRoutes);
+app.use('/api/customization', customizationRoutes);
 
 app.post('/courses/list', async (req, res) => {
   try {
