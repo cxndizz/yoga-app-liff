@@ -11,3 +11,9 @@ dist
 .solid
 .env
 .DS_Store
+docker-compose.yml
+src/liff-web/vite.config.mjs
+src/liff-web/.env
+src/api/.env
+src/admin-web/vite.config.mjs
+src/admin-web/.env

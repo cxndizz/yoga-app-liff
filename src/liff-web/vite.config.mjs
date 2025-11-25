@@ -9,7 +9,7 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       '127.0.0.1',
-      'a26294266684.ngrok-free.app'
+      'fortestonlyme.online'
     ],
   }
 });
