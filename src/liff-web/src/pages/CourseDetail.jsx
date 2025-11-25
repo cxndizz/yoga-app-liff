@@ -53,6 +53,7 @@ function CourseDetail() {
   const seatLabel = isStandalone
     ? t('access.seatsLeftDetail', { left: course.seatsLeft, capacity: course.maxStudents })
     : t('access.seatsLeftDetail', { left: course.seatsLeft, capacity: course.capacity });
+  const ctaLabel = course.isFree ? t('common.registerNow') : t('common.payOmise');
 
   return (
     <div style={{ display: 'grid', gap: 18 }}>
@@ -137,7 +138,7 @@ function CourseDetail() {
                 navigate(course.isFree ? `/courses/${courseId}/checkout` : `/courses/${courseId}/checkout`)
               }
             >
-              {course.isFree ? t('common.registerNow') : t('common.payOmise')}
+              {ctaLabel}
             </button>
           </div>
         </div>
@@ -216,6 +217,20 @@ function CourseDetail() {
           <SessionList sessions={sessions} fallbackChannel={course.channel || t('course.course')} />
         </section>
       )}
+
+      <div className="mobile-action-bar">
+        <div className="mobile-action-bar__meta">
+          <span style={{ fontWeight: 800 }}>{priceLabel}</span>
+          <span className="helper-text">{seatLabel}</span>
+        </div>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => navigate(`/courses/${courseId}/checkout`)}
+        >
+          {ctaLabel}
+        </button>
+      </div>
     </div>
   );
 }
