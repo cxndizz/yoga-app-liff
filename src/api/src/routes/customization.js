@@ -7,7 +7,7 @@ const db = require('../db');
 const { requireAdminAuth } = require('../middleware/adminAuth');
 
 // Configure multer for logo uploads
-const storage = multer.diskStorage({
+const logoStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'logos');
     // Create directory if it doesn't exist
@@ -37,14 +37,35 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({
-  storage: storage,
+const bannerStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'banners');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'banner-' + uniqueSuffix + ext);
+  }
+});
+
+const uploadLogo = multer({
+  storage: logoStorage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: fileFilter
 });
 
+const uploadBanner = multer({
+  storage: bannerStorage,
+  limits: { fileSize: 8 * 1024 * 1024 }, // 8MB limit
+  fileFilter: fileFilter
+});
+
 // Upload logo image (admin only)
-router.post('/upload-logo', requireAdminAuth(['super_admin']), upload.single('logo'), async (req, res) => {
+router.post('/upload-logo', requireAdminAuth(['super_admin']), uploadLogo.single('logo'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -64,6 +85,26 @@ router.post('/upload-logo', requireAdminAuth(['super_admin']), upload.single('lo
   }
 });
 
+// Upload banner image (admin only)
+router.post('/upload-banner', requireAdminAuth(['super_admin']), uploadBanner.single('banner'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const bannerUrl = `/uploads/banners/${req.file.filename}`;
+
+    res.json({
+      success: true,
+      banner_url: bannerUrl,
+      message: 'Banner uploaded successfully'
+    });
+  } catch (err) {
+    console.error('Error uploading banner:', err);
+    res.status(500).json({ message: err.message || 'Error uploading banner' });
+  }
+});
+
 // Get app customization settings (public - for LIFF app)
 router.post('/get', async (_req, res) => {
   try {
@@ -75,6 +116,7 @@ router.post('/get', async (_req, res) => {
         app_name: 'Yoga Luxe',
         app_description: 'Boutique LIFF Studio',
         logo_url: null,
+        banner_url: null,
         logo_initials: 'YL',
         primary_color: '#0b1a3c',
       });
@@ -94,6 +136,7 @@ router.post('/update', requireAdminAuth(['super_admin']), async (req, res) => {
       app_name,
       app_description,
       logo_url,
+      banner_url,
       logo_initials,
       primary_color,
     } = req.body;
@@ -109,23 +152,25 @@ router.post('/update', requireAdminAuth(['super_admin']), async (req, res) => {
          SET app_name = COALESCE($1, app_name),
              app_description = COALESCE($2, app_description),
              logo_url = COALESCE($3, logo_url),
-             logo_initials = COALESCE($4, logo_initials),
-             primary_color = COALESCE($5, primary_color),
+             banner_url = COALESCE($4, banner_url),
+             logo_initials = COALESCE($5, logo_initials),
+             primary_color = COALESCE($6, primary_color),
              updated_at = NOW()
-         WHERE id = $6
+         WHERE id = $7
          RETURNING *`,
-        [app_name, app_description, logo_url, logo_initials, primary_color, checkResult.rows[0].id]
+        [app_name, app_description, logo_url, banner_url, logo_initials, primary_color, checkResult.rows[0].id]
       );
     } else {
       // Insert new customization
       result = await db.query(
-        `INSERT INTO app_customization (app_name, app_description, logo_url, logo_initials, primary_color)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO app_customization (app_name, app_description, logo_url, banner_url, logo_initials, primary_color)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
         [
           app_name || 'Yoga Luxe',
           app_description || 'Boutique LIFF Studio',
           logo_url,
+          banner_url,
           logo_initials || 'YL',
           primary_color || '#0b1a3c',
         ]

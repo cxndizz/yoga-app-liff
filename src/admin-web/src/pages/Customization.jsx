@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { apiBase } from '../config';
+import AssetDropzone from '../components/AssetDropzone';
 
 const normalizeData = (data = {}) => ({
   app_name: data.app_name || '',
   app_description: data.app_description || '',
   logo_url: data.logo_url || '',
+  banner_url: data.banner_url || '',
   logo_initials: data.logo_initials || '',
   primary_color: data.primary_color || '#0b1a3c',
 });
@@ -19,8 +21,6 @@ function Customization() {
   const [message, setMessage] = useState({ text: '', type: '' });
   const [toast, setToast] = useState({ text: '', type: '' });
   const [showPreview, setShowPreview] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
-  const fileInputRef = useRef(null);
 
   const showToast = (nextToast) => {
     setToast(nextToast);
@@ -91,86 +91,53 @@ function Customization() {
     }));
   };
 
-  const handleFileUpload = async (file) => {
-    if (!file) return;
-
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
-    if (!allowedTypes.includes(file.type)) {
-      setMessage({ text: 'กรุณาเลือกไฟล์รูปภาพเท่านั้น (JPG, PNG, GIF, WEBP, SVG)', type: 'error' });
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setMessage({ text: 'ขนาดไฟล์ต้องไม่เกิน 5MB', type: 'error' });
-      return;
-    }
-
+  const uploadAsset = async (file, type) => {
     setUploading(true);
     setMessage({ text: '', type: '' });
 
+    const endpoint = type === 'logo' ? 'upload-logo' : 'upload-banner';
+    const fieldName = type === 'logo' ? 'logo' : 'banner';
+    const urlKey = type === 'logo' ? 'logo_url' : 'banner_url';
+
     try {
       const formDataToUpload = new FormData();
-      formDataToUpload.append('logo', file);
+      formDataToUpload.append(fieldName, file);
 
-      const response = await axios.post(`${apiBase}/api/customization/upload-logo`, formDataToUpload, {
+      const response = await axios.post(`${apiBase}/api/customization/${endpoint}`, formDataToUpload, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      if (response.data.success) {
+      const uploadedUrl = response.data?.[urlKey];
+      if (response.data.success && uploadedUrl) {
+        const absoluteUrl = `${apiBase}${uploadedUrl}`;
         setFormData((prev) => ({
           ...prev,
-          logo_url: `${apiBase}${response.data.logo_url}`,
+          [urlKey]: absoluteUrl,
         }));
-        setMessage({ text: 'อัปโหลดรูปภาพสำเร็จ', type: 'success' });
-        showToast({ text: 'อัปโหลดรูปภาพสำเร็จ', type: 'success' });
+        const successText = type === 'logo' ? 'อัปโหลดโลโก้สำเร็จ' : 'อัปโหลดแบนเนอร์สำเร็จ';
+        setMessage({ text: successText, type: 'success' });
+        showToast({ text: successText, type: 'success' });
+        return absoluteUrl;
       }
+
+      throw new Error(response.data?.message || 'ไม่สามารถอัปโหลดไฟล์ได้');
     } catch (error) {
-      console.error('Error uploading logo:', error);
-      setMessage({
-        text: error.response?.data?.message || 'เกิดข้อผิดพลาดในการอัปโหลด',
-        type: 'error',
-      });
-      showToast({
-        text: error.response?.data?.message || 'เกิดข้อผิดพลาดในการอัปโหลด',
-        type: 'error',
-      });
+      console.error('Error uploading asset:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'เกิดข้อผิดพลาดในการอัปโหลด';
+      setMessage({ text: errorMessage, type: 'error' });
+      showToast({ text: errorMessage, type: 'error' });
+      throw new Error(errorMessage);
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileUpload(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleFileSelect = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFileUpload(e.target.files[0]);
-    }
-  };
-
-  const handleRemoveLogo = () => {
+  const handleRemoveAsset = (key) => {
     setFormData((prev) => ({
       ...prev,
-      logo_url: '',
+      [key]: '',
     }));
   };
 
@@ -242,67 +209,53 @@ function Customization() {
     </div>
   );
 
+  const previewHeroStyle = formData.banner_url
+    ? {
+        backgroundImage: `linear-gradient(0deg, rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${formData.banner_url})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: '#fff',
+      }
+    : {
+        background: formData.primary_color || '#0b1a3c',
+        color: '#fff',
+      };
+
   const formContent = (
     <div className="page-card page-card--wide">
       {alertMessage}
       <form id="customization-form" onSubmit={handleSubmit} className="form-grid form-grid--balanced">
         <section className="page-card__section">
           <div className="section-heading">
-            <h2 className="section-heading__title">โลโก้และสีแบรนด์</h2>
-            <p className="section-heading__muted">อัปโหลดโลโก้และตั้งค่าสีหลักให้ตรงกับแบรนด์ของคุณ</p>
+            <h2 className="section-heading__title">Brand Assets</h2>
+            <p className="section-heading__muted">
+              อัปโหลดโลโก้และแบนเนอร์พร้อมคำแนะนำเรื่องไฟล์ เพื่อให้การแสดงผลใน LIFF คมชัดและถูกต้อง
+            </p>
           </div>
 
-          <div className="field">
-            <label className="field__label" htmlFor="logo_upload">อัปโหลดรูปโลโก้</label>
-            <div
-              id="logo_upload"
-              className={`upload-dropzone${dragActive ? ' is-active' : ''}`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              role="button"
-              tabIndex={0}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                style={{ display: 'none' }}
-              />
+          <AssetDropzone
+            label="โลโก้แบรนด์"
+            description="รองรับ PNG, JPEG, WEBP สูงสุด 5MB แนะนำพื้นหลังโปร่งใส"
+            value={formData.logo_url}
+            maxSizeMB={5}
+            allowedTypes={['image/png', 'image/jpeg', 'image/jpg', 'image/webp']}
+            recommendedRatio={{ width: 1, height: 1 }}
+            recommendedText="สัดส่วน 1:1 แนะนำ 512x512px"
+            onUpload={(file) => uploadAsset(file, 'logo')}
+            onRemove={() => handleRemoveAsset('logo_url')}
+          />
 
-              {formData.logo_url ? (
-                <div style={{ position: 'relative', display: 'inline-block' }}>
-                  <img
-                    src={formData.logo_url}
-                    alt="Logo Preview"
-                    style={{ maxWidth: '100%', maxHeight: '220px', borderRadius: '10px', objectFit: 'contain' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveLogo();
-                    }}
-                    className="btn btn--ghost btn--small"
-                    style={{ position: 'absolute', top: 8, right: 8 }}
-                  >
-                    ลบรูป
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <div className="upload-dropzone__icon">{uploading ? '⏳' : '📁'}</div>
-                  <p className="upload-dropzone__title">
-                    {uploading ? 'กำลังอัปโหลด...' : 'คลิกหรือลากไฟล์มาวางที่นี่'}
-                  </p>
-                  <p className="upload-dropzone__hint">รองรับ JPG, PNG, GIF, WEBP, SVG (สูงสุด 5MB)</p>
-                </div>
-              )}
-            </div>
-          </div>
+          <AssetDropzone
+            label="แบนเนอร์หน้าแรก"
+            description="รองรับ PNG, JPEG, WEBP สูงสุด 8MB สำหรับ Hero/Banner"
+            value={formData.banner_url}
+            maxSizeMB={8}
+            allowedTypes={['image/png', 'image/jpeg', 'image/jpg', 'image/webp']}
+            recommendedRatio={{ width: 16, height: 9 }}
+            recommendedText="สัดส่วน 16:9 แนะนำ 1600x900px"
+            onUpload={(file) => uploadAsset(file, 'banner')}
+            onRemove={() => handleRemoveAsset('banner_url')}
+          />
 
           <div className="field">
             <label className="field__label" htmlFor="logo_initials">
@@ -392,6 +345,31 @@ function Customization() {
                   <p className="preview-card__subtitle">{formData.app_description || 'รายละเอียดแอป'}</p>
                 </div>
               </div>
+              <div style={{ marginTop: 12 }}>
+                <div
+                  style={{
+                    width: '100%',
+                    height: 140,
+                    borderRadius: '12px',
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: formData.banner_url ? 'transparent' : '#f7f8fb',
+                    backgroundImage: formData.banner_url
+                      ? `linear-gradient(0deg, rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url(${formData.banner_url})`
+                      : undefined,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: formData.banner_url ? '#fff' : 'var(--color-text-muted)',
+                    textAlign: 'center',
+                    padding: '0 12px',
+                  }}
+                  aria-label="ตัวอย่างแบนเนอร์"
+                >
+                  {formData.banner_url ? 'ตัวอย่างแบนเนอร์ที่อัปโหลด' : 'แบนเนอร์ที่อัปโหลดจะแสดงในพื้นที่นี้'}
+                </div>
+              </div>
               <p className="field__hint">ตัวอย่างการจัดวางโลโก้ ชื่อ และข้อความย่อยที่ผู้ใช้จะเห็น</p>
             </div>
           </div>
@@ -453,7 +431,7 @@ function Customization() {
                 ปิด
               </button>
             </div>
-            <div className="preview-modal__hero" style={{ background: formData.primary_color || '#0b1a3c' }}>
+            <div className="preview-modal__hero" style={previewHeroStyle}>
               <div className="preview-modal__logo">{previewAvatar}</div>
               <div className="preview-modal__copy">
                 <h4>{formData.app_name || 'ชื่อแอป'}</h4>
@@ -463,6 +441,7 @@ function Customization() {
             <div className="preview-modal__footer">
               <div className="preview-badge">สีหลัก: {formData.primary_color}</div>
               <div className="preview-badge">โลโก้: {formData.logo_url ? 'อัปโหลดแล้ว' : 'ใช้ตัวย่อ'}</div>
+              <div className="preview-badge">แบนเนอร์: {formData.banner_url ? 'อัปโหลดแล้ว' : 'ยังไม่ได้เพิ่ม'}</div>
               <div className="preview-badge">ข้อความพร้อมแสดง</div>
             </div>
           </div>
