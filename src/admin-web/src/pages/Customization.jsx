@@ -2,14 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { apiBase } from '../config';
 
+const normalizeData = (data = {}) => ({
+  app_name: data.app_name || '',
+  app_description: data.app_description || '',
+  logo_url: data.logo_url || '',
+  logo_initials: data.logo_initials || '',
+  primary_color: data.primary_color || '#0b1a3c',
+});
+
 function Customization() {
-  const [formData, setFormData] = useState({
-    app_name: '',
-    app_description: '',
-    logo_url: '',
-    logo_initials: '',
-    primary_color: '#0b1a3c',
-  });
+  const [formData, setFormData] = useState(normalizeData());
+  const [initialData, setInitialData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -25,15 +28,9 @@ function Customization() {
     setLoading(true);
     try {
       const response = await axios.post(`${apiBase}/api/customization/get`);
-      if (response.data) {
-        setFormData({
-          app_name: response.data.app_name || '',
-          app_description: response.data.app_description || '',
-          logo_url: response.data.logo_url || '',
-          logo_initials: response.data.logo_initials || '',
-          primary_color: response.data.primary_color || '#0b1a3c',
-        });
-      }
+      const normalized = normalizeData(response.data || {});
+      setFormData(normalized);
+      setInitialData(normalized);
     } catch (error) {
       console.error('Error fetching customization:', error);
       setMessage({ text: 'ไม่สามารถโหลดข้อมูลได้', type: 'error' });
@@ -50,11 +47,21 @@ function Customization() {
     try {
       await axios.post(`${apiBase}/api/customization/update`, formData);
       setMessage({ text: 'บันทึกการตั้งค่าเรียบร้อยแล้ว', type: 'success' });
+      setInitialData({ ...formData });
     } catch (error) {
       console.error('Error saving customization:', error);
       setMessage({ text: 'เกิดข้อผิดพลาดในการบันทึก', type: 'error' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    if (initialData) {
+      setFormData({ ...initialData });
+      setMessage({ text: 'คืนค่าตามข้อมูลล่าสุดที่บันทึกไว้แล้ว', type: 'success' });
+    } else {
+      fetchCustomization();
     }
   };
 
@@ -69,14 +76,12 @@ function Customization() {
   const handleFileUpload = async (file) => {
     if (!file) return;
 
-    // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
     if (!allowedTypes.includes(file.type)) {
       setMessage({ text: 'กรุณาเลือกไฟล์รูปภาพเท่านั้น (JPG, PNG, GIF, WEBP, SVG)', type: 'error' });
       return;
     }
 
-    // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       setMessage({ text: 'ขนาดไฟล์ต้องไม่เกิน 5MB', type: 'error' });
       return;
@@ -86,10 +91,10 @@ function Customization() {
     setMessage({ text: '', type: '' });
 
     try {
-      const formData = new FormData();
-      formData.append('logo', file);
+      const formDataToUpload = new FormData();
+      formDataToUpload.append('logo', file);
 
-      const response = await axios.post(`${apiBase}/api/customization/upload-logo`, formData, {
+      const response = await axios.post(`${apiBase}/api/customization/upload-logo`, formDataToUpload, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -146,322 +151,242 @@ function Customization() {
     }));
   };
 
-  if (loading) {
-    return (
-      <div className="page-container">
-        <div className="page-header">
-          <h1>ตั้งค่าหน้าจอแอป</h1>
-        </div>
-        <div style={{ padding: '20px', textAlign: 'center' }}>กำลังโหลด...</div>
+  const header = (
+    <div className="page__header">
+      <div>
+        <p className="page__eyebrow">Appearance</p>
+        <h1 className="page__title">ตั้งค่าหน้าจอแอป</h1>
+        <p className="page__subtitle">ปรับแต่งโลโก้ ชื่อแอป และรายละเอียดที่แสดงในหน้าแอป LIFF</p>
+        <nav className="page__breadcrumb" aria-label="Breadcrumb">
+          <span>การตั้งค่า</span>
+          <span className="page__breadcrumb-separator">/</span>
+          <span>หน้าจอแอป</span>
+        </nav>
+      </div>
+      <div className="page__actions">
+        <button
+          type="button"
+          className="btn btn--ghost"
+          onClick={handleReset}
+          disabled={loading || saving || uploading}
+        >
+          รีเซ็ตค่า
+        </button>
+        <button
+          type="submit"
+          form="customization-form"
+          className="btn btn--primary"
+          disabled={loading || saving || uploading}
+        >
+          {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
+        </button>
+      </div>
+    </div>
+  );
+
+  const alertMessage =
+    message.text && (
+      <div
+        className={`page-alert ${message.type === 'success' ? 'page-alert--success' : 'page-alert--error'}`}
+        role="status"
+      >
+        {message.text}
       </div>
     );
-  }
+
+  const previewAvatar = formData.logo_url ? (
+    <div
+      className="avatar-circle"
+      style={{
+        backgroundImage: `url(${formData.logo_url})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        color: 'transparent',
+      }}
+      aria-label="ตัวอย่างโลโก้"
+    />
+  ) : (
+    <div className="avatar-circle" style={{ color: formData.primary_color }} aria-label="ตัวอย่างตัวย่อ">
+      {formData.logo_initials || 'YL'}
+    </div>
+  );
+
+  const formContent = (
+    <div className="page-card page-card--wide">
+      {alertMessage}
+      <form id="customization-form" onSubmit={handleSubmit} className="form-grid form-grid--balanced">
+        <section className="page-card__section">
+          <div className="section-heading">
+            <h2 className="section-heading__title">โลโก้และสีแบรนด์</h2>
+            <p className="section-heading__muted">อัปโหลดโลโก้และตั้งค่าสีหลักให้ตรงกับแบรนด์ของคุณ</p>
+          </div>
+
+          <div className="field">
+            <label className="field__label" htmlFor="logo_upload">อัปโหลดรูปโลโก้</label>
+            <div
+              id="logo_upload"
+              className={`upload-dropzone${dragActive ? ' is-active' : ''}`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              role="button"
+              tabIndex={0}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+              />
+
+              {formData.logo_url ? (
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <img
+                    src={formData.logo_url}
+                    alt="Logo Preview"
+                    style={{ maxWidth: '100%', maxHeight: '220px', borderRadius: '10px', objectFit: 'contain' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveLogo();
+                    }}
+                    className="btn btn--ghost btn--small"
+                    style={{ position: 'absolute', top: 8, right: 8 }}
+                  >
+                    ลบรูป
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="upload-dropzone__icon">{uploading ? '⏳' : '📁'}</div>
+                  <p className="upload-dropzone__title">
+                    {uploading ? 'กำลังอัปโหลด...' : 'คลิกหรือลากไฟล์มาวางที่นี่'}
+                  </p>
+                  <p className="upload-dropzone__hint">รองรับ JPG, PNG, GIF, WEBP, SVG (สูงสุด 5MB)</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="field">
+            <label className="field__label" htmlFor="logo_initials">
+              ตัวย่อโลโก้ <span style={{ color: 'var(--color-danger)' }}>*</span>
+            </label>
+            <input
+              type="text"
+              id="logo_initials"
+              name="logo_initials"
+              value={formData.logo_initials}
+              onChange={handleChange}
+              className="input"
+              required
+              maxLength={10}
+              placeholder="เช่น YL"
+            />
+            <p className="field__hint">ตัวอักษรสั้นๆ ที่จะแสดงในโลโก้เมื่อไม่มีรูปภาพ (สูงสุด 10 ตัวอักษร)</p>
+          </div>
+
+          <div className="field">
+            <label className="field__label" htmlFor="primary_color">สีหลัก</label>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="color"
+                id="primary_color"
+                name="primary_color"
+                value={formData.primary_color}
+                onChange={handleChange}
+                style={{ width: '72px', height: '44px', cursor: 'pointer', borderRadius: '10px', border: '1px solid var(--color-border)' }}
+              />
+              <input
+                type="text"
+                value={formData.primary_color}
+                onChange={(e) => setFormData((prev) => ({ ...prev, primary_color: e.target.value }))}
+                className="input"
+                placeholder="#0b1a3c"
+                style={{ flex: 1, minWidth: 160 }}
+              />
+            </div>
+            <p className="field__hint">สีหลักที่ใช้ในโลโก้ (รูปแบบ HEX เช่น #0b1a3c)</p>
+          </div>
+        </section>
+
+        <section className="page-card__section">
+          <div className="section-heading">
+            <h2 className="section-heading__title">ข้อมูลที่จะแสดงในแอป</h2>
+            <p className="section-heading__muted">กำหนดชื่อและคำอธิบายที่ใช้กับหน้าจอหน้าแรกของ LIFF</p>
+          </div>
+
+          <div className="field">
+            <label className="field__label" htmlFor="app_name">
+              ชื่อแอป <span style={{ color: 'var(--color-danger)' }}>*</span>
+            </label>
+            <input
+              type="text"
+              id="app_name"
+              name="app_name"
+              value={formData.app_name}
+              onChange={handleChange}
+              className="input"
+              required
+              placeholder="เช่น Yoga Luxe"
+            />
+          </div>
+
+          <div className="field">
+            <label className="field__label" htmlFor="app_description">รายละเอียดแอป</label>
+            <textarea
+              id="app_description"
+              name="app_description"
+              value={formData.app_description}
+              onChange={handleChange}
+              className="textarea"
+              placeholder="เช่น Boutique LIFF Studio"
+              rows="4"
+            />
+            <p className="field__hint">แนะนำบริการของคุณสั้นๆ เพื่อให้ผู้ใช้เข้าใจในทันที</p>
+          </div>
+
+          <div className="field">
+            <label className="field__label">ตัวอย่าง</label>
+            <div className="preview-card">
+              <div className="preview-card__header">
+                {previewAvatar}
+                <div>
+                  <p className="preview-card__title">{formData.app_name || 'ชื่อแอป'}</p>
+                  <p className="preview-card__subtitle">{formData.app_description || 'รายละเอียดแอป'}</p>
+                </div>
+              </div>
+              <p className="field__hint">ตัวอย่างการจัดวางโลโก้ ชื่อ และข้อความย่อยที่ผู้ใช้จะเห็น</p>
+            </div>
+          </div>
+        </section>
+
+        <div className="form-actions">
+          <button
+            type="button"
+            className="btn btn--ghost"
+            onClick={handleReset}
+            disabled={saving || uploading}
+          >
+            รีเซ็ตค่า
+          </button>
+          <button type="submit" className="btn btn--primary" disabled={saving || uploading}>
+            {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <h1>ตั้งค่าหน้าจอแอป</h1>
-        <p className="page-subtext">
-          ปรับแต่งโลโก้ ชื่อแอป และรายละเอียดที่แสดงในหน้าแอป LIFF
-        </p>
-      </div>
-
-      <div className="card">
-        <form onSubmit={handleSubmit}>
-          {/* Message Display */}
-          {message.text && (
-            <div
-              style={{
-                padding: '12px 16px',
-                marginBottom: '24px',
-                borderRadius: '8px',
-                backgroundColor: message.type === 'success' ? '#10b981' : '#ef4444',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <span>{message.type === 'success' ? '✓' : '⚠'}</span>
-              <span>{message.text}</span>
-            </div>
-          )}
-
-          {/* Responsive Grid Layout */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '24px',
-              marginBottom: '24px',
-            }}
-          >
-            {/* Left Column - Logo Upload */}
-            <div>
-              <h3 style={{ marginBottom: '16px', fontSize: '1.1rem', fontWeight: '600' }}>
-                โลโก้แอป
-              </h3>
-
-              {/* Logo Upload Area */}
-              <div className="form-group">
-                <label>อัปโหลดรูปโลโก้</label>
-                <div
-                  onDragEnter={handleDrag}
-                  onDragLeave={handleDrag}
-                  onDragOver={handleDrag}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{
-                    border: dragActive ? '2px dashed #3b82f6' : '2px dashed #334155',
-                    borderRadius: '12px',
-                    padding: '32px 20px',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    backgroundColor: dragActive ? 'rgba(59, 130, 246, 0.05)' : '#1e293b',
-                    transition: 'all 0.2s ease',
-                    position: 'relative',
-                  }}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileSelect}
-                    style={{ display: 'none' }}
-                  />
-
-                  {formData.logo_url ? (
-                    <div style={{ position: 'relative' }}>
-                      <img
-                        src={formData.logo_url}
-                        alt="Logo Preview"
-                        style={{
-                          maxWidth: '100%',
-                          maxHeight: '200px',
-                          borderRadius: '8px',
-                          objectFit: 'contain',
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveLogo();
-                        }}
-                        style={{
-                          position: 'absolute',
-                          top: '8px',
-                          right: '8px',
-                          backgroundColor: '#ef4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '50%',
-                          width: '32px',
-                          height: '32px',
-                          cursor: 'pointer',
-                          fontSize: '18px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      <div style={{ fontSize: '48px', marginBottom: '12px' }}>
-                        {uploading ? '⏳' : '📁'}
-                      </div>
-                      <div style={{ color: '#94a3b8', marginBottom: '8px' }}>
-                        {uploading ? 'กำลังอัปโหลด...' : 'คลิกหรือลากไฟล์มาวางที่นี่'}
-                      </div>
-                      <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
-                        รองรับ JPG, PNG, GIF, WEBP, SVG (สูงสุด 5MB)
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Logo Initials */}
-              <div className="form-group">
-                <label htmlFor="logo_initials">
-                  ตัวย่อโลโก้ <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  id="logo_initials"
-                  name="logo_initials"
-                  value={formData.logo_initials}
-                  onChange={handleChange}
-                  className="form-control"
-                  required
-                  maxLength={10}
-                  placeholder="เช่น YL"
-                />
-                <small className="form-text">
-                  ตัวอักษรสั้นๆ ที่จะแสดงในโลโก้เมื่อไม่มีรูปภาพ (สูงสุด 10 ตัวอักษร)
-                </small>
-              </div>
-
-              {/* Primary Color */}
-              <div className="form-group">
-                <label htmlFor="primary_color">สีหลัก</label>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                  <input
-                    type="color"
-                    id="primary_color"
-                    name="primary_color"
-                    value={formData.primary_color}
-                    onChange={handleChange}
-                    style={{
-                      width: '60px',
-                      height: '44px',
-                      cursor: 'pointer',
-                      border: '1px solid #334155',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <input
-                    type="text"
-                    value={formData.primary_color}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, primary_color: e.target.value }))
-                    }
-                    className="form-control"
-                    placeholder="#0b1a3c"
-                    style={{ flex: 1 }}
-                  />
-                </div>
-                <small className="form-text">
-                  สีหลักที่ใช้ในโลโก้ (รูปแบบ HEX เช่น #0b1a3c)
-                </small>
-              </div>
-            </div>
-
-            {/* Right Column - App Information */}
-            <div>
-              <h3 style={{ marginBottom: '16px', fontSize: '1.1rem', fontWeight: '600' }}>
-                ข้อมูลแอป
-              </h3>
-
-              {/* App Name */}
-              <div className="form-group">
-                <label htmlFor="app_name">
-                  ชื่อแอป <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  id="app_name"
-                  name="app_name"
-                  value={formData.app_name}
-                  onChange={handleChange}
-                  className="form-control"
-                  required
-                  placeholder="เช่น Yoga Luxe"
-                />
-              </div>
-
-              {/* App Description */}
-              <div className="form-group">
-                <label htmlFor="app_description">รายละเอียดแอป</label>
-                <textarea
-                  id="app_description"
-                  name="app_description"
-                  value={formData.app_description}
-                  onChange={handleChange}
-                  className="form-control"
-                  placeholder="เช่น Boutique LIFF Studio"
-                  rows="4"
-                  style={{ resize: 'vertical', minHeight: '100px' }}
-                />
-              </div>
-
-              {/* Preview Section */}
-              <div className="form-group">
-                <label>ตัวอย่าง</label>
-                <div
-                  style={{
-                    padding: '24px',
-                    backgroundColor: '#0f172a',
-                    borderRadius: '12px',
-                    border: '1px solid #334155',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div
-                      style={{
-                        width: 56,
-                        height: 56,
-                        borderRadius: '50%',
-                        border: '2px solid #334155',
-                        display: 'grid',
-                        placeItems: 'center',
-                        background: formData.logo_url
-                          ? `url(${formData.logo_url}) center/cover`
-                          : 'linear-gradient(135deg, rgba(231, 177, 160, 0.35), rgba(231, 177, 160, 0.05))',
-                        color: formData.primary_color,
-                        fontWeight: 800,
-                        letterSpacing: '-0.02em',
-                        fontSize: '1.1rem',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {!formData.logo_url && formData.logo_initials}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontFamily: 'var(--font-heading)',
-                          fontSize: '1.35rem',
-                          letterSpacing: '0.01em',
-                          color: '#fff',
-                          marginBottom: '4px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {formData.app_name || 'ชื่อแอป'}
-                      </div>
-                      <div
-                        style={{
-                          color: '#94a3b8',
-                          fontSize: '0.95rem',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                        }}
-                      >
-                        {formData.app_description || 'รายละเอียดแอป'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <div
-            className="form-actions"
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '12px',
-              paddingTop: '24px',
-              borderTop: '1px solid #334155',
-            }}
-          >
-            <button type="submit" className="btn btn--primary" disabled={saving || uploading}>
-              {saving ? 'กำลังบันทึก...' : 'บันทึกการตั้งค่า'}
-            </button>
-          </div>
-        </form>
-      </div>
+    <div className="page page--narrow">
+      {header}
+      {loading ? <div className="page-card page-card--wide">กำลังโหลด...</div> : formContent}
     </div>
   );
 }
