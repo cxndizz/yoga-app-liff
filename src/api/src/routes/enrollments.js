@@ -6,7 +6,7 @@ const { requireAdminAuth } = require('../middleware/adminAuth');
 // List enrollments
 router.post('/list', requireAdminAuth(['super_admin', 'branch_admin']), async (req, res) => {
   try {
-    const { status, course_id, user_id, session_id } = req.body || {};
+    const { status, course_id, user_id, session_id, course_type } = req.body || {};
 
     let query = `
       SELECT
@@ -15,6 +15,7 @@ router.post('/list', requireAdminAuth(['super_admin', 'branch_admin']), async (r
         u.email as user_email,
         u.phone as user_phone,
         c.title as course_title,
+        c.course_type,
         cs.session_name,
         cs.start_date as session_start_date,
         b.name as branch_name,
@@ -49,6 +50,11 @@ router.post('/list', requireAdminAuth(['super_admin', 'branch_admin']), async (r
       query += ` AND ce.session_id = $${params.length}`;
     }
 
+    if (course_type) {
+      params.push(course_type);
+      query += ` AND c.course_type = $${params.length}`;
+    }
+
     query += ' ORDER BY ce.enrolled_at DESC LIMIT 500';
 
     const result = await db.query(query, params);
@@ -75,6 +81,7 @@ router.post('/detail', requireAdminAuth(['super_admin', 'branch_admin']), async 
          u.phone as user_phone,
          c.title as course_title,
          c.description as course_description,
+         c.course_type,
          cs.session_name,
          cs.start_date as session_start_date,
          cs.start_time as session_start_time,
@@ -125,9 +132,47 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const courseCheck = await db.query('SELECT id, access_times FROM courses WHERE id = $1', [course_id]);
+    const courseCheck = await db.query(
+      'SELECT id, access_times, course_type, max_students FROM courses WHERE id = $1',
+      [course_id]
+    );
     if (courseCheck.rows.length === 0) {
       return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const course = courseCheck.rows[0];
+    const courseType = course.course_type || 'scheduled';
+
+    // Validation based on course type
+    if (courseType === 'scheduled' && !session_id) {
+      return res.status(400).json({
+        message: 'session_id is required for scheduled courses. Please select a session.',
+        course_type: 'scheduled'
+      });
+    }
+
+    if (courseType === 'standalone' && session_id) {
+      return res.status(400).json({
+        message: 'Standalone courses cannot be enrolled with a session. Remove session_id.',
+        course_type: 'standalone'
+      });
+    }
+
+    // Check availability for standalone courses
+    if (courseType === 'standalone' && course.max_students) {
+      const enrollmentCount = await db.query(
+        `SELECT COUNT(*) as count FROM course_enrollments
+         WHERE course_id = $1 AND status = 'active'`,
+        [course_id]
+      );
+      const currentEnrollments = parseInt(enrollmentCount.rows[0].count, 10);
+      if (currentEnrollments >= course.max_students) {
+        return res.status(400).json({
+          message: 'Course is full. No more spots available.',
+          available_spots: 0,
+          max_students: course.max_students
+        });
+      }
     }
 
     const sessionCheck = session_id
@@ -138,7 +183,7 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
       return res.status(404).json({ message: 'Session not found' });
     }
 
-    const courseAccessTimes = courseCheck.rows[0].access_times;
+    const courseAccessTimes = course.access_times;
     const resolvedAccess =
       typeof remaining_access === 'number' ? remaining_access : courseAccessTimes || null;
 

@@ -49,7 +49,10 @@ function CourseDetail() {
   const priceLabel = formatPrice(course.priceCents, course.isFree);
   const accessLabel = formatAccessTimes(course.accessTimes);
   const coverImage = course.coverImage || placeholderImage;
-  const seatLabel = t('access.seatsLeftDetail', { left: course.seatsLeft, capacity: course.capacity });
+  const isStandalone = course.courseType === 'standalone';
+  const seatLabel = isStandalone
+    ? t('access.seatsLeftDetail', { left: course.seatsLeft, capacity: course.maxStudents })
+    : t('access.seatsLeftDetail', { left: course.seatsLeft, capacity: course.capacity });
 
   return (
     <div style={{ display: 'grid', gap: 18 }}>
@@ -89,6 +92,16 @@ function CourseDetail() {
             {t('common.back')}
           </button>
           <div className="badge">{course.channel || t('course.course')}</div>
+          {isStandalone && (
+            <div className="badge" style={{ background: 'rgba(251, 191, 36, 0.9)', color: '#78350f' }}>
+              Standalone
+            </div>
+          )}
+          {!isStandalone && course.sessionCount > 0 && (
+            <div className="badge" style={{ background: 'rgba(96, 165, 250, 0.9)', color: '#1e3a8a' }}>
+              {course.sessionCount} {t('course.sessions', { count: course.sessionCount }) || 'sessions'}
+            </div>
+          )}
         </div>
         <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 2, right: 18 }}>
           <div style={{ color: 'var(--rose)', fontWeight: 700 }}>{course.branchName}</div>
@@ -156,15 +169,53 @@ function CourseDetail() {
         </div>
       </div>
 
-      <section>
-        <div className="section-heading">
-          <div>
-            <h2>{t('course.sessions')}</h2>
-            <div className="helper-text">{t('session.timetable')}</div>
+      {isStandalone ? (
+        // Standalone Course - No sessions section
+        <div className="card-surface" style={{ padding: 18 }}>
+          <h3 style={{ marginTop: 0, marginBottom: 12 }}>
+            {t('course.standalone.title') || 'เรียนได้ทันที'}
+          </h3>
+          <div style={{ display: 'grid', gap: 10, color: 'var(--muted)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: '1.2rem' }}>✓</span>
+              <span>{t('course.standalone.immediate') || 'เข้าเรียนได้ทันทีหลังลงทะเบียน'}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: '1.2rem' }}>✓</span>
+              <span>{t('course.standalone.flexible') || 'ไม่ต้องจองรอบเรียน เรียนได้ตามสะดวก'}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: '1.2rem' }}>✓</span>
+              <span>{t('course.standalone.access') || `เข้าเรียนได้ ${course.accessTimes} ครั้ง`}</span>
+            </div>
+            {course.enrollmentDeadline && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: '1.2rem' }}>⏰</span>
+                <span>
+                  {t('course.standalone.deadline') || 'ปิดรับสมัคร'}: {new Date(course.enrollmentDeadline).toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+              </div>
+            )}
           </div>
         </div>
-        <SessionList sessions={sessions} fallbackChannel={course.channel || t('course.course')} />
-      </section>
+      ) : (
+        // Scheduled Course - Show sessions
+        <section>
+          <div className="section-heading">
+            <div>
+              <h2>{t('course.sessions')}</h2>
+              <div className="helper-text">{t('session.timetable')}</div>
+            </div>
+          </div>
+          <SessionList sessions={sessions} fallbackChannel={course.channel || t('course.course')} />
+        </section>
+      )}
     </div>
   );
 }

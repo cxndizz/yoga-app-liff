@@ -162,19 +162,28 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
     }
 
     const courseCheck = await db.query(
-      'SELECT id, capacity, branch_id as course_branch_id, instructor_id as course_instructor_id FROM courses WHERE id = $1',
+      'SELECT id, capacity, branch_id as course_branch_id, instructor_id as course_instructor_id, course_type FROM courses WHERE id = $1',
       [course_id]
     );
     if (courseCheck.rows.length === 0) {
       return res.status(404).json({ message: 'Course not found' });
     }
 
+    // Prevent creating sessions for standalone courses
+    if (courseCheck.rows[0].course_type === 'standalone') {
+      return res.status(400).json({
+        message: 'Cannot create sessions for standalone courses. Standalone courses do not require session scheduling.',
+        course_type: 'standalone'
+      });
+    }
+
     const courseCapacity = courseCheck.rows[0].capacity;
     const resolvedBranchId = branch_id || courseCheck.rows[0].course_branch_id;
     const resolvedInstructorId = instructor_id || courseCheck.rows[0].course_instructor_id;
 
-    if (!resolvedBranchId || !resolvedInstructorId) {
-      return res.status(400).json({ message: 'branch_id and instructor_id are required' });
+    // Branch is required, instructor is optional
+    if (!resolvedBranchId) {
+      return res.status(400).json({ message: 'branch_id is required for sessions' });
     }
 
     const sessionCapacity = max_capacity || courseCapacity;
@@ -197,7 +206,7 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
         status,
         notes || null,
         resolvedBranchId,
-        resolvedInstructorId
+        resolvedInstructorId || null
       ]
     );
 

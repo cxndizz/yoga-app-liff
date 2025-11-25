@@ -15,6 +15,9 @@ const defaultFormValues = {
   price_cents: 0,
   access_times: 1,
   cover_image_url: '',
+  course_type: 'scheduled',
+  max_students: 20,
+  enrollment_deadline: '',
 };
 
 function Courses() {
@@ -97,9 +100,15 @@ function Courses() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!form.title.trim()) {
       setError('กรุณากรอกชื่อคอร์ส');
+      return;
+    }
+
+    // Validation for standalone courses
+    if (form.course_type === 'standalone' && !form.max_students) {
+      setError('กรุณาระบุจำนวนผู้เรียนสูงสุดสำหรับคอร์สแบบ Standalone');
       return;
     }
 
@@ -118,6 +127,9 @@ function Courses() {
         price_cents: form.is_free ? 0 : Number(form.price_cents),
         access_times: Number(form.access_times),
         cover_image_url: form.cover_image_url || null,
+        course_type: form.course_type,
+        max_students: form.course_type === 'standalone' ? Number(form.max_students) : null,
+        enrollment_deadline: form.course_type === 'standalone' && form.enrollment_deadline ? form.enrollment_deadline : null,
       };
 
       if (editingCourse) {
@@ -161,6 +173,9 @@ function Courses() {
       price_cents: course.price_cents || 0,
       access_times: typeof course.access_times === 'number' ? course.access_times : defaultFormValues.access_times,
       cover_image_url: course.cover_image_url || '',
+      course_type: course.course_type || 'scheduled',
+      max_students: course.max_students || defaultFormValues.max_students,
+      enrollment_deadline: course.enrollment_deadline || '',
     });
     setCoverPreview(course.cover_image_url || '');
     setCoverMeta(null);
@@ -378,6 +393,116 @@ function Courses() {
             />
           </div>
 
+          {/* Course Type Selection */}
+          <div className="field">
+            <label className="field__label" style={{ marginBottom: '12px' }}>
+              ประเภทคอร์ส *
+            </label>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <label style={{
+                flex: '1 1 240px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                padding: '16px',
+                border: `2px solid ${form.course_type === 'scheduled' ? '#6366f1' : '#e5e7eb'}`,
+                borderRadius: '12px',
+                background: form.course_type === 'scheduled' ? '#eef2ff' : '#fff',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="radio"
+                    name="course_type"
+                    value="scheduled"
+                    checked={form.course_type === 'scheduled'}
+                    onChange={handleInputChange('course_type')}
+                    disabled={submitting}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontWeight: '600', fontSize: '15px', color: form.course_type === 'scheduled' ? '#4f46e5' : '#111827' }}>
+                    Scheduled Course (มีรอบเรียน)
+                  </span>
+                </div>
+                <p style={{ marginLeft: '26px', fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>
+                  เหมาะสำหรับ: คอร์สที่ต้องจองรอบเรียน, Workshop ที่มีกำหนดการ
+                </p>
+              </label>
+
+              <label style={{
+                flex: '1 1 240px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+                padding: '16px',
+                border: `2px solid ${form.course_type === 'standalone' ? '#6366f1' : '#e5e7eb'}`,
+                borderRadius: '12px',
+                background: form.course_type === 'standalone' ? '#eef2ff' : '#fff',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="radio"
+                    name="course_type"
+                    value="standalone"
+                    checked={form.course_type === 'standalone'}
+                    onChange={handleInputChange('course_type')}
+                    disabled={submitting}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontWeight: '600', fontSize: '15px', color: form.course_type === 'standalone' ? '#4f46e5' : '#111827' }}>
+                    Standalone Course (ไม่มีรอบเรียน)
+                  </span>
+                </div>
+                <p style={{ marginLeft: '26px', fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>
+                  เหมาะสำหรับ: Online Course, Video Course, Drop-in Class, Package
+                </p>
+              </label>
+            </div>
+          </div>
+
+          {/* Conditional Fields Based on Course Type */}
+          {form.course_type === 'standalone' ? (
+            // Standalone Course Fields
+            <div className="form-grid form-grid--two">
+              <div className="field">
+                <label className="field__label">จำนวนผู้เรียนสูงสุด (ทั้งหมด) *</label>
+                <input
+                  type="number"
+                  className="input"
+                  min="1"
+                  value={form.max_students}
+                  onChange={handleInputChange('max_students')}
+                  disabled={submitting}
+                  placeholder="เช่น 50"
+                  required
+                />
+                <p style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
+                  จำกัดจำนวนผู้เรียนทั้งหมดที่สามารถลงทะเบียนได้
+                </p>
+              </div>
+
+              <div className="field">
+                <label className="field__label">วันปิดรับสมัคร (ถ้ามี)</label>
+                <input
+                  type="datetime-local"
+                  className="input"
+                  value={form.enrollment_deadline}
+                  onChange={handleInputChange('enrollment_deadline')}
+                  disabled={submitting}
+                />
+                <p style={{ marginTop: '6px', fontSize: '12px', color: '#6b7280' }}>
+                  ไม่บังคับ - หากไม่ระบุจะเปิดรับสมัครตลอด
+                </p>
+              </div>
+            </div>
+          ) : (
+            // Scheduled Course Fields (kept for backward compatibility)
+            null
+          )}
+
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'stretch' }}>
             <label style={{
               flex: '1 1 240px',
@@ -552,7 +677,8 @@ function Courses() {
                   <th>รายละเอียด</th>
                   <th>สาขา</th>
                   <th>ผู้สอน</th>
-                  <th>ประเภท</th>
+                  <th>ประเภทคอร์ส</th>
+                  <th style={{ textAlign: 'center' }}>รอบเรียน</th>
                   <th style={{ textAlign: 'right' }}>ราคา</th>
                   <th style={{ textAlign: 'center' }}>ที่รับ</th>
                   <th style={{ textAlign: 'center' }}>เข้าได้</th>
@@ -602,16 +728,31 @@ function Courses() {
                         borderRadius: '12px',
                         fontSize: '12px',
                         fontWeight: '500',
-                        background: course.is_free ? '#d1fae5' : '#dbeafe',
-                        color: course.is_free ? '#065f46' : '#1e40af',
+                        background: (course.course_type || 'scheduled') === 'standalone' ? '#fef3c7' : '#dbeafe',
+                        color: (course.course_type || 'scheduled') === 'standalone' ? '#92400e' : '#1e40af',
                       }}>
-                        {course.is_free ? 'ฟรี' : 'เสียเงิน'}
+                        {(course.course_type || 'scheduled') === 'standalone' ? 'Standalone' : 'Scheduled'}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: '500' }}>
-                      {course.is_free ? '-' : formatPrice(course.price_cents || 0)}
+                    <td style={{ padding: '12px 8px', textAlign: 'center', color: '#6b7280' }}>
+                      {(course.course_type || 'scheduled') === 'scheduled'
+                        ? `${course.session_count || 0} รอบ`
+                        : '-'
+                      }
                     </td>
-                    <td style={{ padding: '12px 8px', textAlign: 'center' }}>{course.capacity}</td>
+                    <td style={{ padding: '12px 8px', textAlign: 'right', fontWeight: '500' }}>
+                      {course.is_free ? (
+                        <span style={{ color: '#059669', fontWeight: '600' }}>ฟรี</span>
+                      ) : (
+                        formatPrice(course.price_cents || 0)
+                      )}
+                    </td>
+                    <td style={{ padding: '12px 8px', textAlign: 'center' }}>
+                      {(course.course_type || 'scheduled') === 'standalone'
+                        ? `${course.max_students || 0}`
+                        : course.capacity
+                      }
+                    </td>
                     <td style={{ padding: '12px 8px', textAlign: 'center' }}>{course.access_times} ครั้ง</td>
                     <td>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>

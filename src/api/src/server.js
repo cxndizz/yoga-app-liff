@@ -68,18 +68,35 @@ app.use('/api/admin/settings', settingsRoutes);
 
 app.post('/courses/list', async (req, res) => {
   try {
-    const { limit = 50 } = req.body || {};
-    const result = await db.query(`
+    const { limit = 50, course_type } = req.body || {};
+    let query = `
       SELECT c.*,
              b.name AS branch_name,
              i.name AS instructor_name,
-             i.avatar_url AS instructor_avatar
+             i.avatar_url AS instructor_avatar,
+             (SELECT COUNT(*) FROM course_sessions cs WHERE cs.course_id = c.id) as session_count,
+             CASE
+               WHEN c.course_type = 'standalone' THEN
+                 COALESCE(c.max_students, 0) - (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id AND ce.status = 'active')
+               ELSE
+                 NULL
+             END as available_spots
       FROM courses c
       LEFT JOIN branches b ON c.branch_id = b.id
       LEFT JOIN instructors i ON c.instructor_id = i.id
-      ORDER BY c.created_at DESC
-      LIMIT $1
-    `, [limit]);
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (course_type) {
+      params.push(course_type);
+      query += ` AND c.course_type = $${params.length}`;
+    }
+
+    params.push(limit);
+    query += ` ORDER BY c.created_at DESC LIMIT $${params.length}`;
+
+    const result = await db.query(query, params);
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching courses', err);
@@ -132,6 +149,7 @@ app.post('/courses/sessions', async (req, res) => {
       LEFT JOIN branches b ON COALESCE(cs.branch_id, c.branch_id) = b.id
       LEFT JOIN instructors i ON COALESCE(cs.instructor_id, c.instructor_id) = i.id
       WHERE ${filters.join(' ')}
+      AND (c.course_type IS NULL OR c.course_type = 'scheduled')
     `;
 
     let selectQuery = `
@@ -147,6 +165,8 @@ app.post('/courses/sessions', async (req, res) => {
              cs.status,
              (cs.max_capacity - cs.current_enrollments) AS available_spots,
              c.title AS course_title,
+             c.course_type,
+             c.channel,
              COALESCE(cs.branch_id, c.branch_id) AS branch_id,
              b.name AS branch_name,
              COALESCE(cs.instructor_id, c.instructor_id) AS instructor_id,

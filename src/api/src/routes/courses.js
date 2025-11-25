@@ -13,6 +13,7 @@ router.post('/list', async (req, res) => {
       branch_id,
       instructor_id,
       is_free,
+      course_type,
       search,
       limit = 50
     } = req.body || {};
@@ -22,7 +23,14 @@ router.post('/list', async (req, res) => {
              b.name AS branch_name,
              i.name AS instructor_name,
              i.avatar_url AS instructor_avatar,
-             (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id) as total_enrollments
+             (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id) as total_enrollments,
+             (SELECT COUNT(*) FROM course_sessions cs WHERE cs.course_id = c.id) as session_count,
+             CASE
+               WHEN c.course_type = 'standalone' THEN
+                 COALESCE(c.max_students, 0) - (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id AND ce.status = 'active')
+               ELSE
+                 NULL
+             END as available_spots
       FROM courses c
       LEFT JOIN branches b ON c.branch_id = b.id
       LEFT JOIN instructors i ON c.instructor_id = i.id
@@ -48,6 +56,11 @@ router.post('/list', async (req, res) => {
     if (is_free !== undefined && is_free !== null) {
       params.push(normalizeBoolean(is_free));
       query += ` AND c.is_free = $${params.length}`;
+    }
+
+    if (course_type) {
+      params.push(course_type);
+      query += ` AND c.course_type = $${params.length}`;
     }
 
     if (search) {
@@ -85,7 +98,14 @@ router.post('/detail', async (req, res) => {
               i.name AS instructor_name,
               i.bio AS instructor_bio,
               i.avatar_url AS instructor_avatar,
-              (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id) as total_enrollments
+              (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id) as total_enrollments,
+              (SELECT COUNT(*) FROM course_sessions cs WHERE cs.course_id = c.id) as session_count,
+              CASE
+                WHEN c.course_type = 'standalone' THEN
+                  COALESCE(c.max_students, 0) - (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id AND ce.status = 'active')
+                ELSE
+                  NULL
+              END as available_spots
        FROM courses c
        LEFT JOIN branches b ON c.branch_id = b.id
        LEFT JOIN instructors i ON c.instructor_id = i.id
@@ -122,25 +142,37 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
       duration_minutes,
       level,
       tags = [],
-      is_featured = false
+      is_featured = false,
+      course_type = 'scheduled',
+      max_students,
+      enrollment_deadline
     } = req.body;
 
     if (!title) {
       return res.status(400).json({ message: 'Course title is required' });
     }
 
+    // Validation for standalone courses
+    if (course_type === 'standalone' && !max_students) {
+      return res.status(400).json({
+        message: 'max_students is required for standalone courses'
+      });
+    }
+
     const result = await db.query(
       `INSERT INTO courses (
          title, description, branch_id, instructor_id, capacity,
          is_free, price_cents, cover_image_url, access_times, channel,
-         status, duration_minutes, level, tags, is_featured
+         status, duration_minutes, level, tags, is_featured,
+         course_type, max_students, enrollment_deadline
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
        RETURNING *`,
       [
         title, description || null, branch_id || null, instructor_id || null, capacity,
         is_free, price_cents, cover_image_url || null, access_times, channel,
-        status, duration_minutes || null, level || null, tags, is_featured
+        status, duration_minutes || null, level || null, tags, is_featured,
+        course_type, max_students || null, enrollment_deadline || null
       ]
     );
 
@@ -170,16 +202,27 @@ router.post('/update', requireAdminAuth(['super_admin', 'branch_admin']), async 
       duration_minutes,
       level,
       tags,
-      is_featured
+      is_featured,
+      course_type,
+      max_students,
+      enrollment_deadline
     } = req.body || {};
 
     if (!id) {
       return res.status(400).json({ message: 'course id is required' });
     }
 
-    const checkResult = await db.query('SELECT id FROM courses WHERE id = $1', [id]);
+    const checkResult = await db.query('SELECT id, course_type FROM courses WHERE id = $1', [id]);
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Validation when changing to standalone
+    const newCourseType = course_type || checkResult.rows[0].course_type;
+    if (newCourseType === 'standalone' && max_students !== undefined && !max_students) {
+      return res.status(400).json({
+        message: 'max_students is required for standalone courses'
+      });
     }
 
     const result = await db.query(
@@ -199,13 +242,17 @@ router.post('/update', requireAdminAuth(['super_admin', 'branch_admin']), async 
            level = COALESCE($13, level),
            tags = COALESCE($14, tags),
            is_featured = COALESCE($15, is_featured),
+           course_type = COALESCE($16, course_type),
+           max_students = COALESCE($17, max_students),
+           enrollment_deadline = COALESCE($18, enrollment_deadline),
            updated_at = NOW()
-       WHERE id = $16
+       WHERE id = $19
        RETURNING *`,
       [
         title, description, branch_id, instructor_id, capacity,
         is_free, price_cents, cover_image_url, access_times, channel,
-        status, duration_minutes, level, tags, is_featured, id
+        status, duration_minutes, level, tags, is_featured,
+        course_type, max_students, enrollment_deadline, id
       ]
     );
 

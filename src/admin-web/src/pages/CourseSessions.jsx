@@ -256,7 +256,9 @@ function CourseSessions() {
 
   const fetchCourses = async () => {
     try {
-      const response = await axios.post(`${apiBase}/api/admin/courses/list`, {});
+      const response = await axios.post(`${apiBase}/api/admin/courses/list`, {
+        course_type: 'scheduled' // Only fetch scheduled courses for session management
+      });
       setCourses(response.data);
     } catch (error) {
       console.error('Error fetching courses:', error);
