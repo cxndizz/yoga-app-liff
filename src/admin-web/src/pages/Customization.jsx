@@ -17,8 +17,17 @@ function Customization() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+  const [toast, setToast] = useState({ text: '', type: '' });
+  const [showPreview, setShowPreview] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
+
+  const showToast = (nextToast) => {
+    setToast(nextToast);
+    if (nextToast.text) {
+      setTimeout(() => setToast({ text: '', type: '' }), 3200);
+    }
+  };
 
   useEffect(() => {
     fetchCustomization();
@@ -33,7 +42,9 @@ function Customization() {
       setInitialData(normalized);
     } catch (error) {
       console.error('Error fetching customization:', error);
-      setMessage({ text: 'ไม่สามารถโหลดข้อมูลได้', type: 'error' });
+      const errorMessage = 'ไม่สามารถโหลดข้อมูลได้';
+      setMessage({ text: errorMessage, type: 'error' });
+      showToast({ text: errorMessage, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -47,19 +58,26 @@ function Customization() {
     try {
       await axios.post(`${apiBase}/api/customization/update`, formData);
       setMessage({ text: 'บันทึกการตั้งค่าเรียบร้อยแล้ว', type: 'success' });
+      showToast({ text: 'บันทึกการตั้งค่าเรียบร้อยแล้ว', type: 'success' });
       setInitialData({ ...formData });
     } catch (error) {
       console.error('Error saving customization:', error);
-      setMessage({ text: 'เกิดข้อผิดพลาดในการบันทึก', type: 'error' });
+      const errorMessage = 'เกิดข้อผิดพลาดในการบันทึก';
+      setMessage({ text: errorMessage, type: 'error' });
+      showToast({ text: errorMessage, type: 'error' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleReset = () => {
+    const confirmed = window.confirm('ยืนยันการรีเซ็ตค่า? การกระทำนี้จะคืนค่าตามข้อมูลล่าสุดที่บันทึกไว้');
+    if (!confirmed) return;
+
     if (initialData) {
       setFormData({ ...initialData });
       setMessage({ text: 'คืนค่าตามข้อมูลล่าสุดที่บันทึกไว้แล้ว', type: 'success' });
+      showToast({ text: 'คืนค่าตามข้อมูลล่าสุดที่บันทึกไว้แล้ว', type: 'success' });
     } else {
       fetchCustomization();
     }
@@ -106,10 +124,15 @@ function Customization() {
           logo_url: `${apiBase}${response.data.logo_url}`,
         }));
         setMessage({ text: 'อัปโหลดรูปภาพสำเร็จ', type: 'success' });
+        showToast({ text: 'อัปโหลดรูปภาพสำเร็จ', type: 'success' });
       }
     } catch (error) {
       console.error('Error uploading logo:', error);
       setMessage({
+        text: error.response?.data?.message || 'เกิดข้อผิดพลาดในการอัปโหลด',
+        type: 'error',
+      });
+      showToast({
         text: error.response?.data?.message || 'เกิดข้อผิดพลาดในการอัปโหลด',
         type: 'error',
       });
@@ -164,6 +187,14 @@ function Customization() {
         </nav>
       </div>
       <div className="page__actions">
+        <button
+          type="button"
+          className="btn btn--ghost"
+          onClick={() => setShowPreview(true)}
+          disabled={loading || saving || uploading}
+        >
+          ดูตัวอย่างเต็ม
+        </button>
         <button
           type="button"
           className="btn btn--ghost"
@@ -386,7 +417,63 @@ function Customization() {
   return (
     <div className="page page--narrow">
       {header}
-      {loading ? <div className="page-card page-card--wide">กำลังโหลด...</div> : formContent}
+      {(saving || uploading) && (
+        <div className="page-status" aria-live="polite">
+          <span className="page-status__dot" aria-hidden="true" />
+          {saving ? 'กำลังบันทึกการตั้งค่า...' : 'กำลังอัปโหลดไฟล์...'}
+        </div>
+      )}
+      {loading ? (
+        <div className="page-card page-card--wide page-card--muted" aria-busy="true">
+          <div className="loading-state">
+            <div className="spinner" aria-hidden="true" />
+            <div>
+              <p className="loading-state__title">กำลังโหลดการตั้งค่า</p>
+              <p className="loading-state__hint">ดึงข้อมูลล่าสุดเพื่อใช้เป็นค่าเริ่มต้น</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        formContent
+      )}
+
+      {showPreview && (
+        <div className="preview-modal" role="dialog" aria-modal="true" aria-label="แสดงตัวอย่างการตั้งค่า">
+          <div className="preview-modal__backdrop" onClick={() => setShowPreview(false)} />
+          <div className="preview-modal__content" style={{ borderColor: formData.primary_color }}>
+            <div className="preview-modal__header">
+              <div>
+                <p className="page__eyebrow" style={{ marginBottom: 4 }}>
+                  Preview
+                </p>
+                <h3 className="preview-modal__title">ตัวอย่างหน้าจอ</h3>
+                <p className="preview-modal__subtitle">ตรวจสอบสี โลโก้ และข้อความก่อนบันทึกจริง</p>
+              </div>
+              <button className="btn btn--ghost" type="button" onClick={() => setShowPreview(false)}>
+                ปิด
+              </button>
+            </div>
+            <div className="preview-modal__hero" style={{ background: formData.primary_color || '#0b1a3c' }}>
+              <div className="preview-modal__logo">{previewAvatar}</div>
+              <div className="preview-modal__copy">
+                <h4>{formData.app_name || 'ชื่อแอป'}</h4>
+                <p>{formData.app_description || 'รายละเอียดแอป'}</p>
+              </div>
+            </div>
+            <div className="preview-modal__footer">
+              <div className="preview-badge">สีหลัก: {formData.primary_color}</div>
+              <div className="preview-badge">โลโก้: {formData.logo_url ? 'อัปโหลดแล้ว' : 'ใช้ตัวย่อ'}</div>
+              <div className="preview-badge">ข้อความพร้อมแสดง</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast.text && (
+        <div className={`toast toast--${toast.type}`} role="status" aria-live="polite">
+          {toast.text}
+        </div>
+      )}
     </div>
   );
 }
