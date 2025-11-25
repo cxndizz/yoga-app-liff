@@ -133,7 +133,7 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
     }
 
     const courseCheck = await db.query(
-      'SELECT id, access_times, course_type, max_students FROM courses WHERE id = $1',
+      'SELECT id, access_times, course_type, max_students, unlimited_capacity FROM courses WHERE id = $1',
       [course_id]
     );
     if (courseCheck.rows.length === 0) {
@@ -158,8 +158,22 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
       });
     }
 
-    // Check availability for standalone courses
-    if (courseType === 'standalone' && course.max_students) {
+    // Check for duplicate purchase (prevent users from buying the same course twice)
+    const duplicateCheck = await db.query(
+      `SELECT id FROM course_enrollments
+       WHERE user_id = $1 AND course_id = $2 AND status = 'active'
+       LIMIT 1`,
+      [user_id, course_id]
+    );
+    if (duplicateCheck.rows.length > 0) {
+      return res.status(400).json({
+        message: 'You have already purchased this course.',
+        enrollment_id: duplicateCheck.rows[0].id
+      });
+    }
+
+    // Check availability for standalone courses (skip if unlimited_capacity is enabled)
+    if (courseType === 'standalone' && !course.unlimited_capacity && course.max_students) {
       const enrollmentCount = await db.query(
         `SELECT COUNT(*) as count FROM course_enrollments
          WHERE course_id = $1 AND status = 'active'`,
