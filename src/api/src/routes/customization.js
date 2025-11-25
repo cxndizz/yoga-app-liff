@@ -105,30 +105,61 @@ router.post('/upload-banner', requireAdminAuth(['super_admin']), uploadBanner.si
   }
 });
 
+const DEFAULT_CUSTOMIZATION = {
+  app_name: 'Yoga Luxe',
+  app_description: 'Boutique LIFF Studio',
+  logo_url: null,
+  banner_url: null,
+  logo_initials: 'YL',
+  primary_color: '#0b1a3c',
+  secondary_color: '#4cafb9',
+  background_color: '#f7f8fb',
+};
+
+const getLatestCustomization = async () => {
+  const result = await db.query('SELECT * FROM app_customization ORDER BY id DESC LIMIT 1');
+  if (result.rows.length === 0) {
+    return DEFAULT_CUSTOMIZATION;
+  }
+  return result.rows[0];
+};
+
 // Get app customization settings (public - for LIFF app)
 router.post('/get', async (_req, res) => {
   try {
-    const result = await db.query('SELECT * FROM app_customization ORDER BY id DESC LIMIT 1');
-
-    if (result.rows.length === 0) {
-      // Return default values if no customization exists
-      return res.json({
-        app_name: 'Yoga Luxe',
-        app_description: 'Boutique LIFF Studio',
-        logo_url: null,
-        banner_url: null,
-        logo_initials: 'YL',
-        primary_color: '#0b1a3c',
-        secondary_color: '#4cafb9',
-        background_color: '#f7f8fb',
-      });
-    }
-
-    res.json(result.rows[0]);
+    const customization = await getLatestCustomization();
+    res.json(customization);
   } catch (err) {
     console.error('Error fetching customization:', err);
     res.status(500).json({ message: 'Error fetching customization settings' });
   }
+});
+
+// Stream customization updates (public - for LIFF app realtime updates)
+router.get('/stream', async (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+
+  const sendUpdate = async () => {
+    try {
+      const customization = await getLatestCustomization();
+      res.write(`data: ${JSON.stringify(customization)}\n\n`);
+    } catch (err) {
+      console.error('Error streaming customization:', err);
+      res.write(`event: error\ndata: {"message":"Error fetching customization"}\n\n`);
+    }
+  };
+
+  const intervalId = setInterval(sendUpdate, 5000);
+
+  // Send first payload immediately
+  sendUpdate();
+
+  req.on('close', () => {
+    clearInterval(intervalId);
+  });
 });
 
 // Update app customization (admin only)

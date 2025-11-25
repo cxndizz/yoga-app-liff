@@ -35,19 +35,42 @@ function Navbar() {
   });
 
   useEffect(() => {
-    const fetchCustomization = async () => {
+    const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+
+    const fetchOnce = async () => {
       try {
-        const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
         const response = await axios.post(`${apiBase}/api/customization/get`);
         if (response.data) {
           setCustomization(response.data);
         }
       } catch (error) {
         console.error('Error fetching customization:', error);
-        // Use default values on error
       }
     };
-    fetchCustomization();
+
+    const source = new EventSource(`${apiBase}/api/customization/stream`);
+
+    source.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        setCustomization(data);
+      } catch (error) {
+        console.error('Error parsing customization stream:', error);
+      }
+    };
+
+    source.onerror = (error) => {
+      console.error('Customization stream error, falling back to manual fetch:', error);
+      source.close();
+      fetchOnce();
+    };
+
+    // Ensure initial data is loaded even if SSE fails silently
+    fetchOnce();
+
+    return () => {
+      source.close();
+    };
   }, []);
 
   const links = [
