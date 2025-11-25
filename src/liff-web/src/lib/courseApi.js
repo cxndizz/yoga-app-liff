@@ -17,6 +17,20 @@ const api = axios.create({
 const normalizeCourse = (course = {}, copy = {}, language = 'en') => {
   const capacity = Number(course.capacity || 0);
   const totalEnrollments = Number(course.total_enrollments || course.current_enrollments || 0);
+  const courseType = course.course_type || 'scheduled';
+  const maxStudents = Number(course.max_students || 0);
+  const sessionCount = Number(course.session_count || 0);
+  const availableSpots = course.available_spots !== null && course.available_spots !== undefined
+    ? Number(course.available_spots)
+    : null;
+
+  // Calculate seats left based on course type
+  let seatsLeft;
+  if (courseType === 'standalone') {
+    seatsLeft = availableSpots !== null ? availableSpots : Math.max(maxStudents - totalEnrollments, 0);
+  } else {
+    seatsLeft = Math.max(capacity - totalEnrollments, 0);
+  }
 
   return {
     id: course.id,
@@ -37,8 +51,13 @@ const normalizeCourse = (course = {}, copy = {}, language = 'en') => {
     coverImage: course.cover_image_url || '',
     level: course.level || '',
     tags: Array.isArray(course.tags) ? course.tags : [],
-    seatsLeft: Math.max(capacity - totalEnrollments, 0),
+    seatsLeft,
     language,
+    courseType,
+    maxStudents,
+    sessionCount,
+    availableSpots,
+    enrollmentDeadline: course.enrollment_deadline || null,
   };
 };
 

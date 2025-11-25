@@ -45,6 +45,22 @@ function CourseCard({ course }) {
         >
           {course.channel || t('course.course')}
         </div>
+        {course.courseType === 'standalone' && (
+          <div
+            className="badge"
+            style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(251, 191, 36, 0.9)', color: '#78350f' }}
+          >
+            Standalone
+          </div>
+        )}
+        {course.courseType === 'scheduled' && course.sessionCount > 0 && (
+          <div
+            className="badge"
+            style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(96, 165, 250, 0.9)', color: '#1e3a8a' }}
+          >
+            {course.sessionCount} {t('course.sessions', { count: course.sessionCount }) || 'sessions'}
+          </div>
+        )}
         <div
           className="badge"
           style={{ position: 'absolute', bottom: 10, right: 10, background: 'rgba(231, 177, 160, 0.18)', color: '#ffffffff' }}
