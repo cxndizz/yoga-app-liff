@@ -120,7 +120,32 @@
     "toBeFilled": "请填写姓名",
     "total": "合计",
     "mockData": "仅为模拟数据，Omise 尚未连接",
-    "required": "必填"
+    "required": "必填",
+    "assist": {
+      "firstName": "名字需 2-50 个字符，避免使用表情符号",
+      "lastName": "姓氏与证件保持一致便于开票",
+      "phone": "请输入 9-15 位数字，如 0812345678 或 +66812345678",
+      "email": "可选，用于收据，例如 name@example.com",
+      "note": "选填，写给教练的提醒不超过 200 字"
+    },
+    "success": {
+      "firstName": "名字填写正确，可以用于收据",
+      "lastName": "姓氏记录清晰",
+      "phone": "联系方式有效",
+      "email": "邮箱格式正确，便于发送收据",
+      "note": "备注已保存"
+    },
+    "errors": {
+      "firstNameRequired": "请输入名字（2-50 个字符）",
+      "firstNameLength": "名字长度需介于 2 至 50 个字符",
+      "lastNameRequired": "请输入姓氏（2-50 个字符）",
+      "lastNameLength": "姓氏长度需介于 2 至 50 个字符",
+      "nameCharacters": "仅使用字母与空格，如 Napasorn Sukjai",
+      "phoneRequired": "请填写可联系的手机号（9-15 位数字）",
+      "phoneFormat": "仅使用数字，如 0812345678 或 +66812345678",
+      "emailFormat": "邮箱格式应为 name@example.com",
+      "noteLength": "备注请控制在 200 字以内"
+    }
   },
   "myCourses": {
     "title": "我的课程",

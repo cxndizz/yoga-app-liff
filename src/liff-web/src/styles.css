@@ -8,6 +8,8 @@
   --ink: #0f172a;
   --soft-white: #f7f7f9;
   --muted: #a5b1c2;
+  --error-strong: #b00020;
+  --success-strong: #0f9d58;
   --card: rgba(255, 255, 255, 0.06);
   --border: rgba(231, 177, 160, 0.35);
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
@@ -274,9 +276,62 @@ a {
   font-weight: 600;
 }
 
-.form-error {
-  color: #fbcfe8;
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.input.has-error {
+  border-color: var(--error-strong);
+  border-style: dashed;
+  background: rgba(176, 0, 32, 0.08);
+  box-shadow: 0 0 0 3px rgba(176, 0, 32, 0.2);
+}
+
+.input.has-success {
+  border-color: var(--success-strong);
+  background: rgba(15, 157, 88, 0.08);
+  box-shadow: 0 0 0 3px rgba(15, 157, 88, 0.2);
+}
+
+.form-helper {
+  color: #e2e8f0;
+  font-weight: 500;
   font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-error {
+  color: var(--error-strong);
+  font-size: 0.95rem;
+  background: #fff;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 2px dashed var(--error-strong);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-success {
+  color: var(--success-strong);
+  font-size: 0.95rem;
+  background: #ecfdf3;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 2px dashed var(--success-strong);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .payment-options {
