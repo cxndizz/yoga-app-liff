@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 const db = require('./db');
 const { requireAdminAuth } = require('./middleware/adminAuth');
 
@@ -30,6 +31,9 @@ const parseLimit = (value, fallback) => {
 
 app.use(bodyParser.json({ limit: '15mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '15mb' }));
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 const allowedOrigins = [process.env.CORS_ORIGIN_LIFF, process.env.CORS_ORIGIN_ADMIN].filter(Boolean);
 
