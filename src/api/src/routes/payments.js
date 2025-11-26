@@ -80,7 +80,7 @@ router.post('/moneyspace/create', async (req, res) => {
       return res.json({ order, payment: { free: true, redirectUrl: null } });
     }
 
-    const orderCode = `ORDER-${order.id}`;
+    const orderCode = String(order.id);
     const payment = await moneyspace.createTransaction({
       orderCode,
       amount,
