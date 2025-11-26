@@ -4,7 +4,12 @@ import { useTranslation } from 'react-i18next';
 import { fetchCourseDetail } from '../lib/courseApi';
 import { useAutoTranslate } from '../lib/autoTranslate';
 import { placeholderImage } from '../lib/formatters';
-import { createOrder, fetchOrderStatus, startMoneySpacePayment } from '../lib/orderApi';
+import {
+  checkMoneySpaceStatus,
+  createOrder,
+  fetchOrderStatus,
+  startMoneySpacePayment,
+} from '../lib/orderApi';
 import useLiffUser from '../hooks/useLiffUser';
 import { getCachedLiffUser } from '../lib/liffAuth';
 
@@ -128,9 +133,36 @@ function Checkout() {
 
         if (['completed', 'success'].includes(latestOrder.status)) {
           navigate('/payments/moneyspace/success');
-        } else if (['failed', 'cancelled'].includes(latestOrder.status)) {
+          return;
+        }
+
+        if (['failed', 'cancelled'].includes(latestOrder.status)) {
           setFlowState('error');
           setPaymentError(t('checkout.errorPayment'));
+          return;
+        }
+
+        if (qrDisplay.transactionId) {
+          const remoteStatus = await checkMoneySpaceStatus({
+            transactionId: qrDisplay.transactionId,
+            orderId: qrDisplay.orderId,
+          });
+
+          const nextStatus =
+            remoteStatus?.order?.status ||
+            remoteStatus?.mappedStatus ||
+            remoteStatus?.status ||
+            latestOrder.status;
+
+          if (['completed', 'success'].includes(nextStatus)) {
+            navigate('/payments/moneyspace/success');
+            return;
+          }
+
+          if (['failed', 'cancelled'].includes(nextStatus)) {
+            setFlowState('error');
+            setPaymentError(t('checkout.errorPayment'));
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -146,7 +178,7 @@ function Checkout() {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [flowState, qrDisplay?.orderId, user?.id, navigate, t]);
+  }, [flowState, qrDisplay?.orderId, qrDisplay?.transactionId, user?.id, navigate, t]);
 
   const validate = () => {
     const nextErrors = {};

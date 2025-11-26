@@ -32,9 +32,18 @@ export const fetchOrderStatus = async ({ orderId, userId }) => {
   return data;
 };
 
+export const checkMoneySpaceStatus = async ({ transactionId, orderId }) => {
+  const { data } = await api.post('/payments/moneyspace/status', {
+    transaction_id: transactionId,
+    order_id: orderId,
+  });
+  return data;
+};
+
 export default {
   createOrder,
   fetchOrdersForUser,
   fetchOrderStatus,
   startMoneySpacePayment,
+  checkMoneySpaceStatus,
 };
