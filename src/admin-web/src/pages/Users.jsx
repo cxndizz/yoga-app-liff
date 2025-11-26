@@ -50,6 +50,7 @@ function Users() {
   const filteredUsers = users.filter(user => {
     const term = searchTerm.toLowerCase();
     return (
+      user.line_display_name?.toLowerCase().includes(term) ||
       user.full_name?.toLowerCase().includes(term) ||
       user.email?.toLowerCase().includes(term) ||
       user.phone?.includes(term) ||
@@ -154,6 +155,7 @@ function Users() {
                 <tr>
                   <th>ID</th>
                   <th>Line User ID</th>
+                  <th>ชื่อใน LINE</th>
                   <th>ชื่อ-นามสกุล</th>
                   <th>อีเมล</th>
                   <th>เบอร์โทร</th>
@@ -174,6 +176,9 @@ function Users() {
                       }}>
                         {user.line_user_id || '-'}
                       </span>
+                    </td>
+                    <td style={{ fontWeight: '500' }}>
+                      {user.line_display_name || <span style={{ color: '#9ca3af' }}>ไม่ระบุ</span>}
                     </td>
                     <td style={{ fontWeight: '500' }}>
                       {user.full_name || <span style={{ color: '#9ca3af' }}>ไม่ระบุ</span>}

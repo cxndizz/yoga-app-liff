@@ -29,9 +29,10 @@ function Checkout() {
   const [paymentError, setPaymentError] = useState('');
   const [qrDisplay, setQrDisplay] = useState(null);
   const [errors, setErrors] = useState({});
+  const cachedDisplayName = cachedUser?.full_name || cachedUser?.line_display_name || cachedProfile.displayName || '';
   const [form, setForm] = useState({
-    firstName: cachedProfile.displayName?.split(' ')?.[0] || '',
-    lastName: cachedProfile.displayName?.split(' ')?.slice(1).join(' ') || '',
+    firstName: cachedDisplayName?.split(' ')?.[0] || '',
+    lastName: cachedDisplayName?.split(' ')?.slice(1).join(' ') || '',
     phone: cachedUser?.phone || '',
     email: cachedUser?.email || '',
     note: '',
@@ -40,12 +41,13 @@ function Checkout() {
   useEffect(() => {
     if (liveUser) {
       setUser(liveUser);
+      const preferredName = liveUser.full_name || liveUser.line_display_name || cachedProfile.displayName || '';
       setForm((prev) => ({
         ...prev,
         phone: prev.phone || liveUser.phone || '',
         email: prev.email || liveUser.email || '',
-        firstName: prev.firstName || liveUser.full_name?.split(' ')?.[0] || '',
-        lastName: prev.lastName || liveUser.full_name?.split(' ')?.slice(1).join(' ') || '',
+        firstName: prev.firstName || preferredName?.split(' ')?.[0] || '',
+        lastName: prev.lastName || preferredName?.split(' ')?.slice(1).join(' ') || '',
       }));
     }
   }, [liveUser]);
