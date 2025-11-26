@@ -98,6 +98,8 @@ function MyCourses() {
           priceCents,
           isFree,
           accessTimes: order.access_times,
+          remainingAccess: order.remaining_access,
+          enrollmentStatus: order.enrollment_status,
           createdAt: order.created_at,
         };
       }),
@@ -105,8 +107,35 @@ function MyCourses() {
   );
 
   const renderAccess = (order) => {
-    if (order.accessTimes === 0 && order.isFree) return t('access.free');
-    return formatAccessTimes(order.accessTimes || 1, {
+    const hasUnlimited = order.remainingAccess === null;
+    const hasRemaining = order.remainingAccess !== undefined && order.remainingAccess !== null;
+    const accessBaseline = order.accessTimes ?? null;
+
+    if (hasUnlimited) {
+      return formatAccessTimes(-1, {
+        language,
+        singleLabel: t('access.single'),
+        unlimitedLabel: t('access.unlimited'),
+        multipleTemplate: t('access.multiple', { count: '{count}' }),
+      });
+    }
+
+    if (hasRemaining) {
+      const remaining = Number(order.remainingAccess || 0);
+      const baselineLabel = accessBaseline
+        ? formatAccessTimes(accessBaseline, {
+            language,
+            singleLabel: t('access.single'),
+            unlimitedLabel: t('access.unlimited'),
+            multipleTemplate: t('access.multiple', { count: '{count}' }),
+          })
+        : '';
+      return `${t('myCourses.remaining')}: ${remaining}${baselineLabel ? ` / ${baselineLabel}` : ''}`;
+    }
+
+    const normalizedAccess = accessBaseline ?? 1;
+    if (normalizedAccess === 0 && order.isFree) return t('access.free');
+    return formatAccessTimes(normalizedAccess, {
       language,
       singleLabel: t('access.single'),
       unlimitedLabel: t('access.unlimited'),

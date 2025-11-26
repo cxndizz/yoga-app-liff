@@ -123,6 +123,7 @@ router.post('/enrollments', requireAdminAuth(['super_admin', 'branch_admin']), a
       `SELECT ce.*,
               c.title as course_title,
               c.cover_image_url as course_image,
+              c.access_times as course_access_times,
               cs.session_name,
               cs.start_date,
               cs.start_time,
