@@ -5,6 +5,7 @@ import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import Checkout from './pages/Checkout';
 import MyCourses from './pages/MyCourses';
+import PaymentResult from './pages/PaymentResult';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import useLiffUser from './hooks/useLiffUser';
@@ -77,6 +78,7 @@ function App() {
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/courses/:courseId/checkout" element={<Checkout />} />
           <Route path="/my-courses" element={<MyCourses />} />
+          <Route path="/payments/moneyspace/:state" element={<PaymentResult />} />
         </Routes>
       </main>
       <Footer />

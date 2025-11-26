@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const crypto = require('crypto');
 const db = require('./db');
 const { requireAdminAuth } = require('./middleware/adminAuth');
 
@@ -18,6 +17,8 @@ const enrollmentsRoutes = require('./routes/enrollments');
 const customersRoutes = require('./routes/customers');
 const contentRoutes = require('./routes/content');
 const settingsRoutes = require('./routes/settings');
+const paymentsRoutes = require('./routes/payments');
+const moneyspaceService = require('./services/moneyspace');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -66,6 +67,7 @@ app.use('/api/admin/enrollments', enrollmentsRoutes);
 app.use('/api/admin/customers', customersRoutes);
 app.use('/api/admin/content', contentRoutes);
 app.use('/api/admin/settings', settingsRoutes);
+app.use('/payments', paymentsRoutes);
 
 app.post('/courses/list', async (req, res) => {
   try {
@@ -298,9 +300,11 @@ app.post('/users/orders', async (req, res) => {
   }
   try {
     const result = await db.query(
-      `SELECT o.*, c.title AS course_title
+      `SELECT o.*, c.title AS course_title, c.cover_image_url, c.channel, c.is_free, c.price_cents, c.access_times,
+              c.course_type, c.max_students, b.name AS branch_name, c.capacity
        FROM orders o
        LEFT JOIN courses c ON o.course_id = c.id
+       LEFT JOIN branches b ON c.branch_id = b.id
        WHERE o.user_id = $1
        ORDER BY o.created_at DESC`,
       [user_id]
@@ -318,68 +322,14 @@ app.post('/payments/omise-webhook', async (req, res) => {
 });
 
 app.post('/payments/moneyspace-webhook', async (req, res) => {
-  const secret = process.env.MONEYSPACE_WEBHOOK_SECRET;
-  if (!secret) {
-    return res.status(500).json({ message: 'MONEYSPACE_WEBHOOK_SECRET is not configured' });
+  try {
+    const result = await moneyspaceService.handleWebhook(req.body);
+    console.log('Money Space webhook received', { ...req.body, ...result });
+    res.json({ received: true, ...result });
+  } catch (err) {
+    console.error('Money Space webhook error', err);
+    res.status(500).json({ message: 'Error handling webhook' });
   }
-
-  const { transectionID, amount, status, orderid, hash } = req.body || {};
-
-  if (!transectionID || !amount || !status || !orderid || !hash) {
-    return res.status(400).json({ message: 'transectionID, amount, status, orderid, and hash are required' });
-  }
-
-  const payload = `${transectionID}${amount}${status}${orderid}`;
-  const expectedHash = crypto.createHmac('sha256', secret).update(payload).digest('hex');
-  const signatureValid = expectedHash.toLowerCase() === String(hash).toLowerCase();
-
-  const statusMap = {
-    OK: 'pending',
-    paysuccess: 'paid',
-    fail: 'failed',
-    cancel: 'cancelled',
-  };
-
-  let orderUpdate;
-
-  if (signatureValid) {
-    const mappedStatus = statusMap[status] || 'pending';
-    const numericOrderId = Number(orderid);
-
-    if (!Number.isNaN(numericOrderId)) {
-      try {
-        const updateResult = await db.query(
-          `UPDATE orders
-           SET status = $1,
-               updated_at = NOW()
-           WHERE id = $2
-           RETURNING id, status`,
-          [mappedStatus, numericOrderId]
-        );
-
-        if (updateResult.rows.length > 0) {
-          orderUpdate = updateResult.rows[0];
-        }
-      } catch (err) {
-        console.error('Error updating order from Money Space webhook:', err);
-      }
-    }
-  }
-
-  console.log('Money Space webhook received', {
-    transectionID,
-    amount,
-    status,
-    orderid,
-    signatureValid,
-    orderUpdate,
-  });
-
-  res.json({
-    received: true,
-    signatureValid,
-    orderUpdate,
-  });
 });
 
 app.listen(port, () => {

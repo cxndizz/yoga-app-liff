@@ -2,7 +2,7 @@
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",
-    "back": "\u2190 Back",
+    "back": "← Back",
     "viewAll": "View all",
     "viewDetails": "View details",
     "register": "Register",
@@ -74,7 +74,7 @@
     "startBrowsing": "Start browsing",
     "hybridTypes": "Hybrid / Onsite / Online",
     "omisePayment": "Pay with Money Space",
-    "omiseDescription": "Seamless booking and payments with Money Space and shared SchemaDB \u2014 works with LINE LIFF login and real-time access control."
+    "omiseDescription": "Seamless booking and payments with Money Space and shared SchemaDB — works with LINE LIFF login and real-time access control."
   },
   "nav": {
     "home": "Home",
@@ -87,11 +87,12 @@
     "contact": "Contact",
     "terms": "Terms",
     "privacy": "Privacy",
-    "copyright": "\u00a9 {{year}} Yoga Luxe. All rights reserved."
+    "copyright": "© {{year}} Yoga Luxe. All rights reserved."
   },
   "checkout": {
     "title": "Checkout & payment",
-    "subtitle": "Fill in your name and phone before paying. Money Space is being connected, so this is still a mock screen.",
+    "subtitle": "Fill in your name and phone before paying.",
+    "subtitleLive": "Money Space gateway is connected. Please confirm your details and choose QR or card.",
     "viewMyCourses": "View my courses",
     "studentInfo": "Student information",
     "contactHint": "We use this to confirm bookings and send reminders via Line and SMS.",
@@ -103,24 +104,23 @@
     "notePlaceholder": "Allergic to nuts, prefer front row, need parking...",
     "paymentMethod": "Payment method",
     "paymentHint": "Bank transfer is available now while Money Space card payments are being wired up.",
+    "paymentHintLive": "Pay securely via Money Space (QR code or card).",
     "recommended": "Recommended",
-    "mockOnly": "Mock only",
-    "bankInstruction": "Bank transfer / PromptPay",
-    "bankInstructionDetail": "Transfer then send your slip to admin chat. We confirm and activate your seat.",
     "processing": "Processing...",
-    "mockPay": "Create mock payment",
+    "payNow": "Pay with Money Space",
     "terms": "By proceeding you agree to our studio terms.",
-    "mockPending": "Waiting for slip verification (mock).",
-    "mockSuccess": "Mock payment confirmed",
-    "mockSuccessHint": "The live version will rely on the Money Space webhook to unlock access.",
+    "redirecting": "Redirecting to Money Space...",
+    "intentCreated": "Payment session created",
+    "intentCreatedHint": "If you are not redirected automatically, tap pay again.",
     "summary": "Order summary",
     "summaryHint": "Seat, access count, and learner name",
     "selectedCourse": "Selected course",
     "beneficiary": "Booked for",
     "toBeFilled": "Please fill name",
     "total": "Total",
-    "mockData": "Mock data only \u2014 Money Space is being connected",
-    "required": "Required"
+    "required": "Required",
+    "errorPayment": "Unable to create payment session, please try again.",
+    "loginRequired": "Please sign in with LINE to continue"
   },
   "myCourses": {
     "title": "My courses",
@@ -129,14 +129,49 @@
     "homeHint": "Tap to view passes you already bought or pending payments.",
     "statusPending": "Pending payment",
     "statusPaid": "Paid",
+    "statusFailed": "Payment failed",
     "nextSession": "Next session",
     "remaining": "Remaining access",
     "reference": "Ref: {{ref}}",
     "amount": "Amount",
     "payNow": "Complete payment",
     "goToCourse": "Open course",
-    "mockData": "Mock data for UI only while Money Space is being connected.",
     "streaming": "Streaming access",
-    "homeCta": "Open my courses"
+    "homeCta": "Open my courses",
+    "loginHint": "We need your LINE account to fetch your bookings.",
+    "empty": "You have no bookings yet",
+    "createdAt": "Created at"
+  },
+  "payment": {
+    "redirectReminder": "Please wait while we confirm your payment with Money Space.",
+    "storePlaceholder": "Yoga Luxe",
+    "noDescription": "No description from gateway",
+    "amountLabel": "Amount: {{amount}}",
+    "customer": "Customer",
+    "transaction": "Transaction",
+    "agreement": "Agreement",
+    "datetime": "Date & time",
+    "goToMyCourses": "Go to My courses",
+    "browseMore": "Browse more courses",
+    "status": {
+      "success": "Payment successful",
+      "fail": "Payment failed",
+      "cancel": "Payment cancelled"
+    },
+    "message": {
+      "success": "We received your payment. Your seat will be confirmed shortly.",
+      "fail": "We could not confirm this payment. Please retry or contact support.",
+      "cancel": "You cancelled the payment. You can try again anytime."
+    },
+    "options": {
+      "qr": "QR code",
+      "qrDesc": "Scan Thai QR PromptPay via your banking app",
+      "debit": "Debit card",
+      "debitDesc": "Use your debit card with 3-D Secure",
+      "credit": "Credit card",
+      "creditDesc": "Pay with Visa, Mastercard, JCB",
+      "instant": "Instant confirmation",
+      "cardGateway": "Money Space gateway"
+    }
   }
 }
