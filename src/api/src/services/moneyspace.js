@@ -100,12 +100,15 @@ const findNestedUrl = (value, depth = 0) => {
 };
 
 const extractRedirectUrl = (payload = {}) => {
+  if (typeof payload === 'string' && payload.startsWith('http')) return payload;
+
   const directUrl =
     payload.url_qr ||
     payload.qr_url ||
     payload.checkout_url ||
     payload.payment_url ||
     payload.paymenturl ||
+    payload.link_payment ||
     payload.redirect_url ||
     payload.redirectUrl ||
     payload.url ||
@@ -117,8 +120,17 @@ const extractRedirectUrl = (payload = {}) => {
   return findNestedUrl(payload);
 };
 
-const extractTransactionId = (payload = {}) =>
-  payload.transection_ID || payload.transectionID || payload.transaction_ID || payload.transactionId || null;
+const extractTransactionId = (payload = {}) => {
+  const source = Array.isArray(payload) ? payload[0] || {} : payload;
+  return (
+    source.transection_ID ||
+    source.transectionID ||
+    source.transaction_ID ||
+    source.transactionId ||
+    source.txn_id ||
+    null
+  );
+};
 
 const createTransaction = async ({
   orderCode,
