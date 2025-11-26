@@ -5,7 +5,7 @@ const db = require('../db');
 
 const MONEYSPACE_SECRET_ID = process.env.MONEYSPACE_SECRET_ID || process.env.MONEYSPACE_SECRETID;
 const MONEYSPACE_SECRET_KEY = process.env.MONEYSPACE_SECRET_KEY || process.env.MONEYSPACE_SECRETKEY;
-const MONEYSPACE_BASE = process.env.MONEYSPACE_API_BASE || 'https://a.moneyspace.net';
+const MONEYSPACE_BASE = process.env.MONEYSPACE_API_BASE || 'https://stage-a.moneysp.net';
 const PUBLIC_BASE = process.env.MONEYSPACE_DOMAIN || process.env.PUBLIC_BASE_URL || 'https://fortestonlyme.online';
 const MONEYSPACE_CREATE_PATH = process.env.MONEYSPACE_CREATE_PATH || '/payment/CreateTransaction';
 
