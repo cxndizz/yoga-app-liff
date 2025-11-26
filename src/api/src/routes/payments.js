@@ -167,4 +167,54 @@ router.post('/moneyspace/create', async (req, res) => {
   }
 });
 
+router.post('/moneyspace/status', async (req, res) => {
+  try {
+    const { transaction_id, order_id } = req.body || {};
+
+    if (!transaction_id) {
+      return res.status(400).json({ message: 'transaction_id is required' });
+    }
+
+    const result = await moneyspace.checkTransactionStatus({
+      transactionId: transaction_id,
+      orderId: order_id,
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('Error checking Money Space status', err);
+    res.status(500).json({ message: err?.message || 'Unable to check payment status' });
+  }
+});
+
+router.post('/moneyspace/cancel', async (req, res) => {
+  try {
+    const { transaction_id, order_id } = req.body || {};
+
+    if (!transaction_id) {
+      return res.status(400).json({ message: 'transaction_id is required' });
+    }
+
+    const result = await moneyspace.cancelTransaction({
+      transactionId: transaction_id,
+      orderId: order_id,
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('Error cancelling Money Space transaction', err);
+    res.status(500).json({ message: err?.message || 'Unable to cancel payment' });
+  }
+});
+
+router.get('/moneyspace/store-info', async (_req, res) => {
+  try {
+    const result = await moneyspace.fetchStoreInfo();
+    res.json(result);
+  } catch (err) {
+    console.error('Error fetching Money Space store info', err);
+    res.status(500).json({ message: err?.message || 'Unable to fetch store information' });
+  }
+});
+
 module.exports = router;

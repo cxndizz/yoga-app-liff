@@ -7,8 +7,11 @@ const { ensureEnrollmentForOrder } = require('./enrollmentService');
 const MONEYSPACE_SECRET_ID = process.env.MONEYSPACE_SECRET_ID || process.env.MONEYSPACE_SECRETID;
 const MONEYSPACE_SECRET_KEY = process.env.MONEYSPACE_SECRET_KEY || process.env.MONEYSPACE_SECRETKEY;
 const MONEYSPACE_BASE = process.env.MONEYSPACE_API_BASE || 'https://a.moneyspace.net';
+const MONEYSPACE_STORE_BASE = process.env.MONEYSPACE_STORE_BASE || 'https://www.moneyspace.net';
 const PUBLIC_BASE = process.env.MONEYSPACE_DOMAIN || process.env.PUBLIC_BASE_URL || 'https://fortestonlyme.online';
 const MONEYSPACE_CREATE_PATH = process.env.MONEYSPACE_CREATE_PATH || '/payment/CreateTransaction';
+const MONEYSPACE_CHECK_PATH = process.env.MONEYSPACE_CHECK_PATH || '/CheckPayment';
+const MONEYSPACE_CANCEL_PATH = process.env.MONEYSPACE_CANCEL_PATH || '/merchantapi/cancelpayment';
 
 const safeFetch = (url, { method = 'GET', headers = {}, body } = {}) => {
   if (typeof globalThis.fetch === 'function') {
@@ -59,6 +62,9 @@ const FAIL_URL = process.env.MONEYSPACE_FAIL_URL || defaultReturnUrl('/payments/
 const CANCEL_URL = process.env.MONEYSPACE_CANCEL_URL || defaultReturnUrl('/payments/moneyspace/cancel');
 const AGREEMENT = process.env.MONEYSPACE_AGREEMENT || '4';
 const CREATE_TRANSACTION_URL = `${MONEYSPACE_BASE.replace(/\/$/, '')}${MONEYSPACE_CREATE_PATH}`;
+const CHECK_TRANSACTION_URL = `${MONEYSPACE_BASE.replace(/\/$/, '')}${MONEYSPACE_CHECK_PATH}`;
+const CANCEL_TRANSACTION_URL = `${MONEYSPACE_BASE.replace(/\/$/, '')}${MONEYSPACE_CANCEL_PATH}`;
+const STORE_INFO_URL = `${MONEYSPACE_STORE_BASE.replace(/\/$/, '')}/merchantapi/v1/store/obj`;
 
 const normalizePaymentType = (paymentMethod = 'card') => {
   const map = {
@@ -302,6 +308,79 @@ const statusMap = {
   cancel: 'cancelled',
 };
 
+const normalizeStatus = (value) => statusMap[value] || String(value || 'pending').toLowerCase() || 'pending';
+
+const resolveOrderIdForTransaction = async ({ transactionId, providedOrderId, payload }) => {
+  if (providedOrderId) return providedOrderId;
+
+  const guessFromPayload =
+    payload?.order_id ||
+    payload?.orderid ||
+    payload?.orderId ||
+    payload?.ref1 ||
+    payload?.reference1 ||
+    payload?.ref ||
+    null;
+
+  const numericGuess = guessFromPayload ? Number(String(guessFromPayload).replace(/[^0-9]/g, '')) : null;
+  if (numericGuess && !Number.isNaN(numericGuess)) return numericGuess;
+
+  if (transactionId) {
+    const lookup = await db.query(
+      `SELECT order_id
+       FROM payments
+       WHERE omise_charge_id = $1
+       ORDER BY updated_at DESC
+       LIMIT 1`,
+      [transactionId]
+    );
+
+    if (lookup.rows[0]?.order_id) {
+      return lookup.rows[0].order_id;
+    }
+  }
+
+  return null;
+};
+
+const updateOrderAndPayment = async ({ orderId, mappedStatus, transactionId, payload }) => {
+  if (!orderId) return null;
+
+  let orderUpdate = null;
+
+  try {
+    const updateOrder = await db.query(
+      `UPDATE orders
+       SET status = $1,
+           updated_at = NOW()
+       WHERE id = $2
+       RETURNING id, status`,
+      [mappedStatus, orderId]
+    );
+
+    orderUpdate = updateOrder.rows[0] || null;
+
+    await recordPaymentStatus({
+      orderId,
+      status: mappedStatus,
+      transactionId,
+      payload,
+    });
+
+    if (mappedStatus === 'completed') {
+      try {
+        await ensureEnrollmentForOrder(orderId);
+      } catch (err) {
+        console.error('Money Space enrollment error:', err);
+      }
+    }
+  } catch (err) {
+    console.error('Money Space order update error:', err);
+  }
+
+  return orderUpdate;
+};
+
 const recordPaymentStatus = async ({ orderId, status, transactionId, payload }) => {
   const normalizedStatus = statusMap[status] || status || 'pending';
   const rawPayload = payload ? JSON.stringify(payload) : null;
@@ -343,30 +422,12 @@ const handleWebhook = async (body = {}) => {
     const numericOrderId = Number(orderid);
     if (!Number.isNaN(numericOrderId)) {
       try {
-        const updateOrder = await db.query(
-          `UPDATE orders
-           SET status = $1,
-               updated_at = NOW()
-           WHERE id = $2
-           RETURNING id, status`,
-          [mappedStatus, numericOrderId]
-        );
-        orderUpdate = updateOrder.rows[0];
-
-        await recordPaymentStatus({
+        orderUpdate = await updateOrderAndPayment({
           orderId: numericOrderId,
-          status: mappedStatus,
+          mappedStatus,
           transactionId: transectionID,
           payload: body,
         });
-
-        if (mappedStatus === 'completed') {
-          try {
-            await ensureEnrollmentForOrder(numericOrderId);
-          } catch (enrollErr) {
-            console.error('Money Space webhook enrollment error:', enrollErr);
-          }
-        }
       } catch (err) {
         console.error('Money Space webhook DB error:', err);
       }
@@ -376,9 +437,132 @@ const handleWebhook = async (body = {}) => {
   return { signatureValid, mappedStatus, orderUpdate };
 };
 
+const checkTransactionStatus = async ({ transactionId, orderId }) => {
+  ensureSecrets();
+
+  if (!transactionId) {
+    throw new Error('transaction_id is required');
+  }
+
+  const response = await safeFetch(CHECK_TRANSACTION_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      secret_id: MONEYSPACE_SECRET_ID,
+      secret_key: MONEYSPACE_SECRET_KEY,
+      transaction_ID: transactionId,
+    }),
+  });
+
+  const payload = (await response.json().catch(() => ({}))) || {};
+  const primaryPayload = Array.isArray(payload) ? payload[0] || {} : payload;
+  const statusValue =
+    primaryPayload.status ||
+    primaryPayload.transaction_status ||
+    primaryPayload.payment_status ||
+    primaryPayload.result ||
+    primaryPayload.state ||
+    'pending';
+
+  const mappedStatus = normalizeStatus(statusValue);
+  const resolvedOrderId = await resolveOrderIdForTransaction({
+    transactionId,
+    providedOrderId: orderId,
+    payload: primaryPayload,
+  });
+
+  const orderUpdate = await updateOrderAndPayment({
+    orderId: resolvedOrderId,
+    mappedStatus,
+    transactionId,
+    payload,
+  });
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    mappedStatus,
+    orderId: resolvedOrderId,
+    order: orderUpdate,
+    payload,
+  };
+};
+
+const cancelTransaction = async ({ transactionId, orderId }) => {
+  ensureSecrets();
+
+  if (!transactionId) {
+    throw new Error('transaction_id is required');
+  }
+
+  const response = await safeFetch(CANCEL_TRANSACTION_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      secret_id: MONEYSPACE_SECRET_ID,
+      secret_key: MONEYSPACE_SECRET_KEY,
+      transaction_ID: transactionId,
+    }),
+  });
+
+  const payload = (await response.json().catch(() => ({}))) || {};
+  const mappedStatus = normalizeStatus(payload.status || 'cancel');
+  const resolvedOrderId = await resolveOrderIdForTransaction({
+    transactionId,
+    providedOrderId: orderId,
+    payload,
+  });
+
+  const orderUpdate = await updateOrderAndPayment({
+    orderId: resolvedOrderId,
+    mappedStatus,
+    transactionId,
+    payload,
+  });
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    mappedStatus,
+    orderId: resolvedOrderId,
+    order: orderUpdate,
+    payload,
+  };
+};
+
+const formatTimeHash = () => {
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(now.getHours())}${pad(
+    now.getMinutes()
+  )}${pad(now.getSeconds())}`;
+};
+
+const fetchStoreInfo = async () => {
+  ensureSecrets();
+
+  const timeHash = formatTimeHash();
+  const hashPayload = `${timeHash}${MONEYSPACE_SECRET_ID}${MONEYSPACE_SECRET_KEY}`;
+  const hash = crypto.createHash('sha256').update(hashPayload).digest('hex');
+
+  const url = `${STORE_INFO_URL}?timeHash=${timeHash}&secreteID=${MONEYSPACE_SECRET_ID}&hash=${hash}`;
+
+  const response = await safeFetch(url, { method: 'GET' });
+  const payload = (await response.json().catch(() => ({}))) || {};
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    payload,
+  };
+};
+
 module.exports = {
   createTransaction,
   recordPaymentStatus,
   handleWebhook,
   normalizePaymentType,
+  checkTransactionStatus,
+  cancelTransaction,
+  fetchStoreInfo,
 };
