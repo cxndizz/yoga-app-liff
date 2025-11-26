@@ -117,6 +117,8 @@ router.post('/moneyspace/create', async (req, res) => {
         transactionId: payment.transactionId,
         redirectUrl: payment.redirectUrl,
         paymentType: payment.paymentType,
+        qrImage: payment.qrImage,
+        embedHtml: payment.embedHtml,
       },
     });
   } catch (err) {

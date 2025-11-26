@@ -27,6 +27,7 @@ function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState('qrnone');
   const [flowState, setFlowState] = useState('idle');
   const [paymentError, setPaymentError] = useState('');
+  const [qrDisplay, setQrDisplay] = useState(null);
   const [errors, setErrors] = useState({});
   const [form, setForm] = useState({
     firstName: cachedProfile.displayName?.split(' ')?.[0] || '',
@@ -107,6 +108,12 @@ function Checkout() {
     setPaymentError('');
   };
 
+  useEffect(() => {
+    if (paymentMethod !== 'qrnone') {
+      setQrDisplay(null);
+    }
+  }, [paymentMethod]);
+
   const validate = () => {
     const nextErrors = {};
     if (!form.firstName.trim()) nextErrors.firstName = t('checkout.required');
@@ -143,6 +150,18 @@ function Checkout() {
         cancel_url: `${currentOrigin}/payments/moneyspace/cancel`,
       });
 
+      if (payment?.paymentType === 'qrnone') {
+        setQrDisplay({
+          transactionId: payment.transactionId,
+          orderId: existingOrder?.id,
+          qrImage: payment.qrImage || payment.redirectUrl,
+          embedHtml: payment.embedHtml,
+          redirectUrl: payment.redirectUrl,
+        });
+        setFlowState('qr_ready');
+        return;
+      }
+
       if (payment?.redirectUrl) {
         window.location.href = payment.redirectUrl;
         return;
@@ -156,10 +175,30 @@ function Checkout() {
     }
   };
 
+  const handleDownloadQr = async () => {
+    if (!qrDisplay?.qrImage) return;
+    try {
+      const response = await fetch(qrDisplay.qrImage);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `promptpay-${qrDisplay.orderId || qrDisplay.transactionId || 'payment'}.png`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Download QR error', err);
+      setPaymentError(t('checkout.qrDownloadError'));
+    }
+  };
+
   const priceLabel = useMemo(() => formatPrice(course?.priceCents, course?.isFree), [course, formatPrice]);
   const accessLabel = useMemo(() => formatAccessTimes(course?.accessTimes || 0), [course, formatAccessTimes]);
   const seatsLeft = course ? t('access.seatsLeftDetail', { left: course.seatsLeft, capacity: course.capacity }) : '';
   const fullName = `${form.firstName} ${form.lastName}`.trim();
+  const qrEmbedAvailable = qrDisplay && (qrDisplay.qrImage || qrDisplay.embedHtml || qrDisplay.redirectUrl);
 
   if (status === 'loading') {
     return (
@@ -396,6 +435,99 @@ function Checkout() {
                 <span>✅</span> {t('checkout.intentCreated')}
               </div>
               <div className="helper-text">{t('checkout.intentCreatedHint')}</div>
+            </div>
+          )}
+
+          {qrEmbedAvailable && (
+            <div
+              style={{
+                marginTop: 4,
+                padding: 14,
+                borderRadius: 14,
+                border: '1px dashed rgba(251, 191, 36, 0.4)',
+                background: 'rgba(15, 23, 42, 0.45)',
+                display: 'grid',
+                gap: 12,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ display: 'grid', gap: 6 }}>
+                  <div
+                    className="badge"
+                    style={{
+                      background: 'rgba(251, 191, 36, 0.1)',
+                      borderColor: 'rgba(251, 191, 36, 0.4)',
+                      color: '#fbbf24',
+                      width: 'fit-content',
+                    }}
+                  >
+                    🧾 {t('checkout.qrTitle')}
+                  </div>
+                  <div className="helper-text">{t('checkout.qrSubtitle')}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div className="helper-text" style={{ color: '#fbbf24' }}>
+                    {t('checkout.qrAmount')} {priceLabel}
+                  </div>
+                  <div className="helper-text">{t('checkout.qrRef')}: {qrDisplay?.transactionId || '-'}</div>
+                  <div className="helper-text">Order #{qrDisplay?.orderId || '-'}</div>
+                </div>
+              </div>
+
+              {qrDisplay?.qrImage && (
+                <div style={{ textAlign: 'center' }}>
+                  <img
+                    src={qrDisplay.qrImage}
+                    alt="PromptPay QR"
+                    style={{
+                      width: 'min(320px, 100%)',
+                      margin: '0 auto',
+                      borderRadius: 12,
+                      background: '#fff',
+                      padding: 12,
+                    }}
+                  />
+                  <div className="helper-text" style={{ marginTop: 8 }}>
+                    {t('checkout.qrFallback')}
+                  </div>
+                </div>
+              )}
+
+              {!qrDisplay?.qrImage && qrDisplay?.embedHtml && (
+                <div
+                  className="qr-embed"
+                  style={{ background: '#fff', borderRadius: 12, overflow: 'hidden' }}
+                  dangerouslySetInnerHTML={{ __html: qrDisplay.embedHtml }}
+                />
+              )}
+
+              {!qrDisplay?.qrImage && !qrDisplay?.embedHtml && qrDisplay?.redirectUrl && (
+                <iframe
+                  title="PromptPay QR"
+                  src={qrDisplay.redirectUrl}
+                  style={{ width: '100%', minHeight: 420, borderRadius: 12, border: '1px solid rgba(251, 191, 36, 0.4)' }}
+                  allow="payment"
+                />
+              )}
+
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                {qrDisplay?.qrImage && (
+                  <button type="button" className="btn btn-primary" onClick={handleDownloadQr}>
+                    💾 {t('checkout.qrDownload')}
+                  </button>
+                )}
+                {qrDisplay?.redirectUrl && (
+                  <a
+                    href={qrDisplay.redirectUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn-outline"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    🔗 {t('checkout.qrOpenLink')}
+                  </a>
+                )}
+              </div>
             </div>
           )}
         </div>
