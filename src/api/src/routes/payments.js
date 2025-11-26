@@ -47,6 +47,33 @@ router.post('/moneyspace/create', async (req, res) => {
     const priceCents = course.is_free ? 0 : parseInteger(course.price_cents);
     const amount = priceCents / 100;
 
+    const contactUpdates = [];
+    const contactParams = [];
+    const fullName = [firstname, lastname].filter(Boolean).join(' ').trim();
+
+    if (fullName) {
+      contactParams.push(fullName);
+      contactUpdates.push(`full_name = $${contactParams.length}`);
+    }
+
+    if (email) {
+      contactParams.push(email);
+      contactUpdates.push(`email = $${contactParams.length}`);
+    }
+
+    if (phone) {
+      contactParams.push(phone);
+      contactUpdates.push(`phone = $${contactParams.length}`);
+    }
+
+    if (contactUpdates.length > 0) {
+      contactParams.push(user_id);
+      await db.query(
+        `UPDATE users SET ${contactUpdates.join(', ')} WHERE id = $${contactParams.length}`,
+        contactParams
+      );
+    }
+
     const guard = await assertPurchasable(user_id, course_id);
     if (!guard.allowed) {
       return res.status(400).json({

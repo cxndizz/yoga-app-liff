@@ -245,21 +245,58 @@ app.post('/admin/users/list', requireAdminAuth(['super_admin']), async (req, res
 });
 
 app.post('/auth/line-login', async (req, res) => {
-  const { line_user_id, full_name, email, phone } = req.body;
+  const { line_user_id, line_display_name, full_name, email, phone } = req.body;
   if (!line_user_id) {
     return res.status(400).json({ message: 'line_user_id is required' });
   }
   try {
+    const displayName = line_display_name || full_name || null;
+
     let result = await db.query('SELECT * FROM users WHERE line_user_id = $1', [line_user_id]);
     let user = result.rows[0];
     if (!user) {
       result = await db.query(
-        `INSERT INTO users (line_user_id, full_name, email, phone)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO users (line_user_id, line_display_name, full_name, email, phone)
+         VALUES ($1, $2, $3, $4, $5)
          RETURNING *`,
-        [line_user_id, full_name || null, email || null, phone || null]
+        [line_user_id, displayName, full_name || null, email || null, phone || null]
       );
       user = result.rows[0];
+    } else {
+      const updates = [];
+      const params = [];
+
+      if (displayName) {
+        params.push(displayName);
+        updates.push(`line_display_name = $${params.length}`);
+      }
+
+      if (full_name) {
+        params.push(full_name);
+        updates.push(`full_name = $${params.length}`);
+      }
+
+      if (email) {
+        params.push(email);
+        updates.push(`email = $${params.length}`);
+      }
+
+      if (phone) {
+        params.push(phone);
+        updates.push(`phone = $${params.length}`);
+      }
+
+      if (updates.length > 0) {
+        params.push(line_user_id);
+        const updateQuery = `
+          UPDATE users
+          SET ${updates.join(', ')}
+          WHERE line_user_id = $${params.length}
+          RETURNING *`;
+
+        const updated = await db.query(updateQuery, params);
+        user = updated.rows[0] || user;
+      }
     }
     res.json({ user });
   } catch (err) {

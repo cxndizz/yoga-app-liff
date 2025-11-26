@@ -91,7 +91,7 @@ export const ensureLiffUserSynced = async () => {
 
   const payload = {
     line_user_id: profile.userId,
-    full_name: profile.displayName,
+    line_display_name: profile.displayName,
     email: decoded.email || null,
     phone: decoded.phone_number || null,
   };

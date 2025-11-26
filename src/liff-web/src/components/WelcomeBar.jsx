@@ -59,8 +59,8 @@ function WelcomeBar({ liffState }) {
   }, [user?.id]);
 
   const displayName = useMemo(
-    () => profile?.displayName || user?.full_name || t('nav.brand'),
-    [profile?.displayName, user?.full_name, t]
+    () => profile?.displayName || user?.full_name || user?.line_display_name || t('nav.brand'),
+    [profile?.displayName, user?.full_name, user?.line_display_name, t]
   );
 
   if (!user) return null;

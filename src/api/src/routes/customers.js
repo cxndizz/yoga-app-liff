@@ -27,7 +27,7 @@ router.post('/list', requireAdminAuth(['super_admin', 'branch_admin']), async (r
 
     if (search) {
       params.push(`%${search}%`);
-      query += ` AND (u.full_name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR u.phone ILIKE $${params.length})`;
+      query += ` AND (u.full_name ILIKE $${params.length} OR u.line_display_name ILIKE $${params.length} OR u.email ILIKE $${params.length} OR u.phone ILIKE $${params.length})`;
     }
 
     query += ' GROUP BY u.id ORDER BY u.created_at DESC';
