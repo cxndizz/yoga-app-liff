@@ -27,8 +27,14 @@ export const startMoneySpacePayment = async (payload) => {
   return data;
 };
 
+export const fetchOrderStatus = async ({ orderId, userId }) => {
+  const { data } = await api.post('/orders/status', { order_id: orderId, user_id: userId });
+  return data;
+};
+
 export default {
   createOrder,
   fetchOrdersForUser,
+  fetchOrderStatus,
   startMoneySpacePayment,
 };
