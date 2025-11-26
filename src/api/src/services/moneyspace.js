@@ -185,6 +185,7 @@ const statusMap = {
 
 const recordPaymentStatus = async ({ orderId, status, transactionId, payload }) => {
   const normalizedStatus = statusMap[status] || status || 'pending';
+  const rawPayload = payload ? JSON.stringify(payload) : null;
 
   const updateResult = await db.query(
     `UPDATE payments
@@ -194,14 +195,14 @@ const recordPaymentStatus = async ({ orderId, status, transactionId, payload }) 
          updated_at = NOW()
      WHERE order_id = $4
      RETURNING id`,
-    [normalizedStatus, transactionId || null, payload || null, orderId]
+    [normalizedStatus, transactionId || null, rawPayload, orderId]
   );
 
   if (updateResult.rowCount === 0) {
     await db.query(
       `INSERT INTO payments (order_id, status, omise_charge_id, raw_payload)
        VALUES ($1, $2, $3, $4)`,
-      [orderId, normalizedStatus, transactionId || null, payload || null]
+      [orderId, normalizedStatus, transactionId || null, rawPayload]
     );
   }
 };
