@@ -128,7 +128,7 @@ function Courses() {
         description: form.description.trim(),
         branch_id: form.branch_id ? Number(form.branch_id) : null,
         instructor_id: form.instructor_id ? Number(form.instructor_id) : null,
-        capacity: form.course_type === 'scheduled' && !form.unlimited_capacity ? Number(form.capacity) : null,
+        capacity: form.course_type === 'scheduled' && !form.unlimited_capacity ? Number(form.capacity) : 0,
         price_cents: form.is_free ? 0 : Number(form.price_cents),
         access_times: Number(form.access_times),
         cover_image_url: form.cover_image_url || null,
