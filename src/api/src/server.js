@@ -316,6 +316,32 @@ app.post('/users/orders', async (req, res) => {
   }
 });
 
+app.post('/orders/status', async (req, res) => {
+  const { order_id, user_id } = req.body || {};
+
+  if (!order_id) {
+    return res.status(400).json({ message: 'order_id is required' });
+  }
+
+  try {
+    const result = await db.query('SELECT * FROM orders WHERE id = $1', [order_id]);
+    const order = result.rows[0];
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    if (user_id && Number(order.user_id) !== Number(user_id)) {
+      return res.status(403).json({ message: 'Not authorized to view this order' });
+    }
+
+    return res.json(order);
+  } catch (err) {
+    console.error('Error fetching order status', err);
+    return res.status(500).json({ message: 'Error fetching order status' });
+  }
+});
+
 app.post('/payments/omise-webhook', async (req, res) => {
   console.log('Received Omise webhook mock:', req.body);
   res.json({ received: true });

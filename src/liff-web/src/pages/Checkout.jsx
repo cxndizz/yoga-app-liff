@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { fetchCourseDetail } from '../lib/courseApi';
 import { useAutoTranslate } from '../lib/autoTranslate';
 import { placeholderImage } from '../lib/formatters';
-import { createOrder, startMoneySpacePayment } from '../lib/orderApi';
+import { createOrder, fetchOrderStatus, startMoneySpacePayment } from '../lib/orderApi';
 import useLiffUser from '../hooks/useLiffUser';
 import { getCachedLiffUser } from '../lib/liffAuth';
 
@@ -113,6 +113,38 @@ function Checkout() {
       setQrDisplay(null);
     }
   }, [paymentMethod]);
+
+  useEffect(() => {
+    if (flowState !== 'qr_ready' || !qrDisplay?.orderId) return () => {};
+
+    let cancelled = false;
+
+    const pollStatus = async () => {
+      try {
+        const latestOrder = await fetchOrderStatus({ orderId: qrDisplay.orderId, userId: user?.id });
+        if (!latestOrder || cancelled) return;
+
+        if (['completed', 'success'].includes(latestOrder.status)) {
+          navigate('/payments/moneyspace/success');
+        } else if (['failed', 'cancelled'].includes(latestOrder.status)) {
+          setFlowState('error');
+          setPaymentError(t('checkout.errorPayment'));
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Error polling order status', err);
+        }
+      }
+    };
+
+    pollStatus();
+    const timer = setInterval(pollStatus, 4000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [flowState, qrDisplay?.orderId, user?.id, navigate, t]);
 
   const validate = () => {
     const nextErrors = {};
