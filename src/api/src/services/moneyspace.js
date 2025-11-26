@@ -1,10 +1,55 @@
 const crypto = require('crypto');
+const https = require('https');
+const { URL } = require('url');
 const db = require('../db');
 
 const MONEYSPACE_SECRET_ID = process.env.MONEYSPACE_SECRET_ID || process.env.MONEYSPACE_SECRETID;
 const MONEYSPACE_SECRET_KEY = process.env.MONEYSPACE_SECRET_KEY || process.env.MONEYSPACE_SECRETKEY;
 const MONEYSPACE_BASE = process.env.MONEYSPACE_API_BASE || 'https://a.moneyspace.net';
 const PUBLIC_BASE = process.env.MONEYSPACE_DOMAIN || process.env.PUBLIC_BASE_URL || 'https://fortestonlyme.online';
+
+const safeFetch = (url, { method = 'GET', headers = {}, body } = {}) => {
+  if (typeof globalThis.fetch === 'function') {
+    return globalThis.fetch(url, { method, headers, body });
+  }
+
+  const parsedUrl = new URL(url);
+  const payload = typeof body === 'string' ? body : body ? JSON.stringify(body) : undefined;
+
+  return new Promise((resolve, reject) => {
+    const request = https.request(
+      {
+        method,
+        hostname: parsedUrl.hostname,
+        path: `${parsedUrl.pathname}${parsedUrl.search}`,
+        port: parsedUrl.port || 443,
+        headers: {
+          ...headers,
+          ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
+        },
+      },
+      (res) => {
+        let raw = '';
+        res.on('data', (chunk) => {
+          raw += chunk;
+        });
+        res.on('end', () => {
+          resolve({
+            ok: res.statusCode >= 200 && res.statusCode < 300,
+            status: res.statusCode,
+            headers: res.headers,
+            json: async () => JSON.parse(raw || '{}'),
+            text: async () => raw,
+          });
+        });
+      }
+    );
+
+    request.on('error', reject);
+    if (payload) request.write(payload);
+    request.end();
+  });
+};
 
 const defaultReturnUrl = (path) => `${PUBLIC_BASE}${path}`;
 const SUCCESS_URL = process.env.MONEYSPACE_SUCCESS_URL || defaultReturnUrl('/payments/moneyspace/success');
@@ -82,7 +127,7 @@ const createTransaction = async ({
     ref5: references.ref5,
   };
 
-  const response = await fetch(`${MONEYSPACE_BASE}/CreateTransactionID`, {
+  const response = await safeFetch(`${MONEYSPACE_BASE}/CreateTransactionID`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -96,7 +141,7 @@ const createTransaction = async ({
   }
 
   if (!response.ok) {
-    const message = payload?.message || payload?.error || 'Failed to create Money Space transaction';
+    const message = payload?.message || payload?.error || `Failed to create Money Space transaction (${response.status})`;
     throw new Error(message);
   }
 
