@@ -69,14 +69,31 @@ function Courses() {
   );
 
   return (
-    <div style={{ display: 'grid', gap: 18 }}>
+    <div style={{ display: 'grid', gap: 24 }}>
+      {/* Header Section */}
       <div className="section-heading">
         <div>
           <h2>{t('course.all')}</h2>
           <div className="helper-text">{t('filter.searchFilter')}</div>
         </div>
+        {/* Course Count Badge */}
+        {status === 'ready' && (
+          <div 
+            className="badge"
+            style={{
+              background: 'rgba(251, 191, 36, 0.15)',
+              borderColor: 'rgba(251, 191, 36, 0.4)',
+              color: '#fbbf24',
+              fontWeight: 600,
+            }}
+          >
+            {filtered.length} {t('course.course')}
+            {filtered.length !== 1 ? 's' : ''}
+          </div>
+        )}
       </div>
 
+      {/* Filter Bar */}
       <FilterBar
         search={search}
         onSearch={setSearch}
@@ -88,14 +105,91 @@ function Courses() {
         instructors={instructors}
       />
 
-      {status === 'loading' && <div className="helper-text">{t('course.loadingAll')}</div>}
-      {status === 'error' && <div className="helper-text">{t('course.errorFetch')}</div>}
+      {/* Loading State */}
+      {status === 'loading' && (
+        <div 
+          className="loading-shimmer"
+          style={{ 
+            padding: 60, 
+            borderRadius: 20,
+            textAlign: 'center',
+            color: 'var(--secondary-300)',
+          }}
+        >
+          <div style={{ fontSize: '2rem', marginBottom: 12, opacity: 0.7 }}>📚</div>
+          {t('course.loadingAll')}
+        </div>
+      )}
 
+      {/* Error State */}
+      {status === 'error' && (
+        <div 
+          className="card-surface"
+          style={{ 
+            padding: 60, 
+            borderRadius: 20,
+            textAlign: 'center',
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+          }}
+        >
+          <div style={{ fontSize: '2rem', marginBottom: 12 }}>⚠️</div>
+          <div style={{ color: '#fca5a5', fontWeight: 600 }}>{t('course.errorFetch')}</div>
+        </div>
+      )}
+
+      {/* Courses Grid */}
       <div className="grid">
-        {filtered.map((course) => (
-          <CourseCard key={course.id} course={course} />
+        {filtered.map((course, index) => (
+          <div 
+            key={course.id}
+            style={{
+              animation: `fadeIn 0.4s ease-out ${index * 0.05}s both`,
+            }}
+          >
+            <CourseCard course={course} />
+          </div>
         ))}
-        {status === 'ready' && filtered.length === 0 && <div className="helper-text">{t('course.noCoursesMatch')}</div>}
+        
+        {/* Empty State */}
+        {status === 'ready' && filtered.length === 0 && (
+          <div 
+            className="card-surface"
+            style={{ 
+              gridColumn: '1 / -1',
+              padding: 60, 
+              textAlign: 'center',
+              background: 'linear-gradient(135deg, rgba(76, 29, 149, 0.15) 0%, rgba(196, 181, 253, 0.05) 100%)',
+            }}
+          >
+            <div style={{ fontSize: '3rem', marginBottom: 16, opacity: 0.6 }}>🔍</div>
+            <div style={{ 
+              color: 'var(--secondary-200)', 
+              fontWeight: 600,
+              fontSize: '1.1rem',
+              marginBottom: 8,
+            }}>
+              {t('course.noCoursesMatch')}
+            </div>
+            <div className="helper-text">
+              Try adjusting your search or filters
+            </div>
+            {(search || branch || instructor) && (
+              <button
+                type="button"
+                className="btn btn-outline"
+                style={{ marginTop: 20 }}
+                onClick={() => {
+                  setSearch('');
+                  setBranch('');
+                  setInstructor('');
+                }}
+              >
+                Clear all filters
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

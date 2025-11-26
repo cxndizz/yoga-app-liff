@@ -1,5 +1,17 @@
 import { placeholderImage } from './formatters';
 
+// Generate unique placeholder images with different accent colors
+const generatePlaceholder = (text, variant = 0) => {
+  const variants = [
+    { primary: '%234c1d95', secondary: '%23fbbf24' },
+    { primary: '%233b0764', secondary: '%23c4b5fd' },
+    { primary: '%235b21b6', secondary: '%23f59e0b' },
+  ];
+  const colors = variants[variant % variants.length];
+  
+  return `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><defs><linearGradient id="grad${variant}" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="${colors.primary}" /><stop offset="100%" stop-color="%231e1b4b" /></linearGradient></defs><rect width="600" height="400" fill="url(%23grad${variant})"/><circle cx="300" cy="160" r="50" fill="none" stroke="${colors.secondary}" stroke-width="2" opacity="0.4"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="${colors.secondary}" font-family="Arial" font-size="18" font-weight="600">${text}</text></svg>`;
+};
+
 export const mockMyCourses = [
   {
     id: '201',
@@ -12,7 +24,7 @@ export const mockMyCourses = [
     accessRemaining: 3,
     accessTotal: 6,
     paymentStatus: 'paid',
-    coverImage: placeholderImage,
+    coverImage: generatePlaceholder('Morning Flow', 0),
     reference: 'INV-20241109-01',
     priceCents: 149900,
     isFree: false,
@@ -28,7 +40,7 @@ export const mockMyCourses = [
     accessRemaining: -1,
     accessTotal: -1,
     paymentStatus: 'pending',
-    coverImage: placeholderImage,
+    coverImage: generatePlaceholder('Yin Yoga', 1),
     reference: 'INV-20241112-02',
     priceCents: 99000,
     isFree: false,
@@ -44,7 +56,7 @@ export const mockMyCourses = [
     accessRemaining: 0,
     accessTotal: 0,
     paymentStatus: 'paid',
-    coverImage: placeholderImage,
+    coverImage: generatePlaceholder('Mobility', 2),
     reference: 'INV-20241001-08',
     priceCents: 0,
     isFree: true,

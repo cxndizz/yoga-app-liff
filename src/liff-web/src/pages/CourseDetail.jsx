@@ -43,8 +43,45 @@ function CourseDetail() {
     };
   }, [courseId, language, t]);
 
-  if (status === 'loading') return <div className="helper-text">{t('course.loadingDetails')}</div>;
-  if (status === 'error' || !course) return <div className="helper-text">{t('course.notFound')}</div>;
+  if (status === 'loading') {
+    return (
+      <div 
+        className="loading-shimmer"
+        style={{ 
+          padding: 80, 
+          borderRadius: 24,
+          textAlign: 'center',
+          color: 'var(--secondary-300)',
+        }}
+      >
+        <div style={{ fontSize: '2.5rem', marginBottom: 16, opacity: 0.6 }}>🧘</div>
+        {t('course.loadingDetails')}
+      </div>
+    );
+  }
+
+  if (status === 'error' || !course) {
+    return (
+      <div 
+        className="card-surface"
+        style={{ 
+          padding: 80, 
+          borderRadius: 24,
+          textAlign: 'center',
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+        }}
+      >
+        <div style={{ fontSize: '2.5rem', marginBottom: 16 }}>😔</div>
+        <div style={{ color: '#fca5a5', fontWeight: 600, marginBottom: 16 }}>
+          {t('course.notFound')}
+        </div>
+        <button type="button" className="btn btn-outline" onClick={() => navigate('/courses')}>
+          {t('common.back')}
+        </button>
+      </div>
+    );
+  }
 
   const priceLabel = formatPrice(course.priceCents, course.isFree);
   const accessLabel = formatAccessTimes(course.accessTimes);
@@ -55,143 +92,352 @@ function CourseDetail() {
     : t('access.seatsLeftDetail', { left: course.seatsLeft, capacity: course.capacity });
 
   return (
-    <div style={{ display: 'grid', gap: 18 }}>
+    <div style={{ display: 'grid', gap: 24 }}>
+      {/* Hero Cover Section */}
       <div
         className="card-surface"
         style={{
           position: 'relative',
           overflow: 'hidden',
-          borderRadius: 24,
+          borderRadius: 28,
           padding: 0,
         }}
       >
+        {/* Gradient Overlay */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(135deg, rgba(11,26,60,0.6), rgba(231,177,160,0.25))',
+            background: 'linear-gradient(180deg, rgba(76, 29, 149, 0.3) 0%, rgba(30, 27, 75, 0.9) 100%)',
             zIndex: 1,
           }}
         />
+        
+        {/* Cover Image */}
         <img
           src={coverImage}
           alt={course.title}
-          style={{ width: '100%', height: 320, objectFit: 'cover', display: 'block' }}
+          style={{ 
+            width: '100%', 
+            height: 360, 
+            objectFit: 'cover', 
+            display: 'block',
+          }}
         />
+        
+        {/* Top Badges */}
         <div
           style={{
             position: 'absolute',
-            top: 16,
-            left: 16,
+            top: 20,
+            left: 20,
+            right: 20,
             zIndex: 2,
             display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            flexWrap: 'wrap',
             gap: 10,
           }}
         >
-          <button type="button" className="btn btn-outline" onClick={() => navigate(-1)}>
-            {t('common.back')}
-          </button>
-          <div className="badge">{course.channel || t('course.course')}</div>
-          {isStandalone && (
-            <div className="badge" style={{ background: 'rgba(251, 191, 36, 0.9)', color: '#78350f' }}>
-              Standalone
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button type="button" className="btn btn-outline" onClick={() => navigate(-1)}>
+              {t('common.back')}
+            </button>
+            <div 
+              className="badge"
+              style={{
+                background: 'rgba(76, 29, 149, 0.9)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(196, 181, 253, 0.3)',
+              }}
+            >
+              {course.channel || t('course.course')}
             </div>
-          )}
-          {!isStandalone && course.sessionCount > 0 && (
-            <div className="badge" style={{ background: 'rgba(96, 165, 250, 0.9)', color: '#1e3a8a' }}>
-              {course.sessionCount} {t('course.sessions', { count: course.sessionCount }) || 'sessions'}
-            </div>
-          )}
+          </div>
+          
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {isStandalone && (
+              <div 
+                className="badge"
+                style={{ 
+                  background: 'rgba(251, 191, 36, 0.95)', 
+                  color: '#1e1b4b',
+                  fontWeight: 700,
+                  border: '1px solid rgba(251, 191, 36, 0.5)',
+                }}
+              >
+                ⚡ Standalone
+              </div>
+            )}
+            {!isStandalone && course.sessionCount > 0 && (
+              <div 
+                className="badge"
+                style={{ 
+                  background: 'rgba(196, 181, 253, 0.9)', 
+                  color: '#1e1b4b',
+                  fontWeight: 600,
+                  border: '1px solid rgba(196, 181, 253, 0.5)',
+                }}
+              >
+                📅 {course.sessionCount} {t('course.sessions', { count: course.sessionCount }) || 'sessions'}
+              </div>
+            )}
+          </div>
         </div>
-        <div style={{ position: 'absolute', bottom: 18, left: 18, zIndex: 2, right: 18 }}>
-          <div style={{ color: 'var(--rose)', fontWeight: 700 }}>{course.branchName}</div>
+        
+        {/* Bottom Content */}
+        <div style={{ 
+          position: 'absolute', 
+          bottom: 24, 
+          left: 24, 
+          right: 24,
+          zIndex: 2,
+        }}>
+          <div style={{ 
+            color: '#fbbf24', 
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            marginBottom: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}>
+            <span>📍</span>
+            {course.branchName}
+          </div>
           <h1
             style={{
-              margin: '6px 0',
+              margin: '0 0 12px',
               fontFamily: 'var(--font-heading)',
-              fontSize: '2rem',
-              lineHeight: 1.2,
+              fontSize: 'clamp(1.75rem, 5vw, 2.5rem)',
+              lineHeight: 1.15,
+              background: 'linear-gradient(135deg, #fff 0%, #c4b5fd 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
             }}
           >
             {course.title}
           </h1>
-          <div style={{ color: '#e8ecf5', maxWidth: 720 }}>{course.description}</div>
+          <div style={{ 
+            color: 'var(--secondary-200)', 
+            maxWidth: 720,
+            lineHeight: 1.6,
+          }}>
+            {course.description}
+          </div>
         </div>
       </div>
 
-      <div className="card-surface" style={{ padding: 18, display: 'grid', gap: 12 }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Course Info Card */}
+      <div 
+        className="card-surface" 
+        style={{ 
+          padding: 24, 
+          display: 'grid', 
+          gap: 20,
+          background: 'linear-gradient(135deg, rgba(76, 29, 149, 0.2) 0%, rgba(59, 7, 100, 0.15) 100%)',
+        }}
+      >
+        {/* Price and CTA Row */}
+        <div style={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: 16, 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+        }}>
           <div>
-            <div style={{ color: 'var(--muted)' }}>{t('course.priceAccess')}</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800 }}>{priceLabel}</div>
-            <div style={{ color: 'var(--muted)' }}>{accessLabel}</div>
+            <div style={{ color: 'var(--secondary-300)', fontSize: '0.9rem', marginBottom: 4 }}>
+              {t('course.priceAccess')}
+            </div>
+            <div style={{ 
+              fontSize: '1.75rem', 
+              fontWeight: 800,
+              color: course.isFree ? '#34d399' : '#fbbf24',
+            }}>
+              {priceLabel}
+            </div>
+            <div style={{ color: 'var(--secondary-300)', marginTop: 4 }}>{accessLabel}</div>
           </div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <button type="button" className="btn btn-outline" onClick={() => navigate('/courses')}>
               {t('course.browseOther')}
             </button>
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() =>
-                navigate(course.isFree ? `/courses/${courseId}/checkout` : `/courses/${courseId}/checkout`)
-              }
+              onClick={() => navigate(`/courses/${courseId}/checkout`)}
+              style={{ padding: '14px 28px' }}
             >
               {course.isFree ? t('common.registerNow') : t('common.payOmise')}
             </button>
           </div>
         </div>
-        <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1fr', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        
+        {/* Divider */}
+        <div style={{ 
+          height: 1, 
+          background: 'linear-gradient(90deg, transparent, rgba(196, 181, 253, 0.2), transparent)',
+        }} />
+        
+        {/* Instructor and Tags Row */}
+        <div style={{ 
+          display: 'grid', 
+          gap: 16, 
+          gridTemplateColumns: '1fr', 
+          alignItems: 'center',
+        }}>
+          {/* Instructor */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 16,
+            padding: '14px',
+            background: 'rgba(196, 181, 253, 0.05)',
+            borderRadius: 14,
+            border: '1px solid rgba(196, 181, 253, 0.1)',
+          }}>
             <img
               src={course.instructorAvatar || placeholderImage}
               alt={course.instructorName}
-              style={{ width: 64, height: 64, borderRadius: '50%', border: '1px solid var(--border)', objectFit: 'cover' }}
+              style={{ 
+                width: 72, 
+                height: 72, 
+                borderRadius: '50%', 
+                border: '2px solid rgba(251, 191, 36, 0.4)', 
+                objectFit: 'cover',
+              }}
             />
             <div>
-              <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>{course.instructorName}</div>
-              <div style={{ color: 'var(--muted)' }}>{course.instructorBio || t('instructor.studio')}</div>
+              <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#fff' }}>
+                {course.instructorName}
+              </div>
+              <div style={{ color: 'var(--secondary-300)', marginTop: 4 }}>
+                {course.instructorBio || t('instructor.studio')}
+              </div>
             </div>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          
+          {/* Tags */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             {course.tags.map((tag) => (
-              <span key={tag} className="badge">
+              <span 
+                key={tag} 
+                className="badge"
+                style={{
+                  background: 'rgba(146, 64, 14, 0.15)',
+                  borderColor: 'rgba(146, 64, 14, 0.3)',
+                  color: '#fcd34d',
+                }}
+              >
                 {tag}
               </span>
             ))}
             {course.level && (
-              <span className="badge">
-                {t('course.level')}: {course.level}
+              <span 
+                className="badge"
+                style={{
+                  background: 'rgba(196, 181, 253, 0.1)',
+                  borderColor: 'rgba(196, 181, 253, 0.3)',
+                }}
+              >
+                📊 {t('course.level')}: {course.level}
               </span>
             )}
-            <span className="badge">{seatLabel}</span>
+            <span 
+              className="badge"
+              style={{
+                background: course.seatsLeft < 5 
+                  ? 'rgba(239, 68, 68, 0.15)' 
+                  : 'rgba(16, 185, 129, 0.15)',
+                borderColor: course.seatsLeft < 5 
+                  ? 'rgba(239, 68, 68, 0.4)' 
+                  : 'rgba(16, 185, 129, 0.4)',
+                color: course.seatsLeft < 5 ? '#fca5a5' : '#6ee7b7',
+              }}
+            >
+              🎫 {seatLabel}
+            </span>
           </div>
         </div>
       </div>
 
+      {/* Sessions or Standalone Info */}
       {isStandalone ? (
-        // Standalone Course - No sessions section
-        <div className="card-surface" style={{ padding: 18 }}>
-          <h3 style={{ marginTop: 0, marginBottom: 12 }}>
-            {t('course.standalone.title') || 'เรียนได้ทันที'}
+        <div 
+          className="card-surface" 
+          style={{ 
+            padding: 24,
+            background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.08) 0%, rgba(76, 29, 149, 0.1) 100%)',
+            border: '1px solid rgba(251, 191, 36, 0.2)',
+          }}
+        >
+          <h3 style={{ 
+            marginTop: 0, 
+            marginBottom: 20,
+            color: '#fbbf24',
+            fontFamily: 'var(--font-heading)',
+            fontSize: '1.3rem',
+          }}>
+            ⚡ {t('course.standalone.title') || 'เรียนได้ทันที'}
           </h3>
-          <div style={{ display: 'grid', gap: 10, color: 'var(--muted)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: '1.2rem' }}>✓</span>
-              <span>{t('course.standalone.immediate') || 'เข้าเรียนได้ทันทีหลังลงทะเบียน'}</span>
+          <div style={{ display: 'grid', gap: 14 }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 12,
+              padding: '12px 16px',
+              background: 'rgba(16, 185, 129, 0.1)',
+              borderRadius: 12,
+              border: '1px solid rgba(16, 185, 129, 0.2)',
+            }}>
+              <span style={{ fontSize: '1.3rem' }}>✓</span>
+              <span style={{ color: '#6ee7b7' }}>
+                {t('course.standalone.immediate') || 'เข้าเรียนได้ทันทีหลังลงทะเบียน'}
+              </span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: '1.2rem' }}>✓</span>
-              <span>{t('course.standalone.flexible') || 'ไม่ต้องจองรอบเรียน เรียนได้ตามสะดวก'}</span>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 12,
+              padding: '12px 16px',
+              background: 'rgba(196, 181, 253, 0.1)',
+              borderRadius: 12,
+              border: '1px solid rgba(196, 181, 253, 0.2)',
+            }}>
+              <span style={{ fontSize: '1.3rem' }}>✓</span>
+              <span style={{ color: 'var(--secondary-200)' }}>
+                {t('course.standalone.flexible') || 'ไม่ต้องจองรอบเรียน เรียนได้ตามสะดวก'}
+              </span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: '1.2rem' }}>✓</span>
-              <span>{t('course.standalone.access') || `เข้าเรียนได้ ${course.accessTimes} ครั้ง`}</span>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 12,
+              padding: '12px 16px',
+              background: 'rgba(251, 191, 36, 0.1)',
+              borderRadius: 12,
+              border: '1px solid rgba(251, 191, 36, 0.2)',
+            }}>
+              <span style={{ fontSize: '1.3rem' }}>✓</span>
+              <span style={{ color: '#fbbf24' }}>
+                {t('course.standalone.access') || `เข้าเรียนได้ ${course.accessTimes} ครั้ง`}
+              </span>
             </div>
             {course.enrollmentDeadline && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: '1.2rem' }}>⏰</span>
-                <span>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 12,
+                padding: '12px 16px',
+                background: 'rgba(245, 158, 11, 0.1)',
+                borderRadius: 12,
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+              }}>
+                <span style={{ fontSize: '1.3rem' }}>⏰</span>
+                <span style={{ color: '#fcd34d' }}>
                   {t('course.standalone.deadline') || 'ปิดรับสมัคร'}: {new Date(course.enrollmentDeadline).toLocaleDateString('th-TH', {
                     year: 'numeric',
                     month: 'long',
@@ -205,7 +451,6 @@ function CourseDetail() {
           </div>
         </div>
       ) : (
-        // Scheduled Course - Show sessions
         <section>
           <div className="section-heading">
             <div>
