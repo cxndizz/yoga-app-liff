@@ -309,6 +309,25 @@ function AdminDashboard() {
 
       {error && <div className={styles.errorBanner}>เกิดข้อผิดพลาด: {error}</div>}
 
+      <div className={styles.noticeCard}>
+        <div>
+          <p className={styles.noticeBadge}>PromptPay QR</p>
+          <p className={styles.noticeTitle}>ฝั่งลูกค้าแสดง QR แบบฝังตัวแล้ว</p>
+          <p className={styles.noticeText}>
+            ตรวจสอบหน้า Checkout ใหม่ที่โชว์ QR พร้อมเพย์ฝังในหน้า โดยไม่ต้องเด้งออกจาก LIFF
+            รองรับปุ่มบันทึกภาพและเปิดลิงก์สำรอง ช่วยลดปัญหาลูกค้ากดกลับกลางทางได้
+          </p>
+        </div>
+        <div className={styles.noticeActions}>
+          <a className="btn btn-outline" href="https://fortestonlyme.online/courses/3/checkout" target="_blank" rel="noreferrer">
+            เปิดหน้า Checkout
+          </a>
+          <button type="button" className="btn btn-primary" onClick={refresh} disabled={loading}>
+            รีเฟรชข้อมูลแดชบอร์ด
+          </button>
+        </div>
+      </div>
+
       <div className={styles.kpiGrid}>
         {kpiCards.map((card) => (
           <KpiCard key={card.title} {...card} />

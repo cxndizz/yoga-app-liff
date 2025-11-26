@@ -134,6 +134,38 @@ const extractTransactionId = (payload = {}) => {
   );
 };
 
+const extractQrImage = (payload = {}) => {
+  const source = Array.isArray(payload) ? payload[0] || {} : payload;
+  const directImage =
+    source.qr_image ||
+    source.qrImage ||
+    source.qr_base64 ||
+    source.qrBase64 ||
+    source.promptpay_qr ||
+    source.promptpayQR ||
+    source.promptPayQR ||
+    source.qr_img ||
+    source.qrcode ||
+    source.qrCode ||
+    source.qr;
+
+  if (typeof directImage === 'string' && directImage.trim()) {
+    return directImage;
+  }
+
+  const nested = findNestedUrl(payload);
+  if (nested && nested.startsWith('data:image')) {
+    return nested;
+  }
+
+  return null;
+};
+
+const extractEmbedHtml = (payload = {}) => {
+  const source = Array.isArray(payload) ? payload[0] || {} : payload;
+  return source.iframe || source.embed_html || source.embedHtml || null;
+};
+
 const createTransaction = async ({
   orderCode,
   amount,
@@ -230,6 +262,8 @@ const createTransaction = async ({
 
   const transactionId = extractTransactionId(payload);
   let redirectUrl = extractRedirectUrl(payload);
+  const qrImage = extractQrImage(payload);
+  const embedHtml = extractEmbedHtml(payload);
 
   if (!redirectUrl && transactionId) {
     redirectUrl = `${MONEYSPACE_BASE}/payment/${transactionId}`;
@@ -240,6 +274,8 @@ const createTransaction = async ({
     transactionId,
     redirectUrl,
     paymentType: body.payment_type,
+    qrImage,
+    embedHtml,
   };
 
   console.log('Money Space transaction created successfully:', {
