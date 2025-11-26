@@ -36,6 +36,9 @@ function Courses() {
   const [coverInputKey, setCoverInputKey] = useState(0);
   const [editingCourse, setEditingCourse] = useState(null);
   const [deletingCourseId, setDeletingCourseId] = useState(null);
+  const [qrModal, setQrModal] = useState({ open: false, course: null, image: '', loading: false, error: '' });
+
+  const CHECKIN_PREFIX = 'yoga-checkin:';
 
   const {
     page,
@@ -245,6 +248,28 @@ function Courses() {
     } finally {
       setImageProcessing(false);
     }
+  };
+
+  const buildQrPayload = (course) => {
+    if (!course?.qr_checkin_code) return '';
+    return `${CHECKIN_PREFIX}${course.qr_checkin_code}`;
+  };
+
+  const openQrForCourse = (course) => {
+    if (!course?.qr_checkin_code) return;
+    const payload = buildQrPayload(course);
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=520x520&data=${encodeURIComponent(payload)}`;
+    setQrModal({ open: true, course, image: qrUrl, loading: false, error: '' });
+  };
+
+  const closeQrModal = () => setQrModal({ open: false, course: null, image: '', loading: false, error: '' });
+
+  const handleDownloadQr = () => {
+    if (!qrModal.image || !qrModal.course) return;
+    const link = document.createElement('a');
+    link.href = qrModal.image;
+    link.download = `${qrModal.course.title || 'course'}-checkin-qr.png`;
+    link.click();
   };
 
   const handleRemoveCover = () => {
@@ -822,6 +847,13 @@ function Courses() {
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
                         <button
                           type="button"
+                          className="btn btn--outline btn--small"
+                          onClick={() => openQrForCourse(course)}
+                        >
+                          QR เข้าเรียน
+                        </button>
+                        <button
+                          type="button"
                           className="btn btn--ghost btn--small"
                           onClick={() => handleEditCourse(course)}
                         >
@@ -853,6 +885,107 @@ function Courses() {
           />
         )}
       </div>
+
+      {qrModal.open && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.55)',
+            display: 'grid',
+            placeItems: 'center',
+            zIndex: 2000,
+            padding: '16px'
+          }}
+        >
+          <div
+            className="page-card"
+            style={{
+              maxWidth: '520px',
+              width: '100%',
+              position: 'relative',
+              padding: '24px',
+            }}
+          >
+            <button
+              type="button"
+              onClick={closeQrModal}
+              aria-label="close"
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                border: 'none',
+                background: 'transparent',
+                fontSize: '18px',
+                cursor: 'pointer'
+              }}
+            >
+              ✕
+            </button>
+
+            <h3 style={{ margin: '0 0 6px', fontSize: '18px' }}>
+              QR สำหรับเช็คอินคอร์ส
+            </h3>
+            <p style={{ margin: '0 0 12px', color: '#6b7280', fontSize: '14px' }}>
+              ใช้สำหรับติดที่หน้างาน ผู้เรียนสแกนเพื่อตัดสิทธิ์เข้าเรียนอัตโนมัติ
+            </p>
+
+            {qrModal.course && (
+              <div style={{ marginBottom: 12, fontWeight: 600 }}>
+                {qrModal.course.title} (#{qrModal.course.id})
+              </div>
+            )}
+
+            <div
+              style={{
+                minHeight: 260,
+                display: 'grid',
+                placeItems: 'center',
+                background: '#f9fafb',
+                border: '1px solid #e5e7eb',
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '12px'
+              }}
+            >
+              {qrModal.image ? (
+                <img
+                  src={qrModal.image}
+                  alt="QR Code"
+                  style={{ width: '100%', maxWidth: 360, borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                />
+              ) : (
+                <div style={{ color: '#ef4444' }}>ไม่สามารถสร้าง QR ได้</div>
+              )}
+            </div>
+
+            {qrModal.error && (
+              <div className="page-alert page-alert--error" style={{ marginBottom: 12 }}>
+                {qrModal.error}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={closeQrModal}
+              >
+                ปิด
+              </button>
+              <button
+                type="button"
+                className="btn btn--primary"
+                disabled={!qrModal.image}
+                onClick={handleDownloadQr}
+              >
+                ดาวน์โหลด QR
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

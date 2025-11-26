@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { fetchOrdersForUser } from '../lib/orderApi';
 import { getCachedLiffUser } from '../lib/liffAuth';
+import CheckInScanner from './CheckInScanner';
 
 const isPaidStatus = (value) => {
   if (!value) return false;
@@ -21,6 +22,7 @@ function WelcomeBar({ liffState }) {
   const profile = liffState?.profile || cachedProfile;
 
   const [pendingOrders, setPendingOrders] = useState([]);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   useEffect(() => {
     if (!user?.id) {
@@ -99,7 +101,16 @@ function WelcomeBar({ liffState }) {
         </div>
       </div>
 
-      <div style={{ justifySelf: 'end' }}>
+      <div style={{ justifySelf: 'end', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          className="btn btn-outline"
+          onClick={() => setScannerOpen(true)}
+          disabled={!user?.id}
+          style={{ paddingInline: 16 }}
+        >
+          📷 สแกนเข้าเรียน
+        </button>
         <button
           type="button"
           className="btn btn-outline"
@@ -109,6 +120,12 @@ function WelcomeBar({ liffState }) {
           🛒 {t('cart.viewCart', { count: pendingOrders.length })}
         </button>
       </div>
+
+      <CheckInScanner
+        userId={user?.id}
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+      />
     </div>
   );
 }

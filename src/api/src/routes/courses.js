@@ -1,9 +1,15 @@
 const express = require('express');
+const { randomUUID } = require('crypto');
 const router = express.Router();
 const db = require('../db');
 const { requireAdminAuth } = require('../middleware/adminAuth');
 
 const normalizeBoolean = (value) => value === true || value === 'true';
+
+const generateCheckinCode = () => {
+  if (randomUUID) return randomUUID().replace(/-/g, '');
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+};
 
 // List courses
 router.post('/list', async (req, res) => {
@@ -150,7 +156,8 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
       course_type = 'scheduled',
       max_students,
       enrollment_deadline,
-      unlimited_capacity = false
+      unlimited_capacity = false,
+      qr_checkin_code
     } = req.body;
 
     // Normalize numeric fields to avoid NULL violations on required columns
@@ -176,14 +183,17 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
       });
     }
 
+    const resolvedCheckinCode = (qr_checkin_code || '').trim() || generateCheckinCode();
+
     const result = await db.query(
       `INSERT INTO courses (
          title, description, branch_id, instructor_id, capacity,
          is_free, price_cents, cover_image_url, access_times, channel,
          status, duration_minutes, level, tags, is_featured,
-         course_type, max_students, enrollment_deadline, unlimited_capacity
+         course_type, max_students, enrollment_deadline, unlimited_capacity,
+         qr_checkin_code
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
        RETURNING *`,
       [
         title,
@@ -204,7 +214,8 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
         course_type,
         normalizedMaxStudents,
         enrollment_deadline || null,
-        normalizeBoolean(unlimited_capacity)
+        normalizeBoolean(unlimited_capacity),
+        resolvedCheckinCode
       ]
     );
 
@@ -238,14 +249,19 @@ router.post('/update', requireAdminAuth(['super_admin', 'branch_admin']), async 
       course_type,
       max_students,
       enrollment_deadline,
-      unlimited_capacity
+      unlimited_capacity,
+      qr_checkin_code,
+      regenerate_checkin_code
     } = req.body || {};
 
     if (!id) {
       return res.status(400).json({ message: 'course id is required' });
     }
 
-    const checkResult = await db.query('SELECT id, course_type FROM courses WHERE id = $1', [id]);
+    const checkResult = await db.query(
+      'SELECT id, course_type, qr_checkin_code FROM courses WHERE id = $1',
+      [id]
+    );
     if (checkResult.rows.length === 0) {
       return res.status(404).json({ message: 'Course not found' });
     }
@@ -257,6 +273,33 @@ router.post('/update', requireAdminAuth(['super_admin', 'branch_admin']), async 
         message: 'max_students is required for standalone courses'
       });
     }
+
+    const normalizedCapacity =
+      capacity !== undefined
+        ? newCourseType === 'scheduled' && !normalizeBoolean(unlimited_capacity)
+          ? Number(capacity) || 0
+          : 0
+        : undefined;
+    const normalizedIsFree = is_free !== undefined ? normalizeBoolean(is_free) : undefined;
+    const normalizedPriceCents =
+      normalizedIsFree === true
+        ? 0
+        : price_cents !== undefined
+          ? Number(price_cents) || 0
+          : undefined;
+    const normalizedAccessTimes = access_times !== undefined ? Number(access_times) || 1 : undefined;
+    const normalizedMaxStudents =
+      max_students !== undefined
+        ? newCourseType === 'standalone' && !normalizeBoolean(unlimited_capacity)
+          ? Number(max_students) || 0
+          : null
+        : undefined;
+    const normalizedUnlimited =
+      unlimited_capacity !== undefined ? normalizeBoolean(unlimited_capacity) : undefined;
+
+    const resolvedCheckinCode = regenerate_checkin_code
+      ? generateCheckinCode()
+      : (qr_checkin_code || '').trim() || checkResult.rows[0].qr_checkin_code;
 
     const result = await db.query(
       `UPDATE courses
@@ -279,14 +322,32 @@ router.post('/update', requireAdminAuth(['super_admin', 'branch_admin']), async 
            max_students = COALESCE($17, max_students),
            enrollment_deadline = COALESCE($18, enrollment_deadline),
            unlimited_capacity = COALESCE($19, unlimited_capacity),
+           qr_checkin_code = COALESCE($20, qr_checkin_code),
            updated_at = NOW()
-       WHERE id = $20
+       WHERE id = $21
        RETURNING *`,
       [
-        title, description, branch_id, instructor_id, capacity,
-        is_free, price_cents, cover_image_url, access_times, channel,
-        status, duration_minutes, level, tags, is_featured,
-        course_type, max_students, enrollment_deadline, unlimited_capacity, id
+        title,
+        description,
+        branch_id,
+        instructor_id,
+        normalizedCapacity,
+        normalizedIsFree,
+        normalizedPriceCents,
+        cover_image_url,
+        normalizedAccessTimes,
+        channel,
+        status,
+        duration_minutes,
+        level,
+        tags,
+        is_featured,
+        course_type,
+        normalizedMaxStudents,
+        enrollment_deadline,
+        normalizedUnlimited,
+        resolvedCheckinCode,
+        id
       ]
     );
 
