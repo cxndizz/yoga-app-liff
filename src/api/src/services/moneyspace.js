@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const https = require('https');
 const { URL } = require('url');
 const db = require('../db');
+const { ensureEnrollmentForOrder } = require('./enrollmentService');
 
 const MONEYSPACE_SECRET_ID = process.env.MONEYSPACE_SECRET_ID || process.env.MONEYSPACE_SECRETID;
 const MONEYSPACE_SECRET_KEY = process.env.MONEYSPACE_SECRET_KEY || process.env.MONEYSPACE_SECRETKEY;
@@ -358,6 +359,14 @@ const handleWebhook = async (body = {}) => {
           transactionId: transectionID,
           payload: body,
         });
+
+        if (mappedStatus === 'completed') {
+          try {
+            await ensureEnrollmentForOrder(numericOrderId);
+          } catch (enrollErr) {
+            console.error('Money Space webhook enrollment error:', enrollErr);
+          }
+        }
       } catch (err) {
         console.error('Money Space webhook DB error:', err);
       }
