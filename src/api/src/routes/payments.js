@@ -87,15 +87,21 @@ router.post('/moneyspace/create', async (req, res) => {
       customer: {
         firstName: firstname || user.full_name || '',
         lastName: lastname || '',
-        email: email || user.email || '',
-        phone: phone || user.phone || '',
-        message: note,
+        email: email || user.email || 'customer@fortestonlyme.online',
+        phone: phone || user.phone || '0000000000',
+        message: note || '',
       },
-      description: course.title,
+      description: course.title || 'Yoga course',
       paymentMethod: payment_method,
       returnUrls: { success: success_url, fail: fail_url, cancel: cancel_url },
       branch: course.branch_name || course.channel || 'Yoga Luxe',
-      references: { ref1: String(order.id), ref2: String(user_id), ref3: String(course_id) },
+      references: {
+        ref1: String(order.id),
+        ref2: String(user_id),
+        ref3: String(course_id),
+        ref4: `course_${course_id}`,
+        ref5: `user_${user_id}`
+      },
     });
 
     await moneyspace.recordPaymentStatus({
@@ -114,8 +120,17 @@ router.post('/moneyspace/create', async (req, res) => {
       },
     });
   } catch (err) {
-    console.error('Error creating Money Space payment', err);
-    res.status(500).json({ message: 'Error creating Money Space payment' });
+    console.error('Error creating Money Space payment', {
+      error: err.message,
+      stack: err.stack,
+      response: err.response?.data,
+      status: err.response?.status
+    });
+    const errorMessage = err.message || 'Error creating Money Space payment';
+    res.status(500).json({
+      message: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 

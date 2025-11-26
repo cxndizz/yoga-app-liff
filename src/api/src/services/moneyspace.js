@@ -106,8 +106,8 @@ const createTransaction = async ({
     order_id: orderCode,
     firstname: customer.firstName || customer.fullName || 'Customer',
     lastname: customer.lastName || '',
-    email: customer.email || 'no-email@fortestonlyme.online',
-    phone: customer.phone || '',
+    email: customer.email || 'customer@fortestonlyme.online',
+    phone: customer.phone || '0000000000',
     amount: Number(amount || 0),
     description: description || 'Yoga course booking',
     address: customer.address || 'Thailand',
@@ -120,11 +120,11 @@ const createTransaction = async ({
     agreement: AGREEMENT,
     branch: branch || 'Yoga Studio',
     device_id: 'LIFF',
-    ref1: references.ref1,
-    ref2: references.ref2,
-    ref3: references.ref3,
-    ref4: references.ref4,
-    ref5: references.ref5,
+    ref1: references.ref1 || '',
+    ref2: references.ref2 || '',
+    ref3: references.ref3 || '',
+    ref4: references.ref4 || '',
+    ref5: references.ref5 || '',
   };
 
   const response = await safeFetch(`${MONEYSPACE_BASE}/CreateTransactionID`, {
@@ -134,23 +134,40 @@ const createTransaction = async ({
   });
 
   let payload = {};
+  let rawText = '';
   try {
-    payload = await response.json();
+    rawText = await response.text();
+    payload = JSON.parse(rawText);
   } catch (err) {
     payload = {};
   }
 
   if (!response.ok) {
-    const message = payload?.message || payload?.error || `Failed to create Money Space transaction (${response.status})`;
+    console.error('Money Space API error:', {
+      status: response.status,
+      payload,
+      rawText,
+      requestBody: { ...body, secret_key: '[REDACTED]' }
+    });
+    const message = payload?.message || payload?.error || payload?.msg || `Money Space API returned ${response.status}`;
     throw new Error(message);
   }
 
-  return {
+  const result = {
     raw: payload,
     transactionId: extractTransactionId(payload),
     redirectUrl: extractRedirectUrl(payload),
     paymentType: body.payment_type,
   };
+
+  console.log('Money Space transaction created successfully:', {
+    orderId: orderCode,
+    transactionId: result.transactionId,
+    paymentType: result.paymentType,
+    hasRedirectUrl: !!result.redirectUrl
+  });
+
+  return result;
 };
 
 const computeSignature = ({ transectionID, amount, status, orderid }) => {
