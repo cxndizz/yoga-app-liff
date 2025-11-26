@@ -47,6 +47,17 @@ const loadLiffSdk = () => {
 const isHostAllowed = () =>
   allowedHosts.length === 0 || allowedHosts.includes(window.location.hostname);
 
+export const getCachedLiffUser = () => {
+  try {
+    const cached = localStorage.getItem('liff_user_cache');
+    if (!cached) return null;
+    return JSON.parse(cached);
+  } catch (err) {
+    console.warn('Unable to read LIFF cache', err);
+    return null;
+  }
+};
+
 /**
  * Initialize LIFF, ensure login, and sync the LINE user to the backend.
  * Returns { user, profile } when ready, or flags to indicate skipped/redirecting states.
