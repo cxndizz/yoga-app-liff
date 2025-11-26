@@ -19,6 +19,7 @@ const contentRoutes = require('./routes/content');
 const settingsRoutes = require('./routes/settings');
 const paymentsRoutes = require('./routes/payments');
 const moneyspaceService = require('./services/moneyspace');
+const { assertPurchasable, findReusableOrder } = require('./utils/purchaseGuards');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -280,6 +281,20 @@ app.post('/orders', async (req, res) => {
     const course = courseRes.rows[0];
     const total_price_cents = course.is_free ? 0 : course.price_cents || 0;
 
+    const guard = await assertPurchasable(user_id, course_id);
+    if (!guard.allowed) {
+      return res.status(400).json({
+        message: guard.message,
+        reason: guard.reason,
+        details: guard.details,
+      });
+    }
+
+    const existingOrder = await findReusableOrder(user_id, course_id);
+    if (existingOrder) {
+      return res.json(existingOrder);
+    }
+
     const result = await db.query(
       `INSERT INTO orders (user_id, course_id, status, total_price_cents)
        VALUES ($1, $2, 'pending', $3)
@@ -301,10 +316,18 @@ app.post('/users/orders', async (req, res) => {
   try {
     const result = await db.query(
       `SELECT o.*, c.title AS course_title, c.cover_image_url, c.channel, c.is_free, c.price_cents, c.access_times,
-              c.course_type, c.max_students, b.name AS branch_name, c.capacity
+              c.course_type, c.max_students, b.name AS branch_name, c.capacity,
+              p.status AS payment_status
        FROM orders o
        LEFT JOIN courses c ON o.course_id = c.id
        LEFT JOIN branches b ON c.branch_id = b.id
+       LEFT JOIN LATERAL (
+         SELECT status
+         FROM payments
+         WHERE order_id = o.id
+         ORDER BY created_at DESC
+         LIMIT 1
+       ) p ON TRUE
        WHERE o.user_id = $1
        ORDER BY o.created_at DESC`,
       [user_id]

@@ -160,16 +160,26 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
 
     // Check for duplicate purchase (prevent users from buying the same course twice)
     const duplicateCheck = await db.query(
-      `SELECT id FROM course_enrollments
-       WHERE user_id = $1 AND course_id = $2 AND status = 'active'
+      `SELECT id, status, remaining_access FROM course_enrollments
+       WHERE user_id = $1 AND course_id = $2
+       ORDER BY enrolled_at DESC
        LIMIT 1`,
       [user_id, course_id]
     );
-    if (duplicateCheck.rows.length > 0) {
-      return res.status(400).json({
-        message: 'You have already purchased this course.',
-        enrollment_id: duplicateCheck.rows[0].id
-      });
+    const previousEnrollment = duplicateCheck.rows[0];
+
+    if (previousEnrollment) {
+      const isInactive = ['expired', 'cancelled'].includes(previousEnrollment.status);
+      const stillHasAccess =
+        previousEnrollment.remaining_access === null ||
+        Number(previousEnrollment.remaining_access) > 0;
+
+      if (!isInactive || stillHasAccess) {
+        return res.status(400).json({
+          message: 'You have already purchased this course.',
+          enrollment_id: previousEnrollment.id
+        });
+      }
     }
 
     // Check availability for standalone courses (skip if unlimited_capacity is enabled)

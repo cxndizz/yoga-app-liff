@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const moneyspace = require('../services/moneyspace');
+const { assertPurchasable, findReusableOrder } = require('../utils/purchaseGuards');
 
 const parseInteger = (value) => {
   const parsed = parseInt(value, 10);
@@ -46,15 +47,16 @@ router.post('/moneyspace/create', async (req, res) => {
     const priceCents = course.is_free ? 0 : parseInteger(course.price_cents);
     const amount = priceCents / 100;
 
-    const existingOrder = await db.query(
-      `SELECT * FROM orders
-       WHERE user_id = $1 AND course_id = $2 AND status IN ('pending', 'processing')
-       ORDER BY created_at DESC
-       LIMIT 1`,
-      [user_id, course_id]
-    );
+    const guard = await assertPurchasable(user_id, course_id);
+    if (!guard.allowed) {
+      return res.status(400).json({
+        message: guard.message,
+        reason: guard.reason,
+        details: guard.details,
+      });
+    }
 
-    let order = existingOrder.rows[0];
+    let order = await findReusableOrder(user_id, course_id);
 
     if (!order) {
       const insert = await db.query(

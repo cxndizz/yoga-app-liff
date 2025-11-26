@@ -7,13 +7,15 @@ import Checkout from './pages/Checkout';
 import MyCourses from './pages/MyCourses';
 import PaymentResult from './pages/PaymentResult';
 import Navbar from './components/Navbar';
+import WelcomeBar from './components/WelcomeBar';
 import Footer from './components/Footer';
 import useLiffUser from './hooks/useLiffUser';
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { status: authStatus, errorMessage } = useLiffUser();
+  const liffState = useLiffUser();
+  const { status: authStatus, errorMessage } = liffState;
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -37,6 +39,7 @@ function App() {
     <div className="app-shell">
       <div className="nav-spacer" />
       <Navbar />
+      <WelcomeBar liffState={liffState} />
       <main className="content-area">
         {/* Loading Status Banner */}
         {(authStatus === 'loading' || authStatus === 'redirecting') && (
