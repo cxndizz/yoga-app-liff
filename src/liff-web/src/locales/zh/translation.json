@@ -82,6 +82,19 @@
     "myCourses": "我的课程",
     "brand": "Yoga Luxe"
   },
+  "cart": {
+    "title": "购物车",
+    "subtitle": "尚未付款的预约，可随时继续",
+    "viewCart": "查看购物车 ({{count}})",
+    "pendingStatus": "等待付款",
+    "resume": "前往付款",
+    "empty": "目前没有待付款订单",
+    "emptyHint": "你创建但尚未付款的订单会保留在这里，方便稍后继续结账。",
+    "loginRequired": "请使用 LINE 登录以查看购物车。",
+    "backToCourses": "返回课程列表",
+    "reference": "订单号 {{ref}}",
+    "lastUpdated": "更新于 {{date}}"
+  },
   "footer": {
     "about": "关于",
     "contact": "联系",

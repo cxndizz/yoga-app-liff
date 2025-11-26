@@ -7,17 +7,19 @@ import { formatAccessTimes, placeholderImage } from '../lib/formatters';
 import useLiffUser from '../hooks/useLiffUser';
 import { getCachedLiffUser } from '../lib/liffAuth';
 
+const normalizeStatus = (value) => String(value ?? '').toLowerCase().trim();
+
 const statusClass = (paymentStatus) => {
-  const normalized = String(paymentStatus || '').toLowerCase();
-  if (['completed', 'paid', 'success'].includes(normalized)) return 'pill success';
+  const normalized = normalizeStatus(paymentStatus);
+  if (['completed', 'paid', 'success', 'paysuccess'].includes(normalized)) return 'pill success';
   if (['failed', 'cancelled'].includes(normalized)) return 'pill';
   return 'pill warning';
 };
 
-const isPaidStatus = (value) => {
-  if (!value) return false;
-  const normalized = String(value).toLowerCase();
-  return ['completed', 'paid', 'success'].includes(normalized);
+const isPaidStatus = (value, isFree = false) => {
+  if (isFree) return true;
+  const normalized = normalizeStatus(value);
+  return ['completed', 'paid', 'success', 'paysuccess'].includes(normalized);
 };
 
 function MyCourses() {
@@ -57,28 +59,49 @@ function MyCourses() {
     };
   }, [user]);
 
-  const paidOrders = useMemo(
-    () => orders.filter((order) => isPaidStatus(order.payment_status) || isPaidStatus(order.status)),
-    [orders]
-  );
+  const visibleOrders = useMemo(() => {
+    const result = [];
+
+    for (const order of orders) {
+      const normalizedStatus = normalizeStatus(order?.status);
+      const normalizedPayment = normalizeStatus(order?.payment_status);
+      const priceCents = Number(order?.total_price_cents ?? order?.price_cents ?? 0);
+      const isFree = order?.is_free || priceCents === 0;
+
+      const cancelled = normalizedStatus === 'cancelled' || normalizedPayment === 'cancelled';
+      const paid = isPaidStatus(normalizedPayment, isFree) || isPaidStatus(normalizedStatus, isFree);
+
+      if (!cancelled && paid) {
+        result.push(order);
+      }
+    }
+
+    return result;
+  }, [orders]);
 
   const mappedOrders = useMemo(
     () =>
-      paidOrders.map((order) => ({
-        id: order.id,
-        courseId: order.course_id,
-        title: order.course_title || t('course.course'),
-        branchName: order.branch_name || t('branch.unspecified'),
-        channel: order.channel || t('course.course'),
-        status: order.status,
-        paymentStatus: order.payment_status || order.status,
-        coverImage: order.cover_image_url || placeholderImage,
-        priceCents: order.total_price_cents ?? order.price_cents ?? 0,
-        isFree: order.is_free,
-        accessTimes: order.access_times,
-        createdAt: order.created_at,
-      })),
-    [paidOrders, t]
+      visibleOrders.map((order) => {
+        const normalizedPayment = normalizeStatus(order.payment_status || order.status);
+        const priceCents = Number(order?.total_price_cents ?? order?.price_cents ?? 0);
+        const isFree = order?.is_free || priceCents === 0;
+
+        return {
+          id: order.id,
+          courseId: order.course_id,
+          title: order.course_title || t('course.course'),
+          branchName: order.branch_name || t('branch.unspecified'),
+          channel: order.channel || t('course.course'),
+          status: order.status,
+          paymentStatus: normalizedPayment || (isFree ? 'completed' : 'pending'),
+          coverImage: order.cover_image_url || placeholderImage,
+          priceCents,
+          isFree,
+          accessTimes: order.access_times,
+          createdAt: order.created_at,
+        };
+      }),
+    [visibleOrders, t]
   );
 
   const renderAccess = (order) => {
@@ -152,9 +175,9 @@ function MyCourses() {
                 <div
                   className={statusClass(course.paymentStatus)}
                   style={{
-                    background: course.paymentStatus === 'completed' || course.paymentStatus === 'paid'
+                    background: ['completed', 'paid', 'paysuccess', 'success'].includes(course.paymentStatus)
                       ? 'rgba(16, 185, 129, 0.9)'
-                      : course.paymentStatus === 'failed'
+                      : ['failed', 'cancelled'].includes(course.paymentStatus)
                         ? 'rgba(239, 68, 68, 0.9)'
                         : 'rgba(245, 158, 11, 0.9)',
                     backdropFilter: 'blur(8px)',
@@ -163,9 +186,9 @@ function MyCourses() {
                     fontWeight: 700,
                   }}
                 >
-                  {course.paymentStatus === 'completed' || course.paymentStatus === 'paid'
+                  {['completed', 'paid', 'paysuccess', 'success'].includes(course.paymentStatus)
                     ? `✓ ${t('myCourses.statusPaid')}`
-                    : course.paymentStatus === 'failed'
+                    : ['failed', 'cancelled'].includes(course.paymentStatus)
                       ? `⚠️ ${t('myCourses.statusFailed')}`
                       : `⏳ ${t('myCourses.statusPending')}`}
                 </div>

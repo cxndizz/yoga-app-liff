@@ -6,8 +6,8 @@ import { getCachedLiffUser } from '../lib/liffAuth';
 
 const isPaidStatus = (value) => {
   if (!value) return false;
-  const normalized = String(value).toLowerCase();
-  return ['completed', 'paid', 'success'].includes(normalized);
+  const normalized = String(value).toLowerCase().trim();
+  return ['completed', 'paid', 'success', 'paysuccess'].includes(normalized);
 };
 
 function WelcomeBar({ liffState }) {
@@ -20,7 +20,6 @@ function WelcomeBar({ liffState }) {
   const user = liffState?.user || cachedUser;
   const profile = liffState?.profile || cachedProfile;
 
-  const [cartOpen, setCartOpen] = useState(false);
   const [pendingOrders, setPendingOrders] = useState([]);
 
   useEffect(() => {
@@ -100,68 +99,15 @@ function WelcomeBar({ liffState }) {
         </div>
       </div>
 
-      <div style={{ position: 'relative', justifySelf: 'end' }}>
+      <div style={{ justifySelf: 'end' }}>
         <button
           type="button"
           className="btn btn-outline"
-          onClick={() => setCartOpen((prev) => !prev)}
+          onClick={() => navigate('/cart')}
           style={{ paddingInline: 16 }}
         >
-          🛒 ดูตะกร้า ({pendingOrders.length})
+          🛒 {t('cart.viewCart', { count: pendingOrders.length })}
         </button>
-
-        {cartOpen && (
-          <div
-            className="card-surface"
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: 'calc(100% + 8px)',
-              minWidth: 280,
-              background: 'rgba(15, 23, 42, 0.95)',
-              border: '1px solid rgba(148, 163, 184, 0.35)',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-              padding: 14,
-              display: 'grid',
-              gap: 8,
-              zIndex: 20,
-            }}
-          >
-            {pendingOrders.length === 0 && (
-              <div className="helper-text" style={{ color: '#cbd5e1' }}>
-                ยังไม่มีคำสั่งซื้อที่รอชำระ ระบบจะไม่สร้างออเดอร์ซ้ำสำหรับคอร์สเดียวกัน
-              </div>
-            )}
-
-            {pendingOrders.map((order) => (
-              <div
-                key={order.id}
-                style={{
-                  padding: '10px',
-                  borderRadius: 10,
-                  border: '1px solid rgba(148, 163, 184, 0.25)',
-                  background: 'rgba(76, 29, 149, 0.12)',
-                }}
-              >
-                <div style={{ color: '#e2e8f0', fontWeight: 700 }}>{order.course_title || t('course.course')}</div>
-                <div className="helper-text" style={{ color: '#cbd5e1', marginTop: 4 }}>
-                  สถานะ: {order.status || 'pending'}
-                </div>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  style={{ marginTop: 8, width: '100%' }}
-                  onClick={() => {
-                    setCartOpen(false);
-                    navigate(`/courses/${order.course_id}/checkout`);
-                  }}
-                >
-                  ดำเนินการชำระเงิน
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
