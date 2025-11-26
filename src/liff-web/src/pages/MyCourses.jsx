@@ -8,9 +8,16 @@ import useLiffUser from '../hooks/useLiffUser';
 import { getCachedLiffUser } from '../lib/liffAuth';
 
 const statusClass = (paymentStatus) => {
-  if (paymentStatus === 'completed' || paymentStatus === 'paid' || paymentStatus === 'success') return 'pill success';
-  if (paymentStatus === 'failed' || paymentStatus === 'cancelled') return 'pill';
+  const normalized = String(paymentStatus || '').toLowerCase();
+  if (['completed', 'paid', 'success'].includes(normalized)) return 'pill success';
+  if (['failed', 'cancelled'].includes(normalized)) return 'pill';
   return 'pill warning';
+};
+
+const isPaidStatus = (value) => {
+  if (!value) return false;
+  const normalized = String(value).toLowerCase();
+  return ['completed', 'paid', 'success'].includes(normalized);
 };
 
 function MyCourses() {
@@ -50,9 +57,14 @@ function MyCourses() {
     };
   }, [user]);
 
+  const paidOrders = useMemo(
+    () => orders.filter((order) => isPaidStatus(order.payment_status) || isPaidStatus(order.status)),
+    [orders]
+  );
+
   const mappedOrders = useMemo(
     () =>
-      orders.map((order) => ({
+      paidOrders.map((order) => ({
         id: order.id,
         courseId: order.course_id,
         title: order.course_title || t('course.course'),
@@ -66,7 +78,7 @@ function MyCourses() {
         accessTimes: order.access_times,
         createdAt: order.created_at,
       })),
-    [orders, t]
+    [paidOrders, t]
   );
 
   const renderAccess = (order) => {

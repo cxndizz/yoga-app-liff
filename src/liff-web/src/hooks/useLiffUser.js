@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ensureLiffUserSynced } from '../lib/liffAuth';
 
 export const useLiffUser = () => {
-  const [state, setState] = useState({ status: 'idle', user: null, errorMessage: '' });
+  const [state, setState] = useState({ status: 'idle', user: null, profile: null, errorMessage: '' });
 
   useEffect(() => {
     let isMounted = true;
@@ -15,22 +15,23 @@ export const useLiffUser = () => {
         if (!isMounted) return;
 
         if (result?.pendingRedirect) {
-          setState({ status: 'redirecting', user: null, errorMessage: '' });
+          setState({ status: 'redirecting', user: null, profile: null, errorMessage: '' });
           return;
         }
 
         if (result?.skip) {
-          setState({ status: 'skipped', user: null, errorMessage: '' });
+          setState({ status: 'skipped', user: null, profile: null, errorMessage: '' });
           return;
         }
 
-        setState({ status: 'ready', user: result?.user || null, errorMessage: '' });
+        setState({ status: 'ready', user: result?.user || null, profile: result?.profile || null, errorMessage: '' });
       } catch (err) {
         console.error('LIFF user sync failed', err);
         if (!isMounted) return;
         setState({
           status: 'error',
           user: null,
+          profile: null,
           errorMessage: err?.message || 'เชื่อมต่อ LINE ไม่สำเร็จ',
         });
       }
