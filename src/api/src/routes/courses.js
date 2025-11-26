@@ -153,6 +153,18 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
       unlimited_capacity = false
     } = req.body;
 
+    // Normalize numeric fields to avoid NULL violations on required columns
+    const normalizedCapacity =
+      course_type === 'scheduled' && !unlimited_capacity
+        ? Number(capacity) || 0
+        : 0;
+    const normalizedPriceCents = is_free ? 0 : Number(price_cents) || 0;
+    const normalizedAccessTimes = Number(access_times) || 1;
+    const normalizedMaxStudents =
+      course_type === 'standalone' && !unlimited_capacity
+        ? Number(max_students) || 0
+        : null;
+
     if (!title) {
       return res.status(400).json({ message: 'Course title is required' });
     }
@@ -174,10 +186,25 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
        RETURNING *`,
       [
-        title, description || null, branch_id || null, instructor_id || null, capacity,
-        is_free, price_cents, cover_image_url || null, access_times, channel,
-        status, duration_minutes || null, level || null, tags, is_featured,
-        course_type, max_students || null, enrollment_deadline || null, unlimited_capacity
+        title,
+        description || null,
+        branch_id || null,
+        instructor_id || null,
+        normalizedCapacity,
+        !!is_free,
+        normalizedPriceCents,
+        cover_image_url || null,
+        normalizedAccessTimes,
+        channel,
+        status,
+        duration_minutes || null,
+        level || null,
+        Array.isArray(tags) ? tags : [],
+        !!is_featured,
+        course_type,
+        normalizedMaxStudents,
+        enrollment_deadline || null,
+        normalizeBoolean(unlimited_capacity)
       ]
     );
 
