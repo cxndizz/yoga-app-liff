@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const moneyspace = require('../services/moneyspace');
 const { assertPurchasable, findReusableOrder } = require('../utils/purchaseGuards');
+const { ensureEnrollmentForOrder } = require('../services/enrollmentService');
 
 const parseInteger = (value) => {
   const parsed = parseInt(value, 10);
@@ -106,6 +107,7 @@ router.post('/moneyspace/create', async (req, res) => {
         transactionId: 'FREE-ORDER',
         payload: { note: 'Free course, payment bypassed' },
       });
+      await ensureEnrollmentForOrder(order.id);
       return res.json({ order, payment: { free: true, redirectUrl: null } });
     }
 
