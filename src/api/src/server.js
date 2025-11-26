@@ -74,17 +74,39 @@ app.post('/courses/list', async (req, res) => {
   try {
     const { limit = 50, course_type } = req.body || {};
     let query = `
-      SELECT c.*,
-             b.name AS branch_name,
-             i.name AS instructor_name,
-             i.avatar_url AS instructor_avatar,
-             (SELECT COUNT(*) FROM course_sessions cs WHERE cs.course_id = c.id) as session_count,
-             CASE
-               WHEN c.course_type = 'standalone' THEN
-                 COALESCE(c.max_students, 0) - (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id AND ce.status = 'active')
-               ELSE
-                 NULL
-             END as available_spots
+      SELECT
+        c.id,
+        c.title,
+        c.description,
+        c.branch_id,
+        c.instructor_id,
+        c.capacity,
+        c.is_free,
+        c.price_cents,
+        c.cover_image_url,
+        c.access_times,
+        c.channel,
+        c.status,
+        c.duration_minutes,
+        c.level,
+        c.tags,
+        c.is_featured,
+        c.course_type,
+        c.max_students,
+        c.enrollment_deadline,
+        c.unlimited_capacity,
+        c.created_at,
+        c.updated_at,
+        b.name AS branch_name,
+        i.name AS instructor_name,
+        i.avatar_url AS instructor_avatar,
+        (SELECT COUNT(*) FROM course_sessions cs WHERE cs.course_id = c.id) as session_count,
+        CASE
+          WHEN c.course_type = 'standalone' THEN
+            COALESCE(c.max_students, 0) - (SELECT COUNT(*) FROM course_enrollments ce WHERE ce.course_id = c.id AND ce.status = 'active')
+          ELSE
+            NULL
+        END as available_spots
       FROM courses c
       LEFT JOIN branches b ON c.branch_id = b.id
       LEFT JOIN instructors i ON c.instructor_id = i.id
@@ -206,6 +228,80 @@ app.post('/courses/sessions', async (req, res) => {
   } catch (err) {
     console.error('Error fetching course sessions', err);
     res.status(500).json({ message: 'Error fetching course sessions' });
+  }
+});
+
+// Member self-check-in via QR code
+app.post('/courses/checkin', async (req, res) => {
+  try {
+    const { user_id, code } = req.body || {};
+    if (!user_id || !code) {
+      return res.status(400).json({ message: 'user_id and code are required' });
+    }
+
+    const normalizedCode = String(code || '')
+      .replace(/^yoga-checkin:/i, '')
+      .trim();
+
+    if (!normalizedCode) {
+      return res.status(400).json({ message: 'Invalid QR code' });
+    }
+
+    const courseResult = await db.query(
+      'SELECT id, title FROM courses WHERE qr_checkin_code = $1',
+      [normalizedCode]
+    );
+
+    if (courseResult.rows.length === 0) {
+      return res.status(404).json({ message: 'ไม่พบคอร์สสำหรับ QR นี้' });
+    }
+
+    const course = courseResult.rows[0];
+
+    const enrollmentResult = await db.query(
+      `SELECT *
+       FROM course_enrollments
+       WHERE user_id = $1 AND course_id = $2 AND status = 'active'
+       ORDER BY enrolled_at DESC
+       LIMIT 1`,
+      [user_id, course.id]
+    );
+
+    if (enrollmentResult.rows.length === 0) {
+      return res.status(404).json({
+        message: 'ยังไม่มีสิทธิ์เข้าเรียนคอร์สนี้',
+        course_id: course.id,
+      });
+    }
+
+    const enrollment = enrollmentResult.rows[0];
+    if (enrollment.remaining_access !== null && enrollment.remaining_access <= 0) {
+      return res.status(400).json({ message: 'สิทธิ์เข้าเรียนของคุณหมดแล้ว' });
+    }
+
+    const newRemaining =
+      enrollment.remaining_access !== null ? enrollment.remaining_access - 1 : null;
+    const newStatus = newRemaining === 0 ? 'expired' : 'active';
+
+    const updateResult = await db.query(
+      `UPDATE course_enrollments
+       SET remaining_access = $1,
+           status = $2,
+           last_attended_at = NOW(),
+           updated_at = NOW()
+       WHERE id = $3
+       RETURNING *`,
+      [newRemaining, newStatus, enrollment.id]
+    );
+
+    res.json({
+      message: 'บันทึกการเข้าเรียนเรียบร้อย',
+      course,
+      enrollment: updateResult.rows[0],
+    });
+  } catch (err) {
+    console.error('Error in course check-in:', err);
+    res.status(500).json({ message: 'ไม่สามารถบันทึกการเข้าเรียนได้' });
   }
 });
 
