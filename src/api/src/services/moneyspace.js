@@ -75,15 +75,47 @@ const ensureSecrets = () => {
   }
 };
 
-const extractRedirectUrl = (payload = {}) =>
-  payload.url_qr ||
-  payload.qr_url ||
-  payload.checkout_url ||
-  payload.payment_url ||
-  payload.paymenturl ||
-  payload.url ||
-  payload.iframe ||
-  null;
+const findNestedUrl = (value, depth = 0) => {
+  if (!value || depth > 3) return null;
+
+  if (typeof value === 'string' && value.startsWith('http')) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const found = findNestedUrl(entry, depth + 1);
+      if (found) return found;
+    }
+  }
+
+  if (typeof value === 'object') {
+    for (const key of Object.keys(value)) {
+      const found = findNestedUrl(value[key], depth + 1);
+      if (found) return found;
+    }
+  }
+
+  return null;
+};
+
+const extractRedirectUrl = (payload = {}) => {
+  const directUrl =
+    payload.url_qr ||
+    payload.qr_url ||
+    payload.checkout_url ||
+    payload.payment_url ||
+    payload.paymenturl ||
+    payload.redirect_url ||
+    payload.redirectUrl ||
+    payload.url ||
+    payload.iframe ||
+    null;
+
+  if (directUrl) return directUrl;
+
+  return findNestedUrl(payload);
+};
 
 const extractTransactionId = (payload = {}) =>
   payload.transection_ID || payload.transectionID || payload.transaction_ID || payload.transactionId || null;
@@ -153,10 +185,17 @@ const createTransaction = async ({
     throw new Error(message);
   }
 
+  const transactionId = extractTransactionId(payload);
+  let redirectUrl = extractRedirectUrl(payload);
+
+  if (!redirectUrl && transactionId) {
+    redirectUrl = `${MONEYSPACE_BASE}/payment/${transactionId}`;
+  }
+
   const result = {
     raw: payload,
-    transactionId: extractTransactionId(payload),
-    redirectUrl: extractRedirectUrl(payload),
+    transactionId,
+    redirectUrl,
     paymentType: body.payment_type,
   };
 
@@ -185,6 +224,7 @@ const statusMap = {
 
 const recordPaymentStatus = async ({ orderId, status, transactionId, payload }) => {
   const normalizedStatus = statusMap[status] || status || 'pending';
+  const rawPayload = payload ? JSON.stringify(payload) : null;
 
   const updateResult = await db.query(
     `UPDATE payments
@@ -194,14 +234,14 @@ const recordPaymentStatus = async ({ orderId, status, transactionId, payload }) 
          updated_at = NOW()
      WHERE order_id = $4
      RETURNING id`,
-    [normalizedStatus, transactionId || null, payload || null, orderId]
+    [normalizedStatus, transactionId || null, rawPayload, orderId]
   );
 
   if (updateResult.rowCount === 0) {
     await db.query(
       `INSERT INTO payments (order_id, status, omise_charge_id, raw_payload)
        VALUES ($1, $2, $3, $4)`,
-      [orderId, normalizedStatus, transactionId || null, payload || null]
+      [orderId, normalizedStatus, transactionId || null, rawPayload]
     );
   }
 };

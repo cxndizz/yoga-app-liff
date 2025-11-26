@@ -8,6 +8,7 @@
 3. คอลัมน์ `status` ไม่มีในตาราง `courses`
 4. ตาราง `branches` ขาดคอลัมน์ที่จำเป็น (`map_url`, `is_active`, `address`, `phone`, `created_at`, `updated_at`)
 5. ตาราง `instructors` ขาดคอลัมน์ที่จำเป็น (`email`, `phone`, `specialties`, `is_active`, `created_at`, `updated_at`)
+6. ตาราง `orders` และ `payments` ไม่มีคอลัมน์ `updated_at` ทำให้คำสั่ง `UPDATE ... SET updated_at = NOW()` ล้มเหลว
 
 ## วิธีรัน Migration
 
@@ -31,6 +32,7 @@ psql -U your_db_user -d your_db_name -f docker/db/migrations/002_fix_branches_sc
 psql -U your_db_user -d your_db_name -f docker/db/migrations/003_fix_instructors_schema.sql
 psql -U your_db_user -d your_db_name -f docker/db/migrations/005_fix_courses_schema.sql
 psql -U your_db_user -d your_db_name -f docker/db/migrations/006_add_updated_at_to_courses.sql
+psql -U your_db_user -d your_db_name -f docker/db/migrations/009_add_updated_at_to_orders_and_payments.sql
 ```
 
 ### วิธีที่ 3: รันผ่าน Docker (ถ้าใช้ Docker)
@@ -41,6 +43,7 @@ docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations
 docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations/003_fix_instructors_schema.sql
 docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations/005_fix_courses_schema.sql
 docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations/006_add_updated_at_to_courses.sql
+docker exec -i yoga_lineoa_db psql -U postgres -d yoga_db < docker/db/migrations/009_add_updated_at_to_orders_and_payments.sql
 ```
 
 ## การตรวจสอบหลังรัน Migration
