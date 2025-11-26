@@ -82,6 +82,19 @@
     "myCourses": "My courses",
     "brand": "Yoga Luxe"
   },
+  "cart": {
+    "title": "Shopping cart",
+    "subtitle": "Unpaid or pending bookings you can resume",
+    "viewCart": "View cart ({{count}})",
+    "pendingStatus": "Awaiting payment",
+    "resume": "Continue to payment",
+    "empty": "You have no unpaid orders",
+    "emptyHint": "Orders you created but haven't paid for yet will stay here until you finish checkout.",
+    "loginRequired": "Please sign in with LINE to see your cart.",
+    "backToCourses": "Browse courses",
+    "reference": "Order ref {{ref}}",
+    "lastUpdated": "Updated {{date}}"
+  },
   "footer": {
     "about": "About",
     "contact": "Contact",

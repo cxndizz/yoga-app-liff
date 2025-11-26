@@ -206,7 +206,7 @@ function CourseCard({ course }) {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => navigate(`/courses/${course.id}?action=purchase`)}
+          onClick={() => navigate(`/courses/${course.id}/checkout`)}
         >
           {course.isFree ? t('common.register') : t('common.buyCourse')}
         </button>

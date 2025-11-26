@@ -6,6 +6,7 @@ import CourseDetail from './pages/CourseDetail';
 import Checkout from './pages/Checkout';
 import MyCourses from './pages/MyCourses';
 import PaymentResult from './pages/PaymentResult';
+import Cart from './pages/Cart';
 import Navbar from './components/Navbar';
 import WelcomeBar from './components/WelcomeBar';
 import Footer from './components/Footer';
@@ -29,6 +30,7 @@ function App() {
       howto: '/',
       contact: '/',
       mycourses: '/my-courses',
+      cart: '/cart',
     };
 
     const destination = actionRoutes[action];
@@ -81,6 +83,7 @@ function App() {
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/courses/:courseId/checkout" element={<Checkout />} />
           <Route path="/my-courses" element={<MyCourses />} />
+          <Route path="/cart" element={<Cart />} />
           <Route path="/payments/moneyspace/:state" element={<PaymentResult />} />
         </Routes>
       </main>

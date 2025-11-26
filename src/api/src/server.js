@@ -317,7 +317,7 @@ app.post('/users/orders', async (req, res) => {
     const result = await db.query(
       `SELECT o.*, c.title AS course_title, c.cover_image_url, c.channel, c.is_free, c.price_cents, c.access_times,
               c.course_type, c.max_students, b.name AS branch_name, c.capacity,
-              p.status AS payment_status
+              TRIM(BOTH FROM COALESCE(p.status, o.status)) AS payment_status
        FROM orders o
        LEFT JOIN courses c ON o.course_id = c.id
        LEFT JOIN branches b ON c.branch_id = b.id
