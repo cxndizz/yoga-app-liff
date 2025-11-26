@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { checkMoneySpaceStatus } from '../lib/orderApi';
 
 const labelStyles = {
   success: {
@@ -31,8 +32,9 @@ function PaymentResult() {
 
   const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
 
-  const statusKey = ['success', 'fail', 'cancel'].includes(state) ? state : 'fail';
-  const style = labelStyles[statusKey];
+  const [verificationStatus, setVerificationStatus] = useState('idle');
+  const [verifiedData, setVerifiedData] = useState(null);
+  const [actualStatus, setActualStatus] = useState(state);
 
   const summary = useMemo(
     () => ({
@@ -42,14 +44,112 @@ function PaymentResult() {
       amount: query.get('amount'),
       datetime: query.get('datetime') || `${query.get('date') || ''} ${query.get('time') || ''}`.trim(),
       transaction: query.get('idpay') || query.get('transactionId'),
+      orderId: query.get('orderId') || query.get('order_id'),
       description: query.get('description'),
       agreement: query.get('agreement'),
     }),
     [query]
   );
 
+  useEffect(() => {
+    if (state !== 'success' || !summary.transaction) {
+      setVerificationStatus('skipped');
+      return;
+    }
+
+    let cancelled = false;
+    setVerificationStatus('verifying');
+
+    const verifyTransaction = async () => {
+      try {
+        const result = await checkMoneySpaceStatus({
+          transactionId: summary.transaction,
+          orderId: summary.orderId ? parseInt(summary.orderId, 10) : undefined,
+        });
+
+        if (cancelled) return;
+
+        setVerifiedData(result);
+
+        const mappedStatus = result?.mappedStatus || result?.order?.status || 'pending';
+        if (['completed', 'success', 'paysuccess'].includes(mappedStatus.toLowerCase())) {
+          setActualStatus('success');
+          setVerificationStatus('verified');
+        } else if (['failed', 'fail'].includes(mappedStatus.toLowerCase())) {
+          setActualStatus('fail');
+          setVerificationStatus('verified');
+        } else if (['cancelled', 'cancel'].includes(mappedStatus.toLowerCase())) {
+          setActualStatus('cancel');
+          setVerificationStatus('verified');
+        } else {
+          setActualStatus('fail');
+          setVerificationStatus('verified');
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Error verifying payment status', err);
+        setVerificationStatus('error');
+        setActualStatus('fail');
+      }
+    };
+
+    verifyTransaction();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [state, summary.transaction, summary.orderId]);
+
+  const statusKey = ['success', 'fail', 'cancel'].includes(actualStatus) ? actualStatus : 'fail';
+  const style = labelStyles[statusKey];
+
   return (
     <div className="card-surface" style={{ padding: 24, borderRadius: 20, display: 'grid', gap: 16 }}>
+      {verificationStatus === 'verifying' && (
+        <div
+          className="status-banner"
+          style={{
+            background: 'linear-gradient(135deg, rgba(91, 33, 182, 0.2), rgba(196, 181, 253, 0.1))',
+            borderColor: 'rgba(196, 181, 253, 0.3)',
+            color: 'var(--secondary-100)',
+            textAlign: 'center',
+          }}
+        >
+          <span style={{ marginRight: 8 }}>⏳</span>
+          {t('payment.verifying') || 'กำลังตรวจสอบสถานะการชำระเงิน...'}
+        </div>
+      )}
+
+      {verificationStatus === 'error' && (
+        <div
+          className="status-banner status-banner--error"
+          style={{
+            background: 'rgba(239, 68, 68, 0.15)',
+            borderColor: 'rgba(239, 68, 68, 0.4)',
+            color: '#fca5a5',
+            textAlign: 'center',
+          }}
+        >
+          <span style={{ marginRight: 8 }}>⚠️</span>
+          {t('payment.verificationError') || 'ไม่สามารถตรวจสอบสถานะการชำระเงินได้ กรุณาติดต่อเจ้าหน้าที่'}
+        </div>
+      )}
+
+      {verificationStatus === 'verified' && (
+        <div
+          className="status-banner"
+          style={{
+            background: 'rgba(16, 185, 129, 0.15)',
+            borderColor: 'rgba(16, 185, 129, 0.4)',
+            color: '#6ee7b7',
+            textAlign: 'center',
+          }}
+        >
+          <span style={{ marginRight: 8 }}>✓</span>
+          {t('payment.verified') || 'ตรวจสอบสถานะการชำระเงินเรียบร้อยแล้ว'}
+        </div>
+      )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div

@@ -217,4 +217,28 @@ router.get('/moneyspace/store-info', async (_req, res) => {
   }
 });
 
+router.post('/moneyspace/webhook', async (req, res) => {
+  try {
+    const result = await moneyspace.handleWebhook(req.body);
+
+    if (result.signatureValid) {
+      console.log('Money Space webhook processed successfully', {
+        transactionId: req.body?.transectionID,
+        orderId: result.orderUpdate?.id,
+        status: result.mappedStatus,
+      });
+      res.json({ success: true, status: result.mappedStatus });
+    } else {
+      console.warn('Money Space webhook signature invalid', {
+        reason: result.reason,
+        body: req.body,
+      });
+      res.status(400).json({ success: false, message: 'Invalid signature' });
+    }
+  } catch (err) {
+    console.error('Error processing Money Space webhook', err);
+    res.status(500).json({ success: false, message: err?.message || 'Webhook processing failed' });
+  }
+});
+
 module.exports = router;
