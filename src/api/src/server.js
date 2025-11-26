@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const crypto = require('crypto');
 const db = require('./db');
 const { requireAdminAuth } = require('./middleware/adminAuth');
 
@@ -314,6 +315,71 @@ app.post('/users/orders', async (req, res) => {
 app.post('/payments/omise-webhook', async (req, res) => {
   console.log('Received Omise webhook mock:', req.body);
   res.json({ received: true });
+});
+
+app.post('/payments/moneyspace-webhook', async (req, res) => {
+  const secret = process.env.MONEYSPACE_WEBHOOK_SECRET;
+  if (!secret) {
+    return res.status(500).json({ message: 'MONEYSPACE_WEBHOOK_SECRET is not configured' });
+  }
+
+  const { transectionID, amount, status, orderid, hash } = req.body || {};
+
+  if (!transectionID || !amount || !status || !orderid || !hash) {
+    return res.status(400).json({ message: 'transectionID, amount, status, orderid, and hash are required' });
+  }
+
+  const payload = `${transectionID}${amount}${status}${orderid}`;
+  const expectedHash = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+  const signatureValid = expectedHash.toLowerCase() === String(hash).toLowerCase();
+
+  const statusMap = {
+    OK: 'pending',
+    paysuccess: 'paid',
+    fail: 'failed',
+    cancel: 'cancelled',
+  };
+
+  let orderUpdate;
+
+  if (signatureValid) {
+    const mappedStatus = statusMap[status] || 'pending';
+    const numericOrderId = Number(orderid);
+
+    if (!Number.isNaN(numericOrderId)) {
+      try {
+        const updateResult = await db.query(
+          `UPDATE orders
+           SET status = $1,
+               updated_at = NOW()
+           WHERE id = $2
+           RETURNING id, status`,
+          [mappedStatus, numericOrderId]
+        );
+
+        if (updateResult.rows.length > 0) {
+          orderUpdate = updateResult.rows[0];
+        }
+      } catch (err) {
+        console.error('Error updating order from Money Space webhook:', err);
+      }
+    }
+  }
+
+  console.log('Money Space webhook received', {
+    transectionID,
+    amount,
+    status,
+    orderid,
+    signatureValid,
+    orderUpdate,
+  });
+
+  res.json({
+    received: true,
+    signatureValid,
+    orderUpdate,
+  });
 });
 
 app.listen(port, () => {

@@ -128,7 +128,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Omise Payment Info Section */}
+        {/* Money Space Payment Info Section */}
       <section 
         className="card-surface" 
         style={{ 

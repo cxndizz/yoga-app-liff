@@ -10,7 +10,7 @@
     "registerFree": "ลงทะเบียนฟรี",
     "buyCourse": "ซื้อคอร์ส",
     "bookCourse": "จองคอร์สนี้",
-    "payOmise": "ชำระผ่าน Omise",
+    "payOmise": "ชำระผ่าน Money Space",
     "myCourses": "คอร์สของฉัน",
     "language": "ภาษา",
     "search": "ค้นหา",
@@ -73,8 +73,8 @@
     "findCourse": "หาคอร์สที่เหมาะกับคุณ",
     "startBrowsing": "เริ่มเลือกคอร์ส",
     "hybridTypes": "ไฮบริด / ที่สตูดิโอ / ออนไลน์",
-    "omisePayment": "ชำระเงินผ่าน Omise",
-    "omiseDescription": "จองและชำระเงินง่ายด้วย Omise และ SchemaDB ร่วมกับ LIFF ตรวจสอบสิทธิ์แบบเรียลไทม์."
+    "omisePayment": "ชำระเงินผ่าน Money Space",
+    "omiseDescription": "จองและชำระเงินง่ายด้วย Money Space และ SchemaDB ร่วมกับ LIFF ตรวจสอบสิทธิ์แบบเรียลไทม์."
   },
   "nav": {
     "home": "หน้าหลัก",
@@ -91,7 +91,7 @@
   },
   "checkout": {
     "title": "ชำระเงิน / จองคอร์ส",
-    "subtitle": "กรอกชื่อ-นามสกุล และเบอร์โทรก่อนชำระ ระบบยังไม่เชื่อม Omise จึงเป็นหน้าจอ Mock",
+    "subtitle": "กรอกชื่อ-นามสกุล และเบอร์โทรก่อนชำระ ระบบกำลังเชื่อม Money Space จึงเป็นหน้าจอ Mock",
     "viewMyCourses": "ดูคอร์สของฉัน",
     "studentInfo": "ข้อมูลผู้เรียน",
     "contactHint": "ใช้ยืนยันการจองและส่งเตือนผ่าน Line / SMS",
@@ -102,7 +102,7 @@
     "note": "โน้ตถึงผู้สอน (ถ้ามี)",
     "notePlaceholder": "เช่น แพ้อาหารทะเล ต้องการจอดรถ ชอบนั่งแถวหน้า",
     "paymentMethod": "วิธีชำระเงิน",
-    "paymentHint": "ตอนนี้รองรับโอน/พร้อมเพย์ ส่วนบัตร Omise จะตามมาภายหลัง",
+    "paymentHint": "ตอนนี้รองรับโอน/พร้อมเพย์ ส่วนบัตรผ่าน Money Space จะตามมาภายหลัง",
     "recommended": "แนะนำ",
     "mockOnly": "จำลอง",
     "bankInstruction": "โอนผ่านธนาคาร / พร้อมเพย์",
@@ -112,14 +112,14 @@
     "terms": "การดำเนินการต่อคือยอมรับเงื่อนไขสตูดิโอ",
     "mockPending": "รอการตรวจสอบสลิป (จำลอง)",
     "mockSuccess": "บันทึกการชำระเงินจำลองแล้ว",
-    "mockSuccessHint": "เวอร์ชันจริงจะใช้ Omise webhook เพื่อปลดล็อกสิทธิ์",
+    "mockSuccessHint": "เวอร์ชันจริงจะใช้ Money Space webhook เพื่อปลดล็อกสิทธิ์",
     "summary": "สรุปคำสั่งซื้อ",
     "summaryHint": "ที่นั่ง สิทธิ์เข้าเรียน และชื่อผู้เรียน",
     "selectedCourse": "คอร์สที่เลือก",
     "beneficiary": "จองให้",
     "toBeFilled": "กรอกชื่อ-สกุล",
     "total": "ยอดรวม",
-    "mockData": "ข้อมูลจำลองเท่านั้น ระบบ Omise ยังไม่เชื่อม",
+    "mockData": "ข้อมูลจำลองเท่านั้น ระบบ Money Space กำลังเชื่อมต่อ",
     "required": "จำเป็นต้องกรอก"
   },
   "myCourses": {
@@ -135,7 +135,7 @@
     "amount": "ยอดเงิน",
     "payNow": "ไปชำระเงิน",
     "goToCourse": "เปิดดูคอร์ส",
-    "mockData": "ข้อมูลจำลองสำหรับหน้า UI ระหว่างรอเชื่อม Omise",
+    "mockData": "ข้อมูลจำลองสำหรับหน้า UI ระหว่างรอเชื่อม Money Space",
     "streaming": "สิทธิ์ดูย้อนหลัง",
     "homeCta": "เปิดคอร์สของฉัน"
   }

@@ -2,7 +2,7 @@
   "common": {
     "loading": "Loading...",
     "error": "An error occurred",
-    "back": "← Back",
+    "back": "\u2190 Back",
     "viewAll": "View all",
     "viewDetails": "View details",
     "register": "Register",
@@ -10,7 +10,7 @@
     "registerFree": "Register for free",
     "buyCourse": "Buy course",
     "bookCourse": "Book this course",
-    "payOmise": "Pay via Omise",
+    "payOmise": "Pay via Money Space",
     "myCourses": "My courses",
     "language": "Language",
     "search": "Search",
@@ -73,8 +73,8 @@
     "findCourse": "Find the right course",
     "startBrowsing": "Start browsing",
     "hybridTypes": "Hybrid / Onsite / Online",
-    "omisePayment": "Omise Payment",
-    "omiseDescription": "Seamless booking and payments with Omise and shared SchemaDB — works with LINE LIFF login and real-time access control."
+    "omisePayment": "Pay with Money Space",
+    "omiseDescription": "Seamless booking and payments with Money Space and shared SchemaDB \u2014 works with LINE LIFF login and real-time access control."
   },
   "nav": {
     "home": "Home",
@@ -87,11 +87,11 @@
     "contact": "Contact",
     "terms": "Terms",
     "privacy": "Privacy",
-    "copyright": "© {{year}} Yoga Luxe. All rights reserved."
+    "copyright": "\u00a9 {{year}} Yoga Luxe. All rights reserved."
   },
   "checkout": {
     "title": "Checkout & payment",
-    "subtitle": "Fill in your name and phone number before paying. Omise is not connected yet, so this is a mock screen.",
+    "subtitle": "Fill in your name and phone before paying. Money Space is being connected, so this is still a mock screen.",
     "viewMyCourses": "View my courses",
     "studentInfo": "Student information",
     "contactHint": "We use this to confirm bookings and send reminders via Line and SMS.",
@@ -102,7 +102,7 @@
     "note": "Note to instructor (optional)",
     "notePlaceholder": "Allergic to nuts, prefer front row, need parking...",
     "paymentMethod": "Payment method",
-    "paymentHint": "Select how you want to pay. Bank transfer is available now while Omise is being wired up.",
+    "paymentHint": "Bank transfer is available now while Money Space card payments are being wired up.",
     "recommended": "Recommended",
     "mockOnly": "Mock only",
     "bankInstruction": "Bank transfer / PromptPay",
@@ -112,14 +112,14 @@
     "terms": "By proceeding you agree to our studio terms.",
     "mockPending": "Waiting for slip verification (mock).",
     "mockSuccess": "Mock payment confirmed",
-    "mockSuccessHint": "We recorded this booking locally. In production, Omise webhook will unlock your access.",
+    "mockSuccessHint": "The live version will rely on the Money Space webhook to unlock access.",
     "summary": "Order summary",
     "summaryHint": "Seat, access count, and learner name",
     "selectedCourse": "Selected course",
     "beneficiary": "Booked for",
     "toBeFilled": "Please fill name",
     "total": "Total",
-    "mockData": "Mock data only — Omise integration pending",
+    "mockData": "Mock data only \u2014 Money Space is being connected",
     "required": "Required"
   },
   "myCourses": {
@@ -135,7 +135,7 @@
     "amount": "Amount",
     "payNow": "Complete payment",
     "goToCourse": "Open course",
-    "mockData": "Mock data for UI only while Omise is being connected.",
+    "mockData": "Mock data for UI only while Money Space is being connected.",
     "streaming": "Streaming access",
     "homeCta": "Open my courses"
   }
