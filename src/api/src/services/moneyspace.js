@@ -7,6 +7,7 @@ const MONEYSPACE_SECRET_ID = process.env.MONEYSPACE_SECRET_ID || process.env.MON
 const MONEYSPACE_SECRET_KEY = process.env.MONEYSPACE_SECRET_KEY || process.env.MONEYSPACE_SECRETKEY;
 const MONEYSPACE_BASE = process.env.MONEYSPACE_API_BASE || 'https://a.moneyspace.net';
 const PUBLIC_BASE = process.env.MONEYSPACE_DOMAIN || process.env.PUBLIC_BASE_URL || 'https://fortestonlyme.online';
+const MONEYSPACE_CREATE_PATH = process.env.MONEYSPACE_CREATE_PATH || '/payment/CreateTransaction';
 
 const safeFetch = (url, { method = 'GET', headers = {}, body } = {}) => {
   if (typeof globalThis.fetch === 'function') {
@@ -56,6 +57,7 @@ const SUCCESS_URL = process.env.MONEYSPACE_SUCCESS_URL || defaultReturnUrl('/pay
 const FAIL_URL = process.env.MONEYSPACE_FAIL_URL || defaultReturnUrl('/payments/moneyspace/fail');
 const CANCEL_URL = process.env.MONEYSPACE_CANCEL_URL || defaultReturnUrl('/payments/moneyspace/cancel');
 const AGREEMENT = process.env.MONEYSPACE_AGREEMENT || '4';
+const CREATE_TRANSACTION_URL = `${MONEYSPACE_BASE.replace(/\/$/, '')}${MONEYSPACE_CREATE_PATH}`;
 
 const normalizePaymentType = (paymentMethod = 'card') => {
   const map = {
@@ -171,7 +173,7 @@ const createTransaction = async ({
     ref5: references.ref5 || '',
   };
 
-  const response = await safeFetch(`${MONEYSPACE_BASE}/CreateTransactionID`, {
+  const response = await safeFetch(CREATE_TRANSACTION_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -186,15 +188,44 @@ const createTransaction = async ({
     payload = {};
   }
 
+  const logRequestBody = { ...body, secret_key: '[REDACTED]' };
+  const payloadArray = Array.isArray(payload) ? payload : [payload];
+  const primaryPayload = payloadArray.find(Boolean) || {};
+  const statusValue = String(primaryPayload.status || '').toLowerCase();
+
   if (!response.ok) {
     console.error('Money Space API error:', {
       status: response.status,
       payload,
       rawText,
-      requestBody: { ...body, secret_key: '[REDACTED]' }
+      requestBody: logRequestBody,
     });
-    const message = payload?.message || payload?.error || payload?.msg || `Money Space API returned ${response.status}`;
+    const message =
+      primaryPayload?.message ||
+      primaryPayload?.error ||
+      primaryPayload?.msg ||
+      primaryPayload?.description ||
+      `Money Space API returned ${response.status}`;
     throw new Error(message);
+  }
+
+  const hasErrorStatus = statusValue && !['success', 'ok', 'paysuccess'].includes(statusValue);
+  if (hasErrorStatus) {
+    const description =
+      primaryPayload.description ||
+      primaryPayload.message ||
+      primaryPayload.msg ||
+      primaryPayload.error ||
+      primaryPayload.status ||
+      'Money Space returned an error status';
+
+    console.error('Money Space API error status:', {
+      status: response.status,
+      payload,
+      rawText,
+      requestBody: logRequestBody,
+    });
+    throw new Error(description);
   }
 
   const transactionId = extractTransactionId(payload);
