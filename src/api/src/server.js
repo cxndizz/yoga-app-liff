@@ -354,7 +354,12 @@ app.post('/users/orders', async (req, res) => {
     const result = await db.query(
       `SELECT o.*, c.title AS course_title, c.cover_image_url, c.channel, c.is_free, c.price_cents, c.access_times,
               c.course_type, c.max_students, b.name AS branch_name, c.capacity,
-              TRIM(BOTH FROM COALESCE(p.status, o.status)) AS payment_status
+              TRIM(BOTH FROM COALESCE(p.status, o.status)) AS payment_status,
+              ce.id AS enrollment_id,
+              ce.status AS enrollment_status,
+              ce.remaining_access,
+              ce.last_attended_at AS enrollment_last_attended,
+              ce.notes AS enrollment_notes
        FROM orders o
        LEFT JOIN courses c ON o.course_id = c.id
        LEFT JOIN branches b ON c.branch_id = b.id
@@ -365,11 +370,56 @@ app.post('/users/orders', async (req, res) => {
          ORDER BY created_at DESC
          LIMIT 1
        ) p ON TRUE
+       LEFT JOIN LATERAL (
+         SELECT id, status, remaining_access, last_attended_at, notes
+         FROM course_enrollments
+         WHERE order_id = o.id
+            OR (user_id = o.user_id AND course_id = o.course_id)
+         ORDER BY enrolled_at DESC
+         LIMIT 1
+       ) ce ON TRUE
        WHERE o.user_id = $1
        ORDER BY o.created_at DESC`,
       [user_id]
     );
-    res.json(result.rows);
+
+    const orphanEnrollments = await db.query(
+      `SELECT ce.*, c.title AS course_title, c.cover_image_url, c.channel, c.is_free, c.price_cents,
+              c.access_times as course_access_times, c.course_type, c.max_students, b.name AS branch_name, c.capacity
+       FROM course_enrollments ce
+       LEFT JOIN courses c ON ce.course_id = c.id
+       LEFT JOIN branches b ON c.branch_id = b.id
+       WHERE ce.user_id = $1
+         AND NOT EXISTS (
+           SELECT 1 FROM orders o WHERE o.user_id = ce.user_id AND o.course_id = ce.course_id
+         )
+       ORDER BY ce.enrolled_at DESC`,
+      [user_id]
+    );
+
+    const mappedEnrollments = orphanEnrollments.rows.map((row) => ({
+      ...row,
+      id: `enrollment-${row.id}`,
+      course_id: row.course_id,
+      user_id: row.user_id,
+      status: row.status || 'completed',
+      total_price_cents: row.total_price_cents || 0,
+      payment_status: row.status || 'completed',
+      access_times: row.course_access_times ?? row.access_times,
+      enrollment_id: row.id,
+      enrollment_status: row.status,
+      enrollment_last_attended: row.last_attended_at,
+      enrollment_notes: row.notes,
+      created_at: row.enrolled_at,
+    }));
+
+    const combined = [...result.rows, ...mappedEnrollments].sort((a, b) => {
+      const aDate = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const bDate = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return bDate - aDate;
+    });
+
+    res.json(combined);
   } catch (err) {
     console.error('Error fetching orders', err);
     res.status(500).json({ message: 'Error fetching orders' });
