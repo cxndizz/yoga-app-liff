@@ -68,46 +68,31 @@ function WelcomeBar({ liffState }) {
   if (!user) return null;
 
   return (
-    <div
-      className="card-surface"
-      style={{
-        margin: '12px auto 0',
-        padding: '12px 16px',
-        width: 'min(1200px, 92vw)',
-        display: 'grid',
-        gap: 10,
-        alignItems: 'center',
-        gridTemplateColumns: '1fr auto',
-        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.45), rgba(59, 7, 100, 0.55))',
-        border: '1px solid rgba(148, 163, 184, 0.25)',
-        backdropFilter: 'blur(12px)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+    <div className="card-surface welcome-card">
+      <div className="welcome-header">
         {profile?.pictureUrl && (
           <img
             src={profile.pictureUrl}
             alt={displayName}
-            style={{ width: 52, height: 52, borderRadius: '50%', border: '2px solid rgba(251, 191, 36, 0.4)' }}
+            className="welcome-avatar"
           />
         )}
-        <div style={{ minWidth: 0 }}>
-          <div style={{ color: '#e5e7eb', fontWeight: 700, marginBottom: 2 }}>
+        <div className="welcome-text">
+          <div className="welcome-title">
             ยินดีต้อนรับ คุณ {displayName}
           </div>
-          <div className="helper-text" style={{ color: '#cbd5e1' }}>
+          <div className="helper-text welcome-subtitle">
             โปรไฟล์ LINE ของคุณพร้อมใช้งานสำหรับการชำระเงินและรับคอร์สเรียน
           </div>
         </div>
       </div>
 
-      <div style={{ justifySelf: 'end', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div className="welcome-actions">
         <button
           type="button"
           className="btn btn-outline"
           onClick={() => setScannerOpen(true)}
           disabled={!user?.id}
-          style={{ paddingInline: 16 }}
         >
           📷 สแกนเข้าเรียน
         </button>
@@ -115,7 +100,6 @@ function WelcomeBar({ liffState }) {
           type="button"
           className="btn btn-outline"
           onClick={() => navigate('/cart')}
-          style={{ paddingInline: 16 }}
         >
           🛒 {t('cart.viewCart', { count: pendingOrders.length })}
         </button>
