@@ -10,7 +10,7 @@
     "registerFree": "免费注册",
     "buyCourse": "购买课程",
     "bookCourse": "预订此课程",
-    "payOmise": "使用 Omise 支付",
+    "payOmise": "使用 Money Space 支付",
     "myCourses": "我的课程",
     "language": "语言",
     "search": "搜索",
@@ -73,8 +73,8 @@
     "findCourse": "找到适合你的课程",
     "startBrowsing": "开始浏览",
     "hybridTypes": "混合 / 现场 / 在线",
-    "omisePayment": "Omise 支付",
-    "omiseDescription": "通过 Omise 与共享 SchemaDB 无缝预订与支付，支持 LINE LIFF 登录与实时权限控制。"
+    "omisePayment": "Money Space 支付",
+    "omiseDescription": "通过 Money Space 与共享 SchemaDB 无缝预订与支付，支持 LINE LIFF 登录与实时权限控制。"
   },
   "nav": {
     "home": "首页",
@@ -91,7 +91,7 @@
   },
   "checkout": {
     "title": "结账与付款",
-    "subtitle": "付款前请填写姓名和电话。尚未接入 Omise，此处为模拟界面。",
+    "subtitle": "付款前请填写姓名和电话。Money Space 正在对接中，此处仍为模拟界面。",
     "viewMyCourses": "查看我的课程",
     "studentInfo": "学员信息",
     "contactHint": "用于确认预约并通过 Line / SMS 发送提醒。",
@@ -102,7 +102,7 @@
     "note": "给教练的备注（可选）",
     "notePlaceholder": "例如 过敏、需要车位、想坐前排",
     "paymentMethod": "支付方式",
-    "paymentHint": "目前支持转账/PromptPay，Omise 刷卡稍后开放。",
+    "paymentHint": "目前支持转账/PromptPay，Money Space 刷卡稍后开放。",
     "recommended": "推荐",
     "mockOnly": "模拟",
     "bankInstruction": "银行转账 / PromptPay",
@@ -112,14 +112,14 @@
     "terms": "继续操作即表示同意工作室条款。",
     "mockPending": "等待凭证审核（模拟）",
     "mockSuccess": "已记录模拟付款",
-    "mockSuccessHint": "正式版将使用 Omise webhook 自动解锁权限。",
+    "mockSuccessHint": "正式版将使用 Money Space webhook 自动解锁权限。",
     "summary": "订单摘要",
     "summaryHint": "席位、权限次数、学员姓名",
     "selectedCourse": "所选课程",
     "beneficiary": "预订给",
     "toBeFilled": "请填写姓名",
     "total": "合计",
-    "mockData": "仅为模拟数据，Omise 尚未连接",
+    "mockData": "仅为模拟数据，Money Space 对接中",
     "required": "必填"
   },
   "myCourses": {
@@ -135,7 +135,7 @@
     "amount": "金额",
     "payNow": "去付款",
     "goToCourse": "打开课程",
-    "mockData": "当前为模拟数据，等待 Omise 接入。",
+    "mockData": "当前为模拟数据，等待 Money Space 接入。",
     "streaming": "录播访问",
     "homeCta": "打开我的课程"
   }
