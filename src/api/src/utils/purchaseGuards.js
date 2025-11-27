@@ -44,7 +44,8 @@ const hasValidEnrollment = async (userId, courseId) => {
   const hasAccessLeft =
     enrollment.remaining_access === null || Number(enrollment.remaining_access) > 0;
 
-  return statusActive || hasAccessLeft ? enrollment : null;
+  // Fixed: Both conditions must be true (AND instead of OR)
+  return statusActive && hasAccessLeft ? enrollment : null;
 };
 
 const assertPurchasable = async (userId, courseId) => {

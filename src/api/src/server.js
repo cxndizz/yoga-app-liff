@@ -451,21 +451,44 @@ app.post('/users/orders', async (req, res) => {
     const paidStatuses = ['completed', 'paid', 'success', 'paysuccess'];
 
     const isEnrollmentActive = (row) => {
+      if (!row?.enrollment_id) return false;
+
       const status = normalizeStatus(row?.enrollment_status);
       const remaining = row?.remaining_access;
+
+      // Enrollment must have active status (not cancelled/expired)
+      const statusActive = !['cancelled', 'expired'].includes(status);
+
+      // AND must have access remaining (null = unlimited, or > 0)
       const hasRemaining = remaining === null || Number(remaining) > 0;
-      return row?.enrollment_id && !['cancelled', 'expired'].includes(status) && hasRemaining;
+
+      return statusActive && hasRemaining;
     };
 
     const withResolvedStatuses = (row) => {
       const normalizedPayment = normalizeStatus(row?.payment_status || row?.status);
       const normalizedOrder = normalizeStatus(row?.status);
       const enrollmentActive = isEnrollmentActive(row);
-      const resolvedPaymentStatus = enrollmentActive
-        ? paidStatuses.includes(normalizedPayment)
-          ? normalizedPayment || 'completed'
-          : 'completed'
-        : normalizedPayment || (row?.is_free ? 'completed' : 'pending');
+
+      // Determine actual payment status based on multiple sources
+      let resolvedPaymentStatus;
+
+      if (row?.is_free) {
+        // Free courses are always "completed"
+        resolvedPaymentStatus = 'completed';
+      } else if (paidStatuses.includes(normalizedPayment)) {
+        // If payment status is explicitly paid, use it
+        resolvedPaymentStatus = normalizedPayment;
+      } else if (paidStatuses.includes(normalizedOrder)) {
+        // If order status is paid, use it
+        resolvedPaymentStatus = normalizedOrder;
+      } else if (enrollmentActive) {
+        // Only if enrollment is truly active AND no explicit payment status, assume completed
+        resolvedPaymentStatus = 'completed';
+      } else {
+        // Default to payment status or pending
+        resolvedPaymentStatus = normalizedPayment || 'pending';
+      }
 
       const resolvedOrderStatus = paidStatuses.includes(resolvedPaymentStatus)
         ? 'completed'
