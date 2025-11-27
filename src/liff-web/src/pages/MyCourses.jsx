@@ -22,6 +22,16 @@ const isPaidStatus = (value, isFree = false) => {
   return ['completed', 'paid', 'success', 'paysuccess'].includes(normalized);
 };
 
+const hasActiveEnrollment = (order = {}) => {
+  const status = normalizeStatus(order?.enrollment_status);
+  const remaining = order?.remaining_access;
+  const hasRemaining = remaining === null || Number(remaining) > 0;
+  return order?.enrollment_id && !['cancelled', 'expired'].includes(status) && hasRemaining;
+};
+
+const derivePaymentStatus = (order = {}) =>
+  normalizeStatus(order?.resolved_payment_status || order?.payment_status || order?.status);
+
 function MyCourses() {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -64,12 +74,15 @@ function MyCourses() {
 
     for (const order of orders) {
       const normalizedStatus = normalizeStatus(order?.status);
-      const normalizedPayment = normalizeStatus(order?.payment_status);
+      const normalizedPayment = derivePaymentStatus(order);
       const priceCents = Number(order?.total_price_cents ?? order?.price_cents ?? 0);
       const isFree = order?.is_free || priceCents === 0;
 
       const cancelled = normalizedStatus === 'cancelled' || normalizedPayment === 'cancelled';
-      const paid = isPaidStatus(normalizedPayment, isFree) || isPaidStatus(normalizedStatus, isFree);
+      const paid =
+        isPaidStatus(normalizedPayment, isFree) ||
+        isPaidStatus(normalizedStatus, isFree) ||
+        hasActiveEnrollment(order);
 
       if (!cancelled && paid) {
         result.push(order);
@@ -82,9 +95,10 @@ function MyCourses() {
   const mappedOrders = useMemo(
     () =>
       visibleOrders.map((order) => {
-        const normalizedPayment = normalizeStatus(order.payment_status || order.status);
+        const normalizedPayment = derivePaymentStatus(order);
         const priceCents = Number(order?.total_price_cents ?? order?.price_cents ?? 0);
         const isFree = order?.is_free || priceCents === 0;
+        const enrollmentActive = hasActiveEnrollment(order);
 
         return {
           id: order.id,
@@ -93,7 +107,9 @@ function MyCourses() {
           branchName: order.branch_name || t('branch.unspecified'),
           channel: order.channel || t('course.course'),
           status: order.status,
-          paymentStatus: normalizedPayment || (isFree ? 'completed' : 'pending'),
+          paymentStatus:
+            normalizedPayment ||
+            (enrollmentActive || isFree ? 'completed' : 'pending'),
           coverImage: order.cover_image_url || placeholderImage,
           priceCents,
           isFree,
