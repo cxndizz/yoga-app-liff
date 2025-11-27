@@ -304,14 +304,57 @@ const computeSignature = ({ transectionID, amount, status, orderid }) => {
 };
 
 const statusMap = {
-  OK: 'pending',
+  ok: 'pending',
+  pending: 'pending',
+  processing: 'pending',
+  wait: 'pending',
+  waiting: 'pending',
+  waitingpayment: 'pending',
+  paypending: 'pending',
   paysuccess: 'completed',
   success: 'completed',
+  completed: 'completed',
+  pay_success: 'completed',
+  paycomplete: 'completed',
   fail: 'failed',
+  failed: 'failed',
+  error: 'failed',
   cancel: 'cancelled',
+  cancelled: 'cancelled',
+  canceled: 'cancelled',
+  timeout: 'cancelled',
 };
 
-const normalizeStatus = (value) => statusMap[value] || String(value || 'pending').toLowerCase() || 'pending';
+const normalizeStatus = (value) => {
+  const key = String(value || 'pending')
+    .toLowerCase()
+    .replace(/[^a-z]/g, '');
+
+  if (statusMap[key]) {
+    return statusMap[key];
+  }
+
+  if (key.includes('success')) return 'completed';
+  if (!key) return 'pending';
+
+  return key;
+};
+
+const extractStatusValue = (payload = {}) => {
+  const primary = Array.isArray(payload) ? payload[0] || {} : payload;
+  return (
+    primary.transection_status ||
+    primary.transectionStatus ||
+    primary.transaction_status ||
+    primary.transactionStatus ||
+    primary.payment_status ||
+    primary.paymentStatus ||
+    primary.result ||
+    primary.state ||
+    primary.status ||
+    'pending'
+  );
+};
 
 const resolveOrderIdForTransaction = async ({ transactionId, providedOrderId, payload }) => {
   if (providedOrderId) return providedOrderId;
@@ -405,7 +448,7 @@ const updateOrderAndPayment = async ({ orderId, mappedStatus, transactionId, pay
 };
 
 const recordPaymentStatus = async ({ orderId, status, transactionId, payload }) => {
-  const normalizedStatus = statusMap[status] || status || 'pending';
+  const normalizedStatus = normalizeStatus(status);
   const rawPayload = payload ? JSON.stringify(payload) : null;
 
   const updateResult = await db.query(
@@ -438,7 +481,7 @@ const handleWebhook = async (body = {}) => {
 
   const expected = computeSignature({ transectionID, amount, status, orderid });
   const signatureValid = expected.toLowerCase() === String(hash || '').toLowerCase();
-  const mappedStatus = statusMap[status] || 'pending';
+  const mappedStatus = normalizeStatus(status);
   let orderUpdate;
 
   if (signatureValid) {
@@ -481,13 +524,7 @@ const checkOrderStatus = async ({ orderId, orderCode }) => {
 
   const payload = (await response.json().catch(() => ({}))) || {};
   const primaryPayload = Array.isArray(payload) ? payload[0] || {} : payload;
-  const statusValue =
-    primaryPayload.status ||
-    primaryPayload.transaction_status ||
-    primaryPayload.payment_status ||
-    primaryPayload.result ||
-    primaryPayload.state ||
-    'pending';
+  const statusValue = extractStatusValue(payload);
 
   const mappedStatus = normalizeStatus(statusValue);
   const numericOrderId = Number(String(resolvedOrderId).replace(/[^0-9]/g, ''));
@@ -529,13 +566,7 @@ const checkTransactionStatus = async ({ transactionId, orderId }) => {
 
   const payload = (await response.json().catch(() => ({}))) || {};
   const primaryPayload = Array.isArray(payload) ? payload[0] || {} : payload;
-  const statusValue =
-    primaryPayload.status ||
-    primaryPayload.transaction_status ||
-    primaryPayload.payment_status ||
-    primaryPayload.result ||
-    primaryPayload.state ||
-    'pending';
+  const statusValue = extractStatusValue(payload);
 
   const mappedStatus = normalizeStatus(statusValue);
   const resolvedOrderId = await resolveOrderIdForTransaction({
