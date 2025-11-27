@@ -106,6 +106,8 @@ project-root/
   JWT_REFRESH_SECRET=dev-refresh-secret
   ACCESS_TOKEN_TTL=15m
   REFRESH_TOKEN_TTL=7d
+  LINE_CHANNEL_ACCESS_TOKEN=your_line_channel_access_token_here
+  LINE_CHANNEL_SECRET=your_line_channel_secret_here
   ```
 
   ภายหลัง คุณสามารถตั้งค่า `MONEYSPACE_WEBHOOK_SECRET` ให้ตรงกับ secret key ของ Money Space สำหรับตรวจสอบ webhook (และเก็บ OMISE keys ไว้เผื่อใช้งาน legacy ได้) รวมถึงตั้งค่า secret/token ttl ให้เหมาะกับ production. ค่าเริ่มต้นมีการ seed ผู้ใช้หลังบ้านเอาไว้คือ `admin@yoga.local / Admin123!` (role = `super_admin`) เพื่อให้ทดสอบ flow ได้ทันที
@@ -122,6 +124,13 @@ project-root/
   * ไม่ใส่พารามิเตอร์จะ fallback เป็นค่าด้านบน
   * สามารถกำหนด `--permissions=courses:read,courses:write` หรือใช้ env `SEED_ADMIN_*` ได้
   * รันซ้ำเท่าไรก็ได้ สคริปต์จะ upsert ให้ (อัปเดตรหัสผ่าน/สิทธิ์ให้ตรงกับค่าที่ส่งเข้าไป)
+
+  #### ตั้งค่า Webhook + Rich Menu สำหรับปุ่ม "ตรวจสอบสมาชิก"
+
+  1. ตั้งค่า `LINE_CHANNEL_ACCESS_TOKEN` และ `LINE_CHANNEL_SECRET` ในไฟล์ `.env` ของ API
+  2. ชี้ LINE webhook URL ไปที่ `https://<your-domain>/line/webhook` (รองรับ postback events)
+  3. สร้าง/แก้ไข rich menu ให้ปุ่ม "ตรวจสอบสมาชิก" ใช้ action ประเภท **postback** และกำหนด `data` เป็น `CHECK_MEMBERSHIP`
+  4. เมื่อผู้ใช้กดปุ่ม ระบบจะดึง user จาก `line_user_id` → หา enrollment ที่ยังใช้งานอยู่ → ส่งข้อความอัตโนมัติกลับไปที่แชทในรูปแบบ `ชื่อคอร์ส / จำนวนครั้งที่เหลือ / วันหมดอายุ`
 
 ---
 

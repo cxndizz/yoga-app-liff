@@ -25,6 +25,7 @@ const checkinsRoutes = require('./routes/checkins');
 const moneyspaceService = require('./services/moneyspace');
 const { assertPurchasable, findReusableOrder } = require('./utils/purchaseGuards');
 const { startOrderExpiryWatcher } = require('./services/orderScheduler');
+const lineRoutes = require('./routes/line');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -76,6 +77,7 @@ app.use('/api/admin/settings', settingsRoutes);
 app.use('/api/admin/debug', adminDebugRoutes);
 app.use('/api/admin/checkins', checkinsRoutes);
 app.use('/payments', paymentsRoutes);
+app.use('/line', lineRoutes);
 
 app.post('/courses/list', async (req, res) => {
   try {
