@@ -11,7 +11,7 @@ if (!apiBase) {
 const api = axios.create({
   baseURL: apiBase,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 12000,
+  timeout: 8000,
 });
 
 const normalizeCourse = (course = {}, copy = {}, language = 'en') => {

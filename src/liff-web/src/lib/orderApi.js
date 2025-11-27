@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { isOrderOwned } from './orderUtils';
+import { withRetry } from './apiRetry';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL;
 
@@ -10,7 +11,7 @@ if (!apiBase) {
 const api = axios.create({
   baseURL: apiBase,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 15000,
+  timeout: 8000,
 });
 
 export const createOrder = async ({ userId, courseId }) => {
@@ -18,11 +19,18 @@ export const createOrder = async ({ userId, courseId }) => {
   return data;
 };
 
-export const fetchOrdersForUser = async (userId) => {
+// Wrap fetchOrdersForUser with retry logic
+const fetchOrdersForUserRaw = async (userId) => {
   const { data } = await api.post('/users/orders', { user_id: userId });
   const list = Array.isArray(data) ? data : [];
   return list.map((order) => ({ ...order, is_owned: order?.is_owned ?? isOrderOwned(order) }));
 };
+
+export const fetchOrdersForUser = withRetry(fetchOrdersForUserRaw, {
+  maxRetries: 2,
+  initialDelay: 400,
+  maxDelay: 2000,
+});
 
 export const startMoneySpacePayment = async (payload) => {
   const { data } = await api.post('/payments/moneyspace/create', payload);

@@ -589,7 +589,8 @@ app.post('/users/orders', async (req, res) => {
          LIMIT 1
        ) ce ON TRUE
        WHERE o.user_id = $1
-       ORDER BY o.created_at DESC`,
+       ORDER BY o.created_at DESC
+       LIMIT 100`,
       [user_id]
     );
 
@@ -603,7 +604,8 @@ app.post('/users/orders', async (req, res) => {
          AND NOT EXISTS (
            SELECT 1 FROM orders o WHERE o.user_id = ce.user_id AND o.course_id = ce.course_id
          )
-       ORDER BY ce.enrolled_at DESC`,
+       ORDER BY ce.enrolled_at DESC
+       LIMIT 50`,
       [user_id]
     );
 

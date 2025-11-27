@@ -57,25 +57,39 @@ function CourseDetail() {
   useEffect(() => {
     if (!user?.id || !courseId) {
       setOwnership({ checked: true, owned: false });
-      return;
+      return undefined;
     }
 
     let active = true;
+    let timeoutId = null;
+
+    // Set a fallback timeout to prevent infinite loading (6 seconds)
+    timeoutId = setTimeout(() => {
+      if (active) {
+        console.warn('Ownership check timed out, allowing purchase anyway');
+        setOwnership({ checked: true, owned: false });
+      }
+    }, 6000);
+
     fetchOrdersForUser(user.id)
       .then((orders) => {
         if (!active) return;
+        if (timeoutId) clearTimeout(timeoutId);
         const orderList = Array.isArray(orders) ? orders : [];
         const ownedSet = collectOwnedCourseIds(orderList);
         const owned = ownedSet.has(String(courseId)) || orderList.some((order) => isOrderOwned(order, courseId));
         setOwnership({ checked: true, owned });
       })
-      .catch(() => {
+      .catch((error) => {
         if (!active) return;
+        if (timeoutId) clearTimeout(timeoutId);
+        console.error('Failed to fetch orders:', error);
         setOwnership((prev) => ({ ...prev, checked: true }));
       });
 
     return () => {
       active = false;
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, [courseId, user?.id]);
 
