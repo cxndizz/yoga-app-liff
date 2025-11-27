@@ -20,6 +20,7 @@ const customersRoutes = require('./routes/customers');
 const contentRoutes = require('./routes/content');
 const settingsRoutes = require('./routes/settings');
 const paymentsRoutes = require('./routes/payments');
+const adminDebugRoutes = require('./routes/adminDebug');
 const moneyspaceService = require('./services/moneyspace');
 const { assertPurchasable, findReusableOrder } = require('./utils/purchaseGuards');
 const { startOrderExpiryWatcher } = require('./services/orderScheduler');
@@ -71,6 +72,7 @@ app.use('/api/admin/enrollments', enrollmentsRoutes);
 app.use('/api/admin/customers', customersRoutes);
 app.use('/api/admin/content', contentRoutes);
 app.use('/api/admin/settings', settingsRoutes);
+app.use('/api/admin/debug', adminDebugRoutes);
 app.use('/payments', paymentsRoutes);
 
 app.post('/courses/list', async (req, res) => {
