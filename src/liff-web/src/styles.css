@@ -1088,6 +1088,165 @@ select option {
 }
 
 /* ============================================
+   🧭 SCANNER MODAL
+   ============================================ */
+
+.scanner-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 3000;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.scanner-modal {
+  position: relative;
+  width: min(520px, 100%);
+  background: #0b1220;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 18px;
+  padding: 20px 18px 18px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+}
+
+.scanner-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  color: #e5e7eb;
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.scanner-modal__title {
+  margin: 0 0 4px;
+  color: #e0e7ff;
+  font-size: 18px;
+}
+
+.scanner-modal__subtitle {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.scanner-modal__enrollments {
+  background: rgba(148, 163, 184, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+  max-height: 240px;
+  overflow: auto;
+}
+
+.scanner-modal__section-title {
+  color: #cbd5e1;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.scanner-modal__hint {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.scanner-modal__error {
+  color: #ef4444;
+  font-size: 14px;
+}
+
+.scanner-modal__options {
+  display: grid;
+  gap: 8px;
+}
+
+.scanner-modal__option {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(148, 163, 184, 0.04);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.scanner-modal__option.is-selected {
+  border-color: rgba(94, 234, 212, 0.8);
+  background: rgba(45, 212, 191, 0.06);
+}
+
+.scanner-modal__option-title {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+.scanner-modal__option-subtitle {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.scanner-modal__option-muted {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.scanner-modal__option-hint {
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.scanner-modal__status {
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.scanner-modal__status-text {
+  color: #e2e8f0;
+}
+
+.scanner-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scanner-modal__actions .btn {
+  padding-inline: 16px;
+}
+
+@media (max-width: 540px) {
+  .scanner-modal {
+    width: 100%;
+  }
+
+  .scanner-modal__actions {
+    flex-direction: column;
+  }
+
+  .scanner-modal__actions .btn {
+    width: 100%;
+  }
+}
+
+/* ============================================
    🌐 SCROLLBAR STYLING
    ============================================ */
 
