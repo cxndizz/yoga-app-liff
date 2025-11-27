@@ -6,6 +6,7 @@ import { useAutoTranslate } from '../lib/autoTranslate';
 import { placeholderImage } from '../lib/formatters';
 import {
   checkMoneySpaceStatus,
+  checkMoneySpaceOrderStatus,
   createOrder,
   fetchOrderStatus,
   startMoneySpacePayment,
@@ -165,27 +166,25 @@ function Checkout() {
           return;
         }
 
-        if (qrDisplay.transactionId) {
-          const remoteStatus = await checkMoneySpaceStatus({
-            transactionId: qrDisplay.transactionId,
-            orderId: qrDisplay.orderId,
-          });
+        const remoteStatusPayload = qrDisplay.transactionId
+          ? await checkMoneySpaceStatus({
+              transactionId: qrDisplay.transactionId,
+              orderId: qrDisplay.orderId,
+            })
+          : await checkMoneySpaceOrderStatus({ orderId: qrDisplay.orderId });
 
-          const nextStatus =
-            remoteStatus?.order?.status ||
-            remoteStatus?.mappedStatus ||
-            remoteStatus?.status ||
-            latestOrder.status;
+        const nextStatus = (remoteStatusPayload?.order?.status || remoteStatusPayload?.mappedStatus || remoteStatusPayload?.status || latestOrder.status || '')
+          .toString()
+          .toLowerCase();
 
-          if (['completed', 'success'].includes(nextStatus)) {
-            navigate('/payments/moneyspace/success');
-            return;
-          }
+        if (['completed', 'success', 'paysuccess'].includes(nextStatus)) {
+          navigate('/payments/moneyspace/success');
+          return;
+        }
 
-          if (['failed', 'cancelled'].includes(nextStatus)) {
-            setFlowState('error');
-            setPaymentError(t('checkout.errorPayment'));
-          }
+        if (['failed', 'cancelled', 'canceled'].includes(nextStatus)) {
+          setFlowState('error');
+          setPaymentError(t('checkout.errorPayment'));
         }
       } catch (err) {
         if (!cancelled) {
@@ -195,7 +194,7 @@ function Checkout() {
     };
 
     pollStatus();
-    const timer = setInterval(pollStatus, 4000);
+    const timer = setInterval(pollStatus, 3000);
 
     return () => {
       cancelled = true;
