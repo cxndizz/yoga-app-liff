@@ -1,19 +1,59 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import SessionList from '../components/SessionList';
 import { fetchCourseDetail } from '../lib/courseApi';
 import { placeholderImage } from '../lib/formatters';
 import { useAutoTranslate } from '../lib/autoTranslate';
+import useLiffUser from '../hooks/useLiffUser';
+import { getCachedLiffUser } from '../lib/liffAuth';
+import { fetchOrdersForUser } from '../lib/orderApi';
+
+const normalizeStatus = (value) => String(value ?? '').toLowerCase().trim();
+
+const isPaidStatus = (value, isFree = false) => {
+  if (isFree) return true;
+  const normalized = normalizeStatus(value);
+  return ['completed', 'paid', 'success', 'paysuccess'].includes(normalized);
+};
+
+const hasActiveEnrollment = (order = {}) => {
+  const status = normalizeStatus(order?.enrollment_status);
+  const remaining = order?.remaining_access;
+  const hasRemaining = remaining === null || Number(remaining) > 0;
+  return order?.enrollment_id && !['cancelled', 'expired'].includes(status) && hasRemaining;
+};
+
+const isOrderOwned = (order = {}, courseId) => {
+  const matchesCourse = String(order?.course_id ?? '') === String(courseId ?? '');
+  if (!matchesCourse) return false;
+
+  const normalizedStatus = normalizeStatus(order?.status);
+  const normalizedPayment = normalizeStatus(order?.resolved_payment_status || order?.payment_status);
+  const priceCents = Number(order?.total_price_cents ?? order?.price_cents ?? 0);
+  const isFree = order?.is_free || priceCents === 0;
+
+  const cancelled = normalizedStatus === 'cancelled' || normalizedPayment === 'cancelled';
+  if (cancelled) return false;
+
+  return isPaidStatus(normalizedPayment, isFree) || isPaidStatus(normalizedStatus, isFree) || hasActiveEnrollment(order);
+};
 
 function CourseDetail() {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const { user: liveUser } = useLiffUser();
   const [course, setCourse] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [status, setStatus] = useState('idle');
+  const [user, setUser] = useState(getCachedLiffUser()?.user || null);
+  const [ownership, setOwnership] = useState({ checked: false, owned: false });
   const { language, formatPrice, formatAccessTimes } = useAutoTranslate();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (liveUser) setUser(liveUser);
+  }, [liveUser]);
 
   useEffect(() => {
     let active = true;
@@ -42,6 +82,31 @@ function CourseDetail() {
       active = false;
     };
   }, [courseId, language, t]);
+
+  useEffect(() => {
+    if (!user?.id || !courseId) {
+      setOwnership({ checked: true, owned: false });
+      return;
+    }
+
+    let active = true;
+    fetchOrdersForUser(user.id)
+      .then((orders) => {
+        if (!active) return;
+        const owned = Array.isArray(orders) && orders.some((order) => isOrderOwned(order, courseId));
+        setOwnership({ checked: true, owned });
+      })
+      .catch(() => {
+        if (!active) return;
+        setOwnership((prev) => ({ ...prev, checked: true }));
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [courseId, user?.id]);
+
+  const canPurchase = useMemo(() => !ownership.owned, [ownership.owned]);
 
   if (status === 'loading') {
     return (
@@ -265,14 +330,20 @@ function CourseDetail() {
             <button type="button" className="btn btn-outline" onClick={() => navigate('/courses')}>
               {t('course.browseOther')}
             </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => navigate(`/courses/${courseId}/checkout`)}
-              style={{ padding: '14px 28px' }}
-            >
-              {course.isFree ? t('common.registerNow') : t('common.payOmise')}
-            </button>
+            {canPurchase ? (
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => navigate(`/courses/${courseId}/checkout`)}
+                style={{ padding: '14px 28px' }}
+              >
+                {course.isFree ? t('common.registerNow') : t('common.payOmise')}
+              </button>
+            ) : (
+              <div className="pill success" style={{ padding: '12px 16px', fontWeight: 700 }}>
+                {t('course.alreadyPurchased')}
+              </div>
+            )}
           </div>
         </div>
         

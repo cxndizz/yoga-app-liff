@@ -38,6 +38,7 @@
     "premium": "Premium courses",
     "all": "All courses",
     "browseOther": "Browse other courses",
+    "alreadyPurchased": "You already own this course",
     "notFound": "Course not found, please return to the main page",
     "loadingCourses": "Loading courses...",
     "loadingAll": "Loading all courses...",
