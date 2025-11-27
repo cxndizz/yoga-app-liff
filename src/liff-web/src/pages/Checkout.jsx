@@ -113,12 +113,13 @@ function Checkout() {
   const steps = useMemo(
     () => [
       { key: 'info', label: t('checkout.stepInfo'), description: t('checkout.stepInfoDesc') },
-      { key: 'method', label: t('checkout.stepPayment'), description: t('checkout.stepPaymentDesc') },
-      { key: 'pay', label: t('checkout.stepPay'), description: t('checkout.stepPayDesc') },
+      { key: 'payment', label: t('checkout.stepPayment'), description: t('checkout.stepPaymentDesc') },
       { key: 'result', label: t('checkout.stepRedirect'), description: t('checkout.stepRedirectDesc') },
     ],
     [t]
   );
+
+  const getStepNumber = (key) => steps.findIndex((step) => step.key === key) + 1;
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -222,11 +223,6 @@ function Checkout() {
     goToStep(1);
   };
 
-  const handleMethodNext = () => {
-    setPaymentError('');
-    goToStep(2);
-  };
-
   const handlePay = async () => {
     const validation = validate();
     setErrors(validation);
@@ -234,7 +230,8 @@ function Checkout() {
     if (Object.keys(validation).length > 0) return;
 
     setFlowState('processing');
-    setCurrentStep(3);
+    const resultStepIndex = steps.findIndex((step) => step.key === 'result');
+    setCurrentStep(resultStepIndex);
 
     try {
       const existingOrder = order || (await createOrder({ userId: user.id, courseId }));
@@ -310,31 +307,15 @@ function Checkout() {
   const qrEmbedAvailable = qrDisplay && (qrDisplay.qrImage || qrDisplay.embedHtml || qrDisplay.redirectUrl);
 
   const renderInfoStep = () => (
-    <div
-      className="card-surface step-card"
-      style={{
-        padding: 20,
-        display: 'grid',
-        gap: 18,
-        background: 'linear-gradient(135deg, rgba(76, 29, 149, 0.15) 0%, rgba(59, 7, 100, 0.1) 100%)',
-      }}
-    >
+    <div className="card-surface step-card" style={{ padding: 20, display: 'grid', gap: 18 }}>
       <div className="step-card__title">
-        <div className="step-index">1</div>
+        <div className="step-index">{getStepNumber('info')}</div>
         <div style={{ display: 'grid', gap: 6 }}>
-          <div
-            className="badge"
-            style={{
-              background: 'rgba(251, 191, 36, 0.15)',
-              borderColor: 'rgba(251, 191, 36, 0.4)',
-              color: '#fbbf24',
-              width: 'fit-content',
-            }}
-          >
-            👤 {t('checkout.studentInfo')}
+          <div className="badge" style={{ width: 'fit-content' }}>
+            {t('checkout.studentInfo')}
           </div>
           <div className="helper-text">{t('checkout.contactHint')}</div>
-          {errors.user && <div className="form-error">⚠️ {errors.user}</div>}
+          {errors.user && <div className="form-error">{errors.user}</div>}
         </div>
       </div>
 
@@ -350,7 +331,7 @@ function Checkout() {
               borderColor: errors.firstName ? 'rgba(239, 68, 68, 0.5)' : undefined,
             }}
           />
-          {errors.firstName && <div className="form-error">⚠️ {errors.firstName}</div>}
+          {errors.firstName && <div className="form-error">{errors.firstName}</div>}
         </label>
         <label className="form-field">
           <span>{t('checkout.lastName')} *</span>
@@ -363,7 +344,7 @@ function Checkout() {
               borderColor: errors.lastName ? 'rgba(239, 68, 68, 0.5)' : undefined,
             }}
           />
-          {errors.lastName && <div className="form-error">⚠️ {errors.lastName}</div>}
+          {errors.lastName && <div className="form-error">{errors.lastName}</div>}
         </label>
         <label className="form-field">
           <span>{t('checkout.phone')} *</span>
@@ -376,7 +357,7 @@ function Checkout() {
               borderColor: errors.phone ? 'rgba(239, 68, 68, 0.5)' : undefined,
             }}
           />
-          {errors.phone && <div className="form-error">⚠️ {errors.phone}</div>}
+          {errors.phone && <div className="form-error">{errors.phone}</div>}
         </label>
         <label className="form-field">
           <span>{t('checkout.email')}</span>
@@ -414,12 +395,12 @@ function Checkout() {
   const renderPaymentStep = () => (
     <div className="card-surface step-card" style={{ padding: 20, display: 'grid', gap: 14 }}>
       <div className="step-card__title">
-        <div className="step-index">2</div>
-        <div>
+        <div className="step-index">{getStepNumber('payment')}</div>
+        <div style={{ display: 'grid', gap: 6 }}>
           <div className="badge" style={{ width: 'fit-content' }}>
-            💳 {t('checkout.paymentMethod')}
+            {t('checkout.paymentMethod')}
           </div>
-          <div className="helper-text" style={{ marginTop: 8 }}>{t('checkout.paymentHintLive')}</div>
+          <div className="helper-text">{t('checkout.paymentHintLive')}</div>
         </div>
       </div>
 
@@ -436,42 +417,20 @@ function Checkout() {
                 <div style={{ fontWeight: 700 }}>{option.label}</div>
                 <div className="helper-text">{option.description}</div>
               </div>
-              <div className="badge">{option.badge}</div>
+              <div className="helper-text" style={{ color: 'var(--secondary-200)' }}>{option.badge}</div>
             </div>
           </button>
         ))}
       </div>
 
-      <div className="step-actions">
-        <button type="button" className="btn btn-outline" onClick={() => goToStep(0)}>
-          {t('common.back')}
-        </button>
-        <button type="button" className="btn btn-primary" onClick={handleMethodNext}>
-          {t('checkout.reviewAndPay')}
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderPayStep = () => (
-    <div className="card-surface step-card" style={{ padding: 20, display: 'grid', gap: 16 }}>
-      <div className="step-card__title">
-        <div className="step-index">3</div>
-        <div style={{ display: 'grid', gap: 6 }}>
-          <div className="badge" style={{ width: 'fit-content', background: 'rgba(16, 185, 129, 0.15)', borderColor: 'rgba(16, 185, 129, 0.4)', color: '#6ee7b7' }}>
-            🧾 {t('checkout.stepPay')}
-          </div>
-          <div className="helper-text">{t('checkout.stepPayDesc')}</div>
-          {selectedPayment && (
-            <div className="pill" style={{ width: 'fit-content' }}>
-              {t('checkout.paymentMethod')}: <strong>{selectedPayment.label}</strong>
-            </div>
-          )}
+      {selectedPayment && (
+        <div className="pill" style={{ width: 'fit-content' }}>
+          {t('checkout.paymentMethod')}: <strong>{selectedPayment.label}</strong>
         </div>
-      </div>
+      )}
 
       <div className="step-actions" style={{ justifyContent: 'flex-start' }}>
-        <button type="button" className="btn btn-outline" onClick={() => goToStep(1)}>
+        <button type="button" className="btn btn-outline" onClick={() => goToStep(0)}>
           {t('common.back')}
         </button>
         <button
@@ -480,11 +439,7 @@ function Checkout() {
           onClick={handlePay}
           disabled={flowState === 'processing'}
         >
-          {flowState === 'processing' ? <>
-            ⏳ {t('checkout.processing')}
-          </> : <>
-            💳 {t('checkout.payNow')}
-          </>}
+          {flowState === 'processing' ? t('checkout.processing') : t('checkout.payNow')}
         </button>
       </div>
 
@@ -495,10 +450,10 @@ function Checkout() {
   const renderResultStep = () => (
     <div className="card-surface step-card" style={{ padding: 20, display: 'grid', gap: 14 }}>
       <div className="step-card__title">
-        <div className="step-index">4</div>
+        <div className="step-index">{getStepNumber('result')}</div>
         <div style={{ display: 'grid', gap: 6 }}>
-          <div className="badge" style={{ width: 'fit-content', background: 'rgba(251, 191, 36, 0.15)', borderColor: 'rgba(251, 191, 36, 0.4)', color: '#fbbf24' }}>
-            🔀 {t('checkout.stepRedirect')}
+          <div className="badge" style={{ width: 'fit-content' }}>
+            {t('checkout.stepRedirect')}
           </div>
           <div className="helper-text">{t('checkout.stepRedirectDesc')}</div>
         </div>
@@ -518,9 +473,7 @@ function Checkout() {
 
       {flowState === 'awaiting_redirect' && (
         <div className="pill success" style={{ display: 'grid', gap: 10 }}>
-          <div style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>✅</span> {t('checkout.intentCreated')}
-          </div>
+          <div style={{ fontWeight: 700 }}>{t('checkout.intentCreated')}</div>
           <div className="helper-text">{t('checkout.intentCreatedHint')}</div>
         </div>
       )}
@@ -539,16 +492,8 @@ function Checkout() {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
             <div style={{ display: 'grid', gap: 6 }}>
-              <div
-                className="badge"
-                style={{
-                  background: 'rgba(251, 191, 36, 0.1)',
-                  borderColor: 'rgba(251, 191, 36, 0.4)',
-                  color: '#fbbf24',
-                  width: 'fit-content',
-                }}
-              >
-                🧾 {t('checkout.qrTitle')}
+              <div className="badge" style={{ width: 'fit-content' }}>
+                {t('checkout.qrTitle')}
               </div>
               <div className="helper-text">{t('checkout.qrSubtitle')}</div>
             </div>
@@ -557,7 +502,7 @@ function Checkout() {
                 {t('checkout.qrAmount')} {priceLabel}
               </div>
               <div className="helper-text">{t('checkout.qrRef')}: {qrDisplay?.transactionId || '-'}</div>
-              <div className="helper-text">Order #{qrDisplay?.orderId || '-'}</div>
+              <div className="helper-text">{t('checkout.selectedCourse')} #{qrDisplay?.orderId || '-'}</div>
             </div>
           </div>
 
@@ -600,7 +545,7 @@ function Checkout() {
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
             {qrDisplay?.qrImage && (
               <button type="button" className="btn btn-primary" onClick={handleDownloadQr}>
-                💾 {t('checkout.qrDownload')}
+                {t('checkout.qrDownload')}
               </button>
             )}
             {qrDisplay?.redirectUrl && (
@@ -611,7 +556,7 @@ function Checkout() {
                 className="btn btn-outline"
                 style={{ textDecoration: 'none' }}
               >
-                🔗 {t('checkout.qrOpenLink')}
+                {t('checkout.qrOpenLink')}
               </a>
             )}
           </div>
@@ -625,7 +570,7 @@ function Checkout() {
       )}
 
       <div className="step-actions" style={{ justifyContent: 'space-between' }}>
-        <button type="button" className="btn btn-outline" onClick={() => goToStep(2)}>
+        <button type="button" className="btn btn-outline" onClick={() => goToStep(1)}>
           {t('checkout.backToPayment')}
         </button>
         <button type="button" className="btn btn-primary" onClick={() => navigate('/my-courses')}>
@@ -646,7 +591,6 @@ function Checkout() {
           color: 'var(--secondary-300)',
         }}
       >
-        <div style={{ fontSize: '2.5rem', marginBottom: 16, opacity: 0.6 }}>💳</div>
         {t('course.loadingDetails')}
       </div>
     );
@@ -664,7 +608,6 @@ function Checkout() {
           border: '1px solid rgba(239, 68, 68, 0.3)',
         }}
       >
-        <div style={{ fontSize: '2.5rem', marginBottom: 16 }}>😔</div>
         <div style={{ color: '#fca5a5', fontWeight: 600 }}>{t('course.notFound')}</div>
       </div>
     );
@@ -713,8 +656,7 @@ function Checkout() {
 
           {currentStep === 0 && renderInfoStep()}
           {currentStep === 1 && renderPaymentStep()}
-          {currentStep === 2 && renderPayStep()}
-          {currentStep === 3 && renderResultStep()}
+          {currentStep === 2 && renderResultStep()}
         </div>
 
         <div
@@ -729,15 +671,8 @@ function Checkout() {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between' }}>
             <div>
-              <div
-                className="badge"
-                style={{
-                  background: 'rgba(251, 191, 36, 0.2)',
-                  borderColor: 'rgba(251, 191, 36, 0.5)',
-                  color: '#fbbf24',
-                }}
-              >
-                📋 {t('checkout.summary')}
+              <div className="badge" style={{ background: 'rgba(251, 191, 36, 0.15)', borderColor: 'rgba(251, 191, 36, 0.3)', color: '#fbbf24' }}>
+                {t('checkout.summary')}
               </div>
               <div className="helper-text" style={{ marginTop: 8 }}>{t('checkout.summaryHint')}</div>
             </div>
@@ -756,19 +691,11 @@ function Checkout() {
             />
             <div style={{ display: 'grid', gap: 6 }}>
               <div style={{ fontWeight: 800, color: '#fff' }}>{course.title}</div>
-              <div style={{ color: '#fbbf24' }}>📍 {course.branchName}</div>
+              <div style={{ color: '#fbbf24' }}>{course.branchName}</div>
               <div className="helper-text">{course.channel}</div>
               <div className="helper-text">{accessLabel}</div>
-              <div
-                className="badge"
-                style={{
-                  width: 'fit-content',
-                  background: 'rgba(16, 185, 129, 0.15)',
-                  borderColor: 'rgba(16, 185, 129, 0.4)',
-                  color: '#6ee7b7',
-                }}
-              >
-                🎫 {seatsLeft}
+              <div className="badge" style={{ width: 'fit-content', background: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.3)', color: '#6ee7b7' }}>
+                {seatsLeft}
               </div>
             </div>
           </div>
@@ -796,7 +723,7 @@ function Checkout() {
           <div className="mini-session-list">
             {sessions.length === 0 && (
               <div className="helper-text" style={{ textAlign: 'center', padding: 16 }}>
-                📅 {t('session.noSessions')}
+                {t('session.noSessions')}
               </div>
             )}
             {sessions.map((session) => (
@@ -804,7 +731,7 @@ function Checkout() {
                 <div>
                   <div style={{ fontWeight: 700, color: '#fff' }}>{session.topic}</div>
                   <div className="helper-text">
-                    📆 {session.date} · 🕐 {session.time}
+                    {session.date} · {session.time}
                   </div>
                 </div>
                 <div
