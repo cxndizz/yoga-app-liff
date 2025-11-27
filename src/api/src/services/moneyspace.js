@@ -340,20 +340,53 @@ const normalizeStatus = (value) => {
   return key;
 };
 
+const findStatusInObject = (input) => {
+  if (!input) return null;
+
+  if (Array.isArray(input)) {
+    for (const item of input) {
+      const nested = findStatusInObject(item);
+      if (nested) return nested;
+    }
+    return null;
+  }
+
+  if (typeof input !== 'object') return null;
+
+  const candidates = [
+    input.transection_status,
+    input.transectionStatus,
+    input.transaction_status,
+    input.transactionStatus,
+    input.payment_status,
+    input.paymentStatus,
+    input.result,
+    input.state,
+    input.status,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim()) {
+      return candidate;
+    }
+  }
+
+  for (const candidate of candidates) {
+    const nestedStatus = findStatusInObject(candidate);
+    if (nestedStatus) return nestedStatus;
+  }
+
+  for (const value of Object.values(input)) {
+    const nestedStatus = findStatusInObject(value);
+    if (nestedStatus) return nestedStatus;
+  }
+
+  return null;
+};
+
 const extractStatusValue = (payload = {}) => {
   const primary = Array.isArray(payload) ? payload[0] || {} : payload;
-  return (
-    primary.transection_status ||
-    primary.transectionStatus ||
-    primary.transaction_status ||
-    primary.transactionStatus ||
-    primary.payment_status ||
-    primary.paymentStatus ||
-    primary.result ||
-    primary.state ||
-    primary.status ||
-    'pending'
-  );
+  return findStatusInObject(primary) || 'pending';
 };
 
 const resolveOrderIdForTransaction = async ({ transactionId, providedOrderId, payload }) => {
