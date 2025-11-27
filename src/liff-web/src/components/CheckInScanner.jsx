@@ -23,6 +23,76 @@ const extractCode = (rawValue = '') => {
   return value;
 };
 
+const scanWithBrowserCamera = async () => {
+  if (typeof window === 'undefined') throw new Error('ไม่สามารถเปิดกล้องในสภาพแวดล้อมนี้ได้');
+
+  const detectorAvailable = typeof window.BarcodeDetector === 'function';
+  const cameraAvailable = !!navigator?.mediaDevices?.getUserMedia;
+
+  if (!detectorAvailable || !cameraAvailable) {
+    throw new Error('อุปกรณ์ไม่รองรับการสแกนผ่านกล้องโดยตรง');
+  }
+
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: 'environment' },
+  });
+
+  const video = document.createElement('video');
+  video.setAttribute('playsinline', 'true');
+  video.srcObject = stream;
+
+  await video.play();
+
+  const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+
+  return new Promise((resolve, reject) => {
+    let stopped = false;
+
+    const stopStream = () => {
+      if (stopped) return;
+      stopped = true;
+      stream.getTracks().forEach((track) => track.stop());
+      video.srcObject = null;
+    };
+
+    const scanFrame = async () => {
+      if (stopped) return;
+
+      try {
+        const [first] = await detector.detect(video);
+        if (first?.rawValue) {
+          stopStream();
+          clearTimeout(timeout);
+          resolve({ value: first.rawValue });
+          return;
+        }
+      } catch (err) {
+        stopStream();
+        clearTimeout(timeout);
+        reject(err);
+        return;
+      }
+
+      requestAnimationFrame(scanFrame);
+    };
+
+    const timeout = setTimeout(() => {
+      stopStream();
+      reject(new Error('ไม่พบ QR Code กรุณาลองใหม่'));
+    }, 20000);
+
+    const cleanupAndReject = (err) => {
+      clearTimeout(timeout);
+      stopStream();
+      reject(err);
+    };
+
+    video.addEventListener('error', (err) => cleanupAndReject(err));
+
+    requestAnimationFrame(scanFrame);
+  });
+};
+
 function CheckInScanner({ userId, open, onClose }) {
   const [status, setStatus] = useState({ state: 'idle', message: '' });
   const [processing, setProcessing] = useState(false);
@@ -82,15 +152,12 @@ function CheckInScanner({ userId, open, onClose }) {
       return;
     }
 
-    if (!window?.liff?.scanCodeV2 && !window?.liff?.scanCode) {
-      setStatus({ state: 'error', message: 'ไม่สามารถเปิดกล้องสแกนจาก LIFF ได้' });
-      return;
-    }
-
     setProcessing(true);
     setStatus({ state: 'idle', message: 'กำลังเปิดกล้อง...' });
 
     try {
+      const hasLiffScanner = !!(window?.liff?.scanCodeV2 || window?.liff?.scanCode);
+
       const openScanner = async () => {
         const liff = window?.liff;
         if (!liff) throw new Error('ไม่พบ LIFF');
@@ -114,7 +181,24 @@ function CheckInScanner({ userId, open, onClose }) {
         throw new Error('ไม่พบความสามารถสแกนจาก LIFF');
       };
 
-      const result = await openScanner();
+      let result;
+      if (hasLiffScanner) {
+        try {
+          result = await openScanner();
+        } catch (liffErr) {
+          const errMessage = String(liffErr?.message || '').toLowerCase();
+          if (errMessage.includes('not allowed')) {
+            setStatus({ state: 'idle', message: 'LIFF ไม่อนุญาตสแกน ใช้กล้องในเครื่องแทน...' });
+            result = await scanWithBrowserCamera();
+          } else {
+            throw liffErr;
+          }
+        }
+      } else {
+        setStatus({ state: 'idle', message: 'LIFF ไม่รองรับสแกน ใช้กล้องในเครื่องแทน...' });
+        result = await scanWithBrowserCamera();
+      }
+
       const rawValue = result?.value || result?.result || '';
       const code = extractCode(rawValue);
       if (!code) {
