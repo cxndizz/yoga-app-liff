@@ -176,13 +176,14 @@ function Checkout() {
         const nextStatus = (remoteStatusPayload?.order?.status || remoteStatusPayload?.mappedStatus || remoteStatusPayload?.status || latestOrder.status || '')
           .toString()
           .toLowerCase();
+        const normalizedNextStatus = nextStatus.replace(/[^a-z]/g, '');
 
-        if (['completed', 'success', 'paysuccess'].includes(nextStatus)) {
+        if (['completed', 'success', 'paysuccess'].includes(normalizedNextStatus)) {
           navigate('/payments/moneyspace/success');
           return;
         }
 
-        if (['failed', 'cancelled', 'canceled'].includes(nextStatus)) {
+        if (['failed', 'cancelled', 'canceled'].includes(normalizedNextStatus)) {
           setFlowState('error');
           setPaymentError(t('checkout.errorPayment'));
         }
