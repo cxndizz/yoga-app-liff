@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { isOrderOwned } from './orderUtils';
 
 const apiBase = import.meta.env.VITE_API_BASE_URL;
 
@@ -19,7 +20,8 @@ export const createOrder = async ({ userId, courseId }) => {
 
 export const fetchOrdersForUser = async (userId) => {
   const { data } = await api.post('/users/orders', { user_id: userId });
-  return Array.isArray(data) ? data : [];
+  const list = Array.isArray(data) ? data : [];
+  return list.map((order) => ({ ...order, is_owned: order?.is_owned ?? isOrderOwned(order) }));
 };
 
 export const startMoneySpacePayment = async (payload) => {

@@ -6,24 +6,7 @@ import { useAutoTranslate } from '../lib/autoTranslate';
 import { placeholderImage } from '../lib/formatters';
 import useLiffUser from '../hooks/useLiffUser';
 import { getCachedLiffUser } from '../lib/liffAuth';
-
-const normalizeStatus = (value) => String(value ?? '').toLowerCase().trim();
-
-const isPaidStatus = (value, isFree = false) => {
-  if (isFree) return true;
-  const normalized = normalizeStatus(value);
-  return ['completed', 'paid', 'success', 'paysuccess'].includes(normalized);
-};
-
-const hasActiveEnrollment = (order = {}) => {
-  const status = normalizeStatus(order?.enrollment_status);
-  const remaining = order?.remaining_access;
-  const hasRemaining = remaining === null || Number(remaining) > 0;
-  return order?.enrollment_id && !['cancelled', 'expired'].includes(status) && hasRemaining;
-};
-
-const derivePaymentStatus = (order = {}) =>
-  normalizeStatus(order?.resolved_payment_status || order?.payment_status || order?.status);
+import { derivePaymentStatus, hasActiveEnrollment, isPaidStatus, normalizeStatus } from '../lib/orderUtils';
 
 function Cart() {
   const navigate = useNavigate();

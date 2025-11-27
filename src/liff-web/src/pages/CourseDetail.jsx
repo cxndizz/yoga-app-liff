@@ -8,36 +8,7 @@ import { useAutoTranslate } from '../lib/autoTranslate';
 import useLiffUser from '../hooks/useLiffUser';
 import { getCachedLiffUser } from '../lib/liffAuth';
 import { fetchOrdersForUser } from '../lib/orderApi';
-
-const normalizeStatus = (value) => String(value ?? '').toLowerCase().trim();
-
-const isPaidStatus = (value, isFree = false) => {
-  if (isFree) return true;
-  const normalized = normalizeStatus(value);
-  return ['completed', 'paid', 'success', 'paysuccess'].includes(normalized);
-};
-
-const hasActiveEnrollment = (order = {}) => {
-  const status = normalizeStatus(order?.enrollment_status);
-  const remaining = order?.remaining_access;
-  const hasRemaining = remaining === null || Number(remaining) > 0;
-  return order?.enrollment_id && !['cancelled', 'expired'].includes(status) && hasRemaining;
-};
-
-const isOrderOwned = (order = {}, courseId) => {
-  const matchesCourse = String(order?.course_id ?? '') === String(courseId ?? '');
-  if (!matchesCourse) return false;
-
-  const normalizedStatus = normalizeStatus(order?.status);
-  const normalizedPayment = normalizeStatus(order?.resolved_payment_status || order?.payment_status);
-  const priceCents = Number(order?.total_price_cents ?? order?.price_cents ?? 0);
-  const isFree = order?.is_free || priceCents === 0;
-
-  const cancelled = normalizedStatus === 'cancelled' || normalizedPayment === 'cancelled';
-  if (cancelled) return false;
-
-  return isPaidStatus(normalizedPayment, isFree) || isPaidStatus(normalizedStatus, isFree) || hasActiveEnrollment(order);
-};
+import { collectOwnedCourseIds, isOrderOwned } from '../lib/orderUtils';
 
 function CourseDetail() {
   const { courseId } = useParams();
@@ -93,7 +64,9 @@ function CourseDetail() {
     fetchOrdersForUser(user.id)
       .then((orders) => {
         if (!active) return;
-        const owned = Array.isArray(orders) && orders.some((order) => isOrderOwned(order, courseId));
+        const orderList = Array.isArray(orders) ? orders : [];
+        const ownedSet = collectOwnedCourseIds(orderList);
+        const owned = ownedSet.has(String(courseId)) || orderList.some((order) => isOrderOwned(order, courseId));
         setOwnership({ checked: true, owned });
       })
       .catch(() => {
