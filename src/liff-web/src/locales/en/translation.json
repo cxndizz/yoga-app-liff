@@ -164,6 +164,7 @@
     "statusPending": "Pending payment",
     "statusPaid": "Paid",
     "statusFailed": "Payment failed",
+    "statusExpired": "Expired",
     "nextSession": "Next session",
     "remaining": "Remaining access",
     "reference": "Ref: {{ref}}",
@@ -174,7 +175,13 @@
     "homeCta": "Open my courses",
     "loginHint": "We need your LINE account to fetch your bookings.",
     "empty": "You have no bookings yet",
-    "createdAt": "Created at"
+    "createdAt": "Created at",
+    "expiresIn": "Expires in {{days}}d {{hours}}h",
+    "expiredAt": "Expired on {{date}}",
+    "expiryPending": "Countdown starts when you scan to join. 30-day access per first scan.",
+    "expiryLabel": "Access expiry",
+    "expiryHint": "Countdown begins after your first check-in (30 days)",
+    "firstCheckIn": "First check-in"
   },
   "payment": {
     "redirectReminder": "Please wait while we confirm your payment with Money Space.",

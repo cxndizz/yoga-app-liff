@@ -4,6 +4,16 @@ import TablePagination from '../components/common/TablePagination';
 import usePagination from '../hooks/usePagination';
 import { apiBase } from '../config';
 
+const formatDateTime = (value) => (value ? new Date(value).toLocaleString('th-TH') : '-');
+const formatCountdown = (expiresAt) => {
+  if (!expiresAt) return 'เริ่มนับเมื่อสแกนครั้งแรก';
+  const diffMs = new Date(expiresAt).getTime() - Date.now();
+  if (diffMs <= 0) return 'หมดอายุแล้ว';
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  return `${days} วัน ${hours} ชม.`;
+};
+
 function Enrollments() {
   const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,6 +102,7 @@ function Enrollments() {
               <th>รอบเรียน</th>
               <th style={{ textAlign: 'center' }}>วันที่ลงทะเบียน</th>
               <th style={{ textAlign: 'center' }}>สิทธิ์เหลือ</th>
+              <th style={{ textAlign: 'center' }}>เริ่มใช้งาน / หมดอายุ</th>
               <th style={{ textAlign: 'center' }}>เข้าร่วมล่าสุด</th>
               <th style={{ textAlign: 'center' }}>สถานะ</th>
               <th style={{ textAlign: 'center' }}>จัดการ</th>
@@ -130,9 +141,13 @@ function Enrollments() {
                       : '∞'}
                   </td>
                   <td style={{ textAlign: 'center' }}>
-                    {enrollment.last_attended_at
-                      ? new Date(enrollment.last_attended_at).toLocaleDateString('th-TH')
-                      : '-'}
+                    <div>{formatDateTime(enrollment.first_attended_at)}</div>
+                    <div className="helper-text">
+                      {formatCountdown(enrollment.expires_at)}
+                    </div>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    {formatDateTime(enrollment.last_attended_at)}
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     <span

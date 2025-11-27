@@ -171,6 +171,8 @@
     "homeHint": "点击查看已购买或待付款的课程。",
     "statusPending": "待付款",
     "statusPaid": "已付款",
+    "statusFailed": "付款失败",
+    "statusExpired": "已过期",
     "nextSession": "下一节课",
     "remaining": "剩余次数",
     "reference": "参考号: {{ref}}",
@@ -179,6 +181,14 @@
     "goToCourse": "打开课程",
     "mockData": "当前为模拟数据，等待 Money Space 接入。",
     "streaming": "录播访问",
-    "homeCta": "打开我的课程"
+    "homeCta": "打开我的课程",
+    "empty": "还没有购买任何课程",
+    "createdAt": "建立时间",
+    "expiresIn": "将在 {{days}} 天 {{hours}} 小时后到期",
+    "expiredAt": "已于 {{date}} 到期",
+    "expiryPending": "首次扫码入课后开始计时，可使用 30 天",
+    "expiryLabel": "到期日",
+    "expiryHint": "首次扫码后开始计算 30 天",
+    "firstCheckIn": "首次扫码"
   }
 }

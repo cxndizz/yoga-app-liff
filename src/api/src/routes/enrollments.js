@@ -310,24 +310,43 @@ router.post('/attend', requireAdminAuth(['super_admin', 'branch_admin', 'instruc
     }
 
     const enrollment = checkResult.rows[0];
+    const now = new Date();
+
+    if (enrollment.expires_at && new Date(enrollment.expires_at).getTime() <= now.getTime()) {
+      await db.query(
+        `UPDATE course_enrollments
+         SET status = 'expired', updated_at = NOW()
+         WHERE id = $1`,
+        [enrollment.id]
+      );
+      return res.status(400).json({ message: 'Enrollment has already expired' });
+    }
 
     if (enrollment.remaining_access !== null && enrollment.remaining_access <= 0) {
       return res.status(400).json({ message: 'No remaining access for this enrollment' });
     }
 
+    const baseStart = enrollment.first_attended_at
+      ? new Date(enrollment.first_attended_at)
+      : now;
+    const resolvedExpiresAt =
+      enrollment.expires_at || new Date(baseStart.getTime() + 30 * 24 * 60 * 60 * 1000);
+
     const newRemainingAccess = enrollment.remaining_access !== null ? enrollment.remaining_access - 1 : null;
     const newStatus = newRemainingAccess === 0 ? 'expired' : 'active';
 
     const result = await db.query(
-      `UPDATE course_enrollments
-       SET last_attended_at = NOW(),
-           remaining_access = $1,
-           status = $2,
-           updated_at = NOW()
-       WHERE id = $3
-       RETURNING *`,
-      [newRemainingAccess, newStatus, id]
-    );
+        `UPDATE course_enrollments
+         SET last_attended_at = NOW(),
+             remaining_access = $1,
+             first_attended_at = COALESCE(first_attended_at, $4),
+             expires_at = COALESCE(expires_at, $5),
+             status = $2,
+             updated_at = NOW()
+         WHERE id = $3
+         RETURNING *`,
+        [newRemainingAccess, newStatus, id, baseStart, resolvedExpiresAt]
+      );
 
     res.json({
       message: 'Attendance recorded successfully',
