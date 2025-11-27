@@ -22,6 +22,7 @@ const settingsRoutes = require('./routes/settings');
 const paymentsRoutes = require('./routes/payments');
 const moneyspaceService = require('./services/moneyspace');
 const { assertPurchasable, findReusableOrder } = require('./utils/purchaseGuards');
+const { startOrderExpiryWatcher } = require('./services/orderScheduler');
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -696,3 +697,6 @@ httpServer.listen(port, () => {
   console.log(`API server is running on port ${port}`);
   console.log(`WebSocket server is ready`);
 });
+
+// Start background watcher to cancel stale pending orders
+startOrderExpiryWatcher();

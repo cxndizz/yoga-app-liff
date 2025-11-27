@@ -187,6 +187,23 @@ router.post('/moneyspace/status', async (req, res) => {
   }
 });
 
+router.post('/moneyspace/order-status', async (req, res) => {
+  try {
+    const { order_id } = req.body || {};
+
+    if (!order_id) {
+      return res.status(400).json({ message: 'order_id is required' });
+    }
+
+    const result = await moneyspace.checkOrderStatus({ orderId: order_id });
+
+    res.json(result);
+  } catch (err) {
+    console.error('Error checking Money Space order status', err);
+    res.status(500).json({ message: err?.message || 'Unable to check payment status' });
+  }
+});
+
 router.post('/moneyspace/cancel', async (req, res) => {
   try {
     const { transaction_id, order_id } = req.body || {};

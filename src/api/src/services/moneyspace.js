@@ -12,6 +12,7 @@ const MONEYSPACE_STORE_BASE = process.env.MONEYSPACE_STORE_BASE || 'https://www.
 const PUBLIC_BASE = process.env.MONEYSPACE_DOMAIN || process.env.PUBLIC_BASE_URL || 'https://fortestonlyme.online';
 const MONEYSPACE_CREATE_PATH = process.env.MONEYSPACE_CREATE_PATH || '/payment/CreateTransaction';
 const MONEYSPACE_CHECK_PATH = process.env.MONEYSPACE_CHECK_PATH || '/CheckPayment';
+const MONEYSPACE_CHECK_ORDER_PATH = process.env.MONEYSPACE_CHECK_ORDER_PATH || '/CheckOrderID';
 const MONEYSPACE_CANCEL_PATH = process.env.MONEYSPACE_CANCEL_PATH || '/merchantapi/cancelpayment';
 
 const safeFetch = (url, { method = 'GET', headers = {}, body } = {}) => {
@@ -64,6 +65,7 @@ const CANCEL_URL = process.env.MONEYSPACE_CANCEL_URL || defaultReturnUrl('/payme
 const AGREEMENT = process.env.MONEYSPACE_AGREEMENT || '4';
 const CREATE_TRANSACTION_URL = `${MONEYSPACE_BASE.replace(/\/$/, '')}${MONEYSPACE_CREATE_PATH}`;
 const CHECK_TRANSACTION_URL = `${MONEYSPACE_BASE.replace(/\/$/, '')}${MONEYSPACE_CHECK_PATH}`;
+const CHECK_ORDER_URL = `${MONEYSPACE_BASE.replace(/\/$/, '')}${MONEYSPACE_CHECK_ORDER_PATH}`;
 const CANCEL_TRANSACTION_URL = `${MONEYSPACE_BASE.replace(/\/$/, '')}${MONEYSPACE_CANCEL_PATH}`;
 const STORE_INFO_URL = `${MONEYSPACE_STORE_BASE.replace(/\/$/, '')}/merchantapi/v1/store/obj`;
 
@@ -458,6 +460,56 @@ const handleWebhook = async (body = {}) => {
   return { signatureValid, mappedStatus, orderUpdate };
 };
 
+const checkOrderStatus = async ({ orderId, orderCode }) => {
+  ensureSecrets();
+
+  const resolvedOrderId = orderId || orderCode;
+
+  if (!resolvedOrderId) {
+    throw new Error('order_id is required');
+  }
+
+  const response = await safeFetch(CHECK_ORDER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      secret_id: MONEYSPACE_SECRET_ID,
+      secret_key: MONEYSPACE_SECRET_KEY,
+      order_id: resolvedOrderId,
+    }),
+  });
+
+  const payload = (await response.json().catch(() => ({}))) || {};
+  const primaryPayload = Array.isArray(payload) ? payload[0] || {} : payload;
+  const statusValue =
+    primaryPayload.status ||
+    primaryPayload.transaction_status ||
+    primaryPayload.payment_status ||
+    primaryPayload.result ||
+    primaryPayload.state ||
+    'pending';
+
+  const mappedStatus = normalizeStatus(statusValue);
+  const numericOrderId = Number(String(resolvedOrderId).replace(/[^0-9]/g, ''));
+  const finalOrderId = Number.isFinite(numericOrderId) ? numericOrderId : null;
+
+  const orderUpdate = await updateOrderAndPayment({
+    orderId: finalOrderId,
+    mappedStatus,
+    transactionId: extractTransactionId(primaryPayload),
+    payload,
+  });
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    mappedStatus,
+    orderId: finalOrderId,
+    order: orderUpdate,
+    payload,
+  };
+};
+
 const checkTransactionStatus = async ({ transactionId, orderId }) => {
   ensureSecrets();
 
@@ -582,6 +634,7 @@ module.exports = {
   createTransaction,
   recordPaymentStatus,
   handleWebhook,
+  checkOrderStatus,
   normalizePaymentType,
   checkTransactionStatus,
   cancelTransaction,
