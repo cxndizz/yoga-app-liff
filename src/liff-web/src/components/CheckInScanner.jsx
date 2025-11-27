@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { fetchCheckinEnrollments, submitCheckin } from '../lib/checkinApi';
 
 const CHECKIN_PREFIX = 'yoga-checkin:';
@@ -144,75 +145,35 @@ function CheckInScanner({ userId, open, onClose }) {
 
   if (!open) return null;
 
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.55)',
-        display: 'grid',
-        placeItems: 'center',
-        zIndex: 3000,
-        padding: '16px',
-      }}
-    >
-      <div
-        className="card-surface"
-        style={{
-          width: 'min(520px, 96vw)',
-          background: '#0b1220',
-          border: '1px solid rgba(148, 163, 184, 0.35)',
-          borderRadius: '16px',
-          padding: '18px',
-          position: 'relative',
-        }}
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: 10,
-            right: 10,
-            border: 'none',
-            background: 'transparent',
-            color: '#e5e7eb',
-            fontSize: '18px',
-            cursor: 'pointer',
-          }}
-          aria-label="close"
-        >
+  return createPortal(
+    <div className="scanner-modal-backdrop">
+      <div className="card-surface scanner-modal" role="dialog" aria-modal="true">
+        <button type="button" onClick={onClose} className="scanner-modal__close" aria-label="close">
           ✕
         </button>
 
-        <h3 style={{ margin: '0 0 4px', color: '#e0e7ff' }}>สแกน QR เพื่อตัดสิทธิ์เข้าเรียน</h3>
-        <p style={{ margin: '0 0 10px', color: '#94a3b8', fontSize: 14 }}>
-          ระบบจะเรียกตัวสแกนของ LINE LIFF เพื่อบันทึกสิทธิ์ที่คุณซื้อไว้
-        </p>
+        <div className="scanner-modal__header">
+          <div>
+            <h3 className="scanner-modal__title">สแกน QR เพื่อตัดสิทธิ์เข้าเรียน</h3>
+            <p className="scanner-modal__subtitle">
+              ระบบจะเรียกตัวสแกนของ LINE LIFF เพื่อบันทึกสิทธิ์ที่คุณซื้อไว้
+            </p>
+          </div>
+        </div>
 
-        <div
-          style={{
-            background: 'rgba(148, 163, 184, 0.06)',
-            border: '1px solid rgba(148, 163, 184, 0.2)',
-            borderRadius: 12,
-            padding: 12,
-            marginBottom: 12,
-            maxHeight: 220,
-            overflow: 'auto',
-          }}
-        >
-          <div style={{ color: '#cbd5e1', marginBottom: 8, fontWeight: 600 }}>เลือกคอร์สที่ต้องการใช้สิทธิ์</div>
+        <div className="scanner-modal__enrollments">
+          <div className="scanner-modal__section-title">เลือกคอร์สที่ต้องการใช้สิทธิ์</div>
 
-          {loadingEnrollments && <div style={{ color: '#94a3b8' }}>กำลังโหลดคอร์สที่คุณมีสิทธิ์...</div>}
+          {loadingEnrollments && <div className="scanner-modal__hint">กำลังโหลดคอร์สที่คุณมีสิทธิ์...</div>}
 
           {!loadingEnrollments && enrollments.length === 0 && (
-            <div style={{ color: '#ef4444', fontSize: 14 }}>
+            <div className="scanner-modal__error">
               ไม่พบสิทธิ์ที่สามารถใช้สแกนได้ กรุณาซื้อคอร์สหรือทำรายการใหม่
             </div>
           )}
 
           {!loadingEnrollments && enrollments.length > 0 && (
-            <div style={{ display: 'grid', gap: 8 }}>
+            <div className="scanner-modal__options">
               {enrollments.map((item) => {
                 const remaining =
                   item.remaining_access === null || item.remaining_access === undefined
@@ -225,19 +186,7 @@ function CheckInScanner({ userId, open, onClose }) {
                   <label
                     key={item.enrollment_id}
                     htmlFor={`enroll-${item.enrollment_id}`}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'auto 1fr auto',
-                      gap: 10,
-                      alignItems: 'center',
-                      border: isSelected
-                        ? '1px solid rgba(94, 234, 212, 0.8)'
-                        : '1px solid rgba(148, 163, 184, 0.35)',
-                      borderRadius: 12,
-                      padding: 10,
-                      background: isSelected ? 'rgba(45, 212, 191, 0.06)' : 'rgba(148, 163, 184, 0.04)',
-                      cursor: 'pointer',
-                    }}
+                    className={`scanner-modal__option ${isSelected ? 'is-selected' : ''}`}
                   >
                     <input
                       type="radio"
@@ -248,17 +197,17 @@ function CheckInScanner({ userId, open, onClose }) {
                       onChange={(e) => setSelectedEnrollmentId(e.target.value)}
                     />
                     <div>
-                      <div style={{ color: '#e2e8f0', fontWeight: 600 }}>{item.title}</div>
-                      <div style={{ color: '#94a3b8', fontSize: 13 }}>
+                      <div className="scanner-modal__option-title">{item.title}</div>
+                      <div className="scanner-modal__option-subtitle">
                         สิทธิ์คงเหลือ: {remaining} / รวม {total}
                       </div>
                       {item.last_attended_at && (
-                        <div style={{ color: '#94a3b8', fontSize: 12 }}>
+                        <div className="scanner-modal__option-muted">
                           เข้าเรียนล่าสุด: {new Date(item.last_attended_at).toLocaleString()}
                         </div>
                       )}
                     </div>
-                    <div style={{ color: '#cbd5e1', fontSize: 12 }}>เลือก</div>
+                    <div className="scanner-modal__option-hint">เลือก</div>
                   </label>
                 );
               })}
@@ -266,35 +215,17 @@ function CheckInScanner({ userId, open, onClose }) {
           )}
         </div>
 
-        <div
-          style={{
-            background: 'rgba(148, 163, 184, 0.08)',
-            border: `1px solid ${statusColor}`,
-            color: statusColor,
-            borderRadius: 10,
-            padding: '10px 12px',
-            minHeight: 44,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            marginBottom: 12,
-          }}
-        >
+        <div className="scanner-modal__status" style={{ borderColor: statusColor, color: statusColor }}>
           {status.state === 'success' && '✅'}
           {status.state === 'error' && '⚠️'}
           {status.state === 'idle' && 'ℹ️'}
-          <span style={{ color: '#e2e8f0' }}>
+          <span className="scanner-modal__status-text">
             {status.message || 'กดปุ่ม "เริ่มสแกน" เพื่อเปิดกล้องจาก LINE'}
           </span>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-          <button
-            type="button"
-            className="btn btn-outline"
-            onClick={onClose}
-            style={{ paddingInline: 16 }}
-          >
+        <div className="scanner-modal__actions">
+          <button type="button" className="btn btn-outline" onClick={onClose}>
             ปิดหน้าต่าง
           </button>
           <button
@@ -302,13 +233,13 @@ function CheckInScanner({ userId, open, onClose }) {
             className="btn btn-primary"
             onClick={handleScan}
             disabled={processing || !userId || !selectedEnrollment}
-            style={{ paddingInline: 16 }}
           >
             {processing ? 'กำลังเปิดกล้อง...' : 'เริ่มสแกน'}
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
