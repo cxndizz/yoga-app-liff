@@ -5,13 +5,16 @@ import App from './App';
 import './styles.css';
 import './i18n'; // Initialize i18next
 import { AutoTranslateProvider } from './lib/autoTranslate';
+import { SocketProvider } from './contexts/SocketContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AutoTranslateProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <SocketProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </SocketProvider>
     </AutoTranslateProvider>
   </React.StrictMode>,
 );
