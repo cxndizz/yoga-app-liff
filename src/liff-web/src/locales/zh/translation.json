@@ -38,6 +38,7 @@
     "premium": "高级课程",
     "all": "全部课程",
     "browseOther": "浏览其他课程",
+    "alreadyPurchased": "您已购买此课程",
     "notFound": "未找到课程，请返回主页",
     "loadingCourses": "正在加载课程...",
     "loadingAll": "正在加载全部课程...",
