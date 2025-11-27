@@ -3,6 +3,7 @@ const { randomUUID } = require('crypto');
 const router = express.Router();
 const db = require('../db');
 const { requireAdminAuth } = require('../middleware/adminAuth');
+const eventBus = require('../events/eventBus');
 
 const normalizeBoolean = (value) => value === true || value === 'true';
 
@@ -219,7 +220,12 @@ router.post('/', requireAdminAuth(['super_admin', 'branch_admin']), async (req, 
       ]
     );
 
-    res.status(201).json(result.rows[0]);
+    const newCourse = result.rows[0];
+
+    // Emit course created event
+    eventBus.emitCourseEvent('created', newCourse);
+
+    res.status(201).json(newCourse);
   } catch (err) {
     console.error('Error creating course:', err);
     res.status(500).json({ message: 'Error creating course' });
@@ -351,7 +357,12 @@ router.post('/update', requireAdminAuth(['super_admin', 'branch_admin']), async 
       ]
     );
 
-    res.json(result.rows[0]);
+    const updatedCourse = result.rows[0];
+
+    // Emit course updated event
+    eventBus.emitCourseEvent('updated', updatedCourse);
+
+    res.json(updatedCourse);
   } catch (err) {
     console.error('Error updating course:', err);
     res.status(500).json({ message: 'Error updating course' });
@@ -378,6 +389,10 @@ router.post('/delete', requireAdminAuth(['super_admin']), async (req, res) => {
     }
 
     await db.query('DELETE FROM courses WHERE id = $1', [id]);
+
+    // Emit course deleted event
+    eventBus.emitCourseEvent('deleted', { id });
+
     res.json({ message: 'Course deleted successfully' });
   } catch (err) {
     console.error('Error deleting course:', err);

@@ -1,9 +1,11 @@
 const express = require('express');
+const http = require('http');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const db = require('./db');
 const { requireAdminAuth } = require('./middleware/adminAuth');
+const { initSocketServer } = require('./websocket/socketServer');
 
 dotenv.config();
 
@@ -649,6 +651,17 @@ app.post('/payments/moneyspace-webhook', async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+// Create HTTP server for both Express and Socket.io
+const httpServer = http.createServer(app);
+
+// Initialize WebSocket server
+const io = initSocketServer(httpServer);
+
+// Make io available to routes via app.locals
+app.locals.io = io;
+
+// Start server
+httpServer.listen(port, () => {
   console.log(`API server is running on port ${port}`);
+  console.log(`WebSocket server is ready`);
 });

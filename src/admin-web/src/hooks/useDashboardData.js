@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
+import { useSocket } from '../contexts/SocketContext';
 
 import { apiBase } from '../config';
 const DEFAULT_INTERVAL = 60_000;
@@ -18,6 +19,7 @@ const useDashboardData = ({ autoRefreshMs = DEFAULT_INTERVAL } = {}) => {
   const [lastUpdated, setLastUpdated] = useState(null);
   const abortControllerRef = useRef(null);
   const isMountedRef = useRef(true);
+  const { on: onSocketEvent } = useSocket();
 
   const fetchData = useCallback(
     async ({ silent = false } = {}) => {
@@ -109,6 +111,23 @@ const useDashboardData = ({ autoRefreshMs = DEFAULT_INTERVAL } = {}) => {
       }
     };
   }, [autoRefreshMs, fetchData]);
+
+  // WebSocket real-time updates
+  useEffect(() => {
+    if (!onSocketEvent) return undefined;
+
+    console.log('[Dashboard] Setting up WebSocket listeners for real-time updates');
+
+    // Listen for dashboard refresh events
+    const unsubscribe = onSocketEvent('dashboard:refresh', () => {
+      console.log('[Dashboard] Received dashboard:refresh event - refreshing data');
+      fetchData({ silent: true });
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [onSocketEvent, fetchData]);
 
   return { data, loading, error, refresh, lastUpdated };
 };

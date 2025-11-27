@@ -3,6 +3,7 @@ const https = require('https');
 const { URL } = require('url');
 const db = require('../db');
 const { ensureEnrollmentForOrder } = require('./enrollmentService');
+const eventBus = require('../events/eventBus');
 
 const MONEYSPACE_SECRET_ID = process.env.MONEYSPACE_SECRET_ID || process.env.MONEYSPACE_SECRETID;
 const MONEYSPACE_SECRET_KEY = process.env.MONEYSPACE_SECRET_KEY || process.env.MONEYSPACE_SECRETKEY;
@@ -354,7 +355,7 @@ const updateOrderAndPayment = async ({ orderId, mappedStatus, transactionId, pay
        SET status = $1,
            updated_at = NOW()
        WHERE id = $2
-       RETURNING id, status`,
+       RETURNING *`,
       [mappedStatus, orderId]
     );
 
@@ -367,13 +368,33 @@ const updateOrderAndPayment = async ({ orderId, mappedStatus, transactionId, pay
       payload,
     });
 
+    // Emit order updated event
+    if (orderUpdate) {
+      eventBus.emitOrderEvent('updated', orderUpdate);
+    }
+
+    // Emit payment event
+    eventBus.emitPaymentEvent(mappedStatus, {
+      order_id: orderId,
+      user_id: orderUpdate?.user_id,
+      transaction_id: transactionId,
+      status: mappedStatus,
+    });
+
     if (mappedStatus === 'completed') {
       try {
-        await ensureEnrollmentForOrder(orderId);
+        const enrollmentResult = await ensureEnrollmentForOrder(orderId);
+        // Emit enrollment event if created
+        if (enrollmentResult.created && enrollmentResult.enrollment) {
+          eventBus.emitEnrollmentEvent('created', enrollmentResult.enrollment);
+        }
       } catch (err) {
         console.error('Money Space enrollment error:', err);
       }
     }
+
+    // Trigger dashboard refresh for admins
+    eventBus.emitDashboardRefresh();
   } catch (err) {
     console.error('Money Space order update error:', err);
   }

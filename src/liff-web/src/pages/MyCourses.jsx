@@ -6,6 +6,7 @@ import { useAutoTranslate } from '../lib/autoTranslate';
 import { formatAccessTimes, placeholderImage } from '../lib/formatters';
 import useLiffUser from '../hooks/useLiffUser';
 import { getCachedLiffUser } from '../lib/liffAuth';
+import { useSocket } from '../contexts/SocketContext';
 
 const normalizeStatus = (value) => String(value ?? '').toLowerCase().trim();
 
@@ -37,6 +38,7 @@ function MyCourses() {
   const { t } = useTranslation();
   const { formatDate, formatPrice, language } = useAutoTranslate();
   const { user: liveUser } = useLiffUser();
+  const { on: onSocketEvent } = useSocket();
 
   const cachedUser = getCachedLiffUser()?.user || null;
   const [user, setUser] = useState(cachedUser);
@@ -47,27 +49,62 @@ function MyCourses() {
     if (liveUser) setUser(liveUser);
   }, [liveUser]);
 
-  useEffect(() => {
+  const refreshOrders = React.useCallback(() => {
     if (!user?.id) {
       setStatus('no-user');
       return;
     }
-    let active = true;
     setStatus('loading');
     fetchOrdersForUser(user.id)
       .then((data) => {
-        if (!active) return;
         setOrders(data);
         setStatus('ready');
       })
       .catch(() => {
-        if (!active) return;
         setStatus('error');
       });
-    return () => {
-      active = false;
-    };
   }, [user]);
+
+  useEffect(() => {
+    refreshOrders();
+  }, [refreshOrders]);
+
+  // WebSocket real-time updates
+  useEffect(() => {
+    if (!onSocketEvent || !user?.id) return undefined;
+
+    console.log('[MyCourses] Setting up WebSocket listeners for user:', user.id);
+
+    // Listen for order updates
+    const unsubscribeOrder = onSocketEvent('order:updated', (data) => {
+      if (data?.user_id === user.id) {
+        console.log('[MyCourses] Received order update - refreshing');
+        refreshOrders();
+      }
+    });
+
+    // Listen for enrollment updates
+    const unsubscribeEnrollment = onSocketEvent('enrollment:updated', (data) => {
+      if (data?.user_id === user.id) {
+        console.log('[MyCourses] Received enrollment update - refreshing');
+        refreshOrders();
+      }
+    });
+
+    // Listen for payment updates
+    const unsubscribePayment = onSocketEvent('payment:updated', (data) => {
+      if (data?.user_id === user.id) {
+        console.log('[MyCourses] Received payment update - refreshing');
+        refreshOrders();
+      }
+    });
+
+    return () => {
+      unsubscribeOrder();
+      unsubscribeEnrollment();
+      unsubscribePayment();
+    };
+  }, [onSocketEvent, user, refreshOrders]);
 
   const visibleOrders = useMemo(() => {
     const result = [];
