@@ -9,6 +9,7 @@ import Instructors from './pages/Instructors';
 import CourseSessions from './pages/CourseSessions';
 import Enrollments from './pages/Enrollments';
 import Login from './pages/Login';
+import AdminDebug from './pages/AdminDebug';
 import { withAdminGuard } from './auth/AdminGuard';
 import { useAdminAuth } from './auth/AdminAuthContext';
 import { apiBase } from './config';
@@ -49,6 +50,7 @@ const AdminLayout = () => {
     { label: 'Branches', to: '/branches', roles: ['super_admin'] },
     { label: 'Instructors', to: '/instructors', roles: ['super_admin', 'branch_admin'] },
     { label: 'Users', to: '/users', roles: ['super_admin'] },
+    { label: 'Debug', to: '/debug', roles: ['super_admin'] },
   ];
 
   const visibleNavItems = navItems.filter((item) => !item.roles || item.roles.includes(role));
@@ -158,6 +160,10 @@ const GuardedUsers = withAdminGuard(Users, {
   allowedRoles: ['super_admin'],
 });
 
+const GuardedDebug = withAdminGuard(AdminDebug, {
+  allowedRoles: ['super_admin'],
+});
+
 function App() {
   return (
     <Routes>
@@ -171,6 +177,7 @@ function App() {
         <Route path="/branches" element={<GuardedBranches />} />
         <Route path="/instructors" element={<GuardedInstructors />} />
         <Route path="/users" element={<GuardedUsers />} />
+        <Route path="/debug" element={<GuardedDebug />} />
       </Route>
     </Routes>
   );
