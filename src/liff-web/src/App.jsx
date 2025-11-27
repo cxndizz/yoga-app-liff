@@ -11,6 +11,7 @@ import Navbar from './components/Navbar';
 import WelcomeBar from './components/WelcomeBar';
 import Footer from './components/Footer';
 import useLiffUser from './hooks/useLiffUser';
+import CheckinHistory from './pages/CheckinHistory';
 
 function App() {
   const location = useLocation();
@@ -83,6 +84,7 @@ function App() {
           <Route path="/courses/:courseId" element={<CourseDetail />} />
           <Route path="/courses/:courseId/checkout" element={<Checkout />} />
           <Route path="/my-courses" element={<MyCourses />} />
+          <Route path="/checkin-history" element={<CheckinHistory />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/payments/moneyspace/:state" element={<PaymentResult />} />
         </Routes>

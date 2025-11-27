@@ -10,6 +10,7 @@ import CourseSessions from './pages/CourseSessions';
 import Enrollments from './pages/Enrollments';
 import Login from './pages/Login';
 import AdminDebug from './pages/AdminDebug';
+import Checkins from './pages/Checkins';
 import { withAdminGuard } from './auth/AdminGuard';
 import { useAdminAuth } from './auth/AdminAuthContext';
 import { apiBase } from './config';
@@ -46,6 +47,7 @@ const AdminLayout = () => {
     { label: 'Dashboard', to: '/dashboard', roles: ['super_admin', 'branch_admin', 'instructor'] },
     { label: 'Courses', to: '/courses', roles: ['super_admin', 'branch_admin'] },
     { label: 'Sessions', to: '/sessions', roles: ['super_admin', 'branch_admin', 'instructor'] },
+    { label: 'Check-ins', to: '/checkins', roles: ['super_admin', 'branch_admin', 'instructor'] },
     { label: 'Enrollments', to: '/enrollments', roles: ['super_admin', 'branch_admin'] },
     { label: 'Branches', to: '/branches', roles: ['super_admin'] },
     { label: 'Instructors', to: '/instructors', roles: ['super_admin', 'branch_admin'] },
@@ -144,6 +146,10 @@ const GuardedSessions = withAdminGuard(CourseSessions, {
   allowedRoles: ['super_admin', 'branch_admin', 'instructor'],
 });
 
+const GuardedCheckins = withAdminGuard(Checkins, {
+  allowedRoles: ['super_admin', 'branch_admin', 'instructor'],
+});
+
 const GuardedEnrollments = withAdminGuard(Enrollments, {
   allowedRoles: ['super_admin', 'branch_admin'],
 });
@@ -173,6 +179,7 @@ function App() {
         <Route path="/dashboard" element={<AdminDashboard />} />
         <Route path="/courses" element={<GuardedCourses />} />
         <Route path="/sessions" element={<GuardedSessions />} />
+        <Route path="/checkins" element={<GuardedCheckins />} />
         <Route path="/enrollments" element={<GuardedEnrollments />} />
         <Route path="/branches" element={<GuardedBranches />} />
         <Route path="/instructors" element={<GuardedInstructors />} />

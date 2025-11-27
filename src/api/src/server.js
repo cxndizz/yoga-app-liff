@@ -21,6 +21,7 @@ const contentRoutes = require('./routes/content');
 const settingsRoutes = require('./routes/settings');
 const paymentsRoutes = require('./routes/payments');
 const adminDebugRoutes = require('./routes/adminDebug');
+const checkinsRoutes = require('./routes/checkins');
 const moneyspaceService = require('./services/moneyspace');
 const { assertPurchasable, findReusableOrder } = require('./utils/purchaseGuards');
 const { startOrderExpiryWatcher } = require('./services/orderScheduler');
@@ -73,6 +74,7 @@ app.use('/api/admin/customers', customersRoutes);
 app.use('/api/admin/content', contentRoutes);
 app.use('/api/admin/settings', settingsRoutes);
 app.use('/api/admin/debug', adminDebugRoutes);
+app.use('/api/admin/checkins', checkinsRoutes);
 app.use('/payments', paymentsRoutes);
 
 app.post('/courses/list', async (req, res) => {
@@ -313,6 +315,12 @@ app.post('/courses/checkin', async (req, res) => {
       [newRemaining, newStatus, enrollment.id]
     );
 
+    await db.query(
+      `INSERT INTO course_checkin_logs (user_id, course_id, enrollment_id, session_id, source, raw_code)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [user_id, course.id, enrollment.id, enrollment.session_id || null, 'liff', normalizedCode]
+    );
+
     res.json({
       message: 'บันทึกการเข้าเรียนเรียบร้อย',
       course,
@@ -358,6 +366,60 @@ app.post('/users/checkin/enrollments', async (req, res) => {
   } catch (err) {
     console.error('Error fetching check-in enrollments', err);
     res.status(500).json({ message: 'Error fetching enrollments for check-in' });
+  }
+});
+
+app.get('/users/:userId/checkins', async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) {
+    return res.status(400).json({ message: 'userId is required' });
+  }
+
+  const limit = parseLimit(req.query.limit, 50);
+  const offset = parseLimit(req.query.offset, 0);
+
+  try {
+    const result = await db.query(
+      `SELECT l.id,
+              l.attended_at,
+              l.course_id,
+              l.enrollment_id,
+              l.session_id,
+              l.source,
+              l.raw_code,
+              c.title AS course_title,
+              cs.session_name,
+              cs.start_date,
+              cs.start_time,
+              cs.end_time
+       FROM course_checkin_logs l
+       LEFT JOIN courses c ON c.id = l.course_id
+       LEFT JOIN course_sessions cs ON cs.id = l.session_id
+       WHERE l.user_id = $1
+       ORDER BY l.attended_at DESC
+       LIMIT $2 OFFSET $3`,
+      [userId, limit, offset]
+    );
+
+    const mapped = result.rows.map((row) => ({
+      id: row.id,
+      attended_at: row.attended_at,
+      course_id: row.course_id,
+      enrollment_id: row.enrollment_id,
+      session_id: row.session_id,
+      session_name: row.session_name,
+      session_start_date: row.start_date,
+      session_start_time: row.start_time,
+      session_end_time: row.end_time,
+      source: row.source,
+      raw_code: row.raw_code,
+      course_title: row.course_title,
+    }));
+
+    res.json(mapped);
+  } catch (err) {
+    console.error('Error fetching check-in history', err);
+    res.status(500).json({ message: 'Error fetching check-in history' });
   }
 });
 

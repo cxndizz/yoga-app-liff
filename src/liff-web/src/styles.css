@@ -363,6 +363,18 @@ input, button, textarea, select {
   transform: translateY(-1px);
 }
 
+.btn-ghost {
+  background: transparent;
+  border-color: rgba(148, 163, 184, 0.4);
+  color: #cbd5e1;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(148, 163, 184, 0.08);
+  border-color: rgba(148, 163, 184, 0.6);
+  color: #e2e8f0;
+}
+
 /* Secondary Button */
 .btn-secondary {
   background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
@@ -1136,6 +1148,99 @@ select option {
   font-size: 14px;
 }
 
+.scanner-viewport {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 14px;
+  padding: 10px;
+  background: radial-gradient(circle at 20% 20%, rgba(94, 234, 212, 0.04), transparent),
+    radial-gradient(circle at 80% 80%, rgba(147, 197, 253, 0.04), transparent);
+}
+
+.scanner-viewport__frame {
+  position: relative;
+  border: 1px dashed rgba(148, 163, 184, 0.5);
+  border-radius: 12px;
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.scanner-viewport__beam {
+  position: absolute;
+  inset: 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(94, 234, 212, 0.35);
+  box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.15);
+  background: linear-gradient(135deg, rgba(94, 234, 212, 0.04), rgba(14, 165, 233, 0.04));
+  animation: scannerBeam 2.4s ease-in-out infinite;
+}
+
+.scanner-viewport__beam[data-state='success'] {
+  border-color: rgba(16, 185, 129, 0.65);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.25);
+}
+
+.scanner-viewport__beam[data-state='error'] {
+  border-color: rgba(248, 113, 113, 0.65);
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.25);
+}
+
+.scanner-viewport__beam[data-state='scanning']::after {
+  content: '';
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  top: 12px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, rgba(94, 234, 212, 0.25), transparent);
+  animation: scannerLine 1.4s ease-in-out infinite;
+}
+
+.scanner-viewport__hint {
+  position: relative;
+  z-index: 1;
+  color: #cbd5e1;
+  font-size: 14px;
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+@keyframes scannerBeam {
+  0% {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+}
+
+@keyframes scannerLine {
+  0% {
+    transform: translateY(-4px);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(12px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-4px);
+    opacity: 0.7;
+  }
+}
+
 .scanner-modal__enrollments {
   background: rgba(148, 163, 184, 0.06);
   border: 1px solid rgba(148, 163, 184, 0.2);
@@ -1226,6 +1331,73 @@ select option {
   justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.scanner-modal__action-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ============================================
+   🗂️ CHECK-IN HISTORY
+   ============================================ */
+
+.checkin-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.checkin-card {
+  padding: 14px 16px;
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.05), rgba(148, 163, 184, 0.02));
+}
+
+.checkin-card__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.checkin-card__chip {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(94, 234, 212, 0.3);
+  color: #5eead4;
+  background: rgba(45, 212, 191, 0.06);
+}
+
+.checkin-card__time {
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.checkin-card__title {
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.checkin-card__meta {
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.checkin-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pill--soft {
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
 }
 
 .scanner-modal__actions .btn {
