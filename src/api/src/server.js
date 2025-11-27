@@ -501,13 +501,41 @@ app.post('/users/orders', async (req, res) => {
   }
   try {
     const normalizeStatus = (value) => String(value || '').trim().toLowerCase();
-    const paidStatuses = ['completed', 'paid', 'success', 'paysuccess'];
+    const paidStatuses = [
+      'completed',
+      'paid',
+      'success',
+      'paysuccess',
+      'succeeded',
+      'successed',
+      'authorized',
+      'authorised',
+      'ok',
+    ];
+    const cancelledStatuses = ['cancelled', 'canceled', 'failed'];
+
+    const isPaidStatus = (value, isFree = false) => {
+      if (isFree) return true;
+      return paidStatuses.includes(normalizeStatus(value));
+    };
 
     const isEnrollmentActive = (row) => {
       const status = normalizeStatus(row?.enrollment_status);
       const remaining = row?.remaining_access;
       const hasRemaining = remaining === null || Number(remaining) > 0;
       return row?.enrollment_id && !['cancelled', 'expired'].includes(status) && hasRemaining;
+    };
+
+    const isOrderOwned = (row) => {
+      const normalizedPayment = normalizeStatus(row?.payment_status || row?.status);
+      const normalizedOrder = normalizeStatus(row?.status);
+      const priceCents = Number(row?.total_price_cents ?? row?.price_cents ?? 0);
+      const isFree = row?.is_free || priceCents === 0;
+      const cancelled = cancelledStatuses.includes(normalizedPayment) || cancelledStatuses.includes(normalizedOrder);
+      return (
+        !cancelled &&
+        (isEnrollmentActive(row) || isPaidStatus(normalizedPayment, isFree) || isPaidStatus(normalizedOrder, isFree))
+      );
     };
 
     const withResolvedStatuses = (row) => {
@@ -529,6 +557,7 @@ app.post('/users/orders', async (req, res) => {
         enrollment_active: enrollmentActive,
         resolved_payment_status: resolvedPaymentStatus,
         resolved_order_status: resolvedOrderStatus,
+        is_owned: isOrderOwned(row),
       };
     };
 

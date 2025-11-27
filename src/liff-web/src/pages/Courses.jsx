@@ -5,6 +5,10 @@ import CourseCard from '../components/CourseCard';
 import FilterBar from '../components/FilterBar';
 import { fetchCourses } from '../lib/courseApi';
 import { useAutoTranslate } from '../lib/autoTranslate';
+import { fetchOrdersForUser } from '../lib/orderApi';
+import { collectOwnedCourseIds } from '../lib/orderUtils';
+import useLiffUser from '../hooks/useLiffUser';
+import { getCachedLiffUser } from '../lib/liffAuth';
 
 function Courses() {
   const location = useLocation();
@@ -13,8 +17,38 @@ function Courses() {
   const [branch, setBranch] = useState('');
   const [instructor, setInstructor] = useState('');
   const [status, setStatus] = useState('idle');
+  const [ownership, setOwnership] = useState({ checked: false, ownedIds: new Set() });
+  const { user: liveUser } = useLiffUser();
+  const [user, setUser] = useState(getCachedLiffUser()?.user || null);
   const { language } = useAutoTranslate();
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (liveUser) setUser(liveUser);
+  }, [liveUser]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setOwnership({ checked: true, ownedIds: new Set() });
+      return undefined;
+    }
+
+    let active = true;
+    fetchOrdersForUser(user.id)
+      .then((orders) => {
+        if (!active) return;
+        const ownedIds = collectOwnedCourseIds(Array.isArray(orders) ? orders : []);
+        setOwnership({ checked: true, ownedIds });
+      })
+      .catch(() => {
+        if (!active) return;
+        setOwnership({ checked: true, ownedIds: new Set() });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   useEffect(() => {
     let active = true;
@@ -141,13 +175,17 @@ function Courses() {
       {/* Courses Grid */}
       <div className="grid">
         {filtered.map((course, index) => (
-          <div 
+          <div
             key={course.id}
             style={{
               animation: `fadeIn 0.4s ease-out ${index * 0.05}s both`,
             }}
           >
-            <CourseCard course={course} />
+            <CourseCard
+              course={course}
+              owned={ownership.ownedIds.has(String(course.id))}
+              ownershipChecked={ownership.checked}
+            />
           </div>
         ))}
         

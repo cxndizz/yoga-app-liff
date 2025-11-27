@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { placeholderImage } from '../lib/formatters';
 import { useAutoTranslate } from '../lib/autoTranslate';
 
-function CourseCard({ course }) {
+function CourseCard({ course, owned = false, ownershipChecked = false }) {
   const navigate = useNavigate();
   const { formatPrice, formatAccessTimes } = useAutoTranslate();
   const { t } = useTranslation();
@@ -203,13 +203,30 @@ function CourseCard({ course }) {
         >
           {t('common.viewDetails')}
         </button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={() => navigate(`/courses/${course.id}/checkout`)}
-        >
-          {course.isFree ? t('common.register') : t('common.buyCourse')}
-        </button>
+        {!ownershipChecked ? (
+          <button type="button" className="btn btn-primary" disabled>
+            {t('common.loading')}
+          </button>
+        ) : owned ? (
+          <div
+            className="pill success"
+            style={{
+              display: 'grid',
+              placeItems: 'center',
+              fontWeight: 700,
+            }}
+          >
+            {t('course.alreadyPurchased')}
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => navigate(`/courses/${course.id}/checkout`)}
+          >
+            {course.isFree ? t('common.register') : t('common.buyCourse')}
+          </button>
+        )}
       </div>
     </article>
   );

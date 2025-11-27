@@ -7,31 +7,14 @@ import { formatAccessTimes, placeholderImage } from '../lib/formatters';
 import useLiffUser from '../hooks/useLiffUser';
 import { getCachedLiffUser } from '../lib/liffAuth';
 import { useSocket } from '../contexts/SocketContext';
-
-const normalizeStatus = (value) => String(value ?? '').toLowerCase().trim();
+import { derivePaymentStatus, hasActiveEnrollment, isPaidStatus, normalizeStatus } from '../lib/orderUtils';
 
 const statusClass = (paymentStatus) => {
   const normalized = normalizeStatus(paymentStatus);
-  if (['completed', 'paid', 'success', 'paysuccess'].includes(normalized)) return 'pill success';
+  if (['completed', 'paid', 'success', 'paysuccess', 'succeeded', 'successed'].includes(normalized)) return 'pill success';
   if (['failed', 'cancelled'].includes(normalized)) return 'pill';
   return 'pill warning';
 };
-
-const isPaidStatus = (value, isFree = false) => {
-  if (isFree) return true;
-  const normalized = normalizeStatus(value);
-  return ['completed', 'paid', 'success', 'paysuccess'].includes(normalized);
-};
-
-const hasActiveEnrollment = (order = {}) => {
-  const status = normalizeStatus(order?.enrollment_status);
-  const remaining = order?.remaining_access;
-  const hasRemaining = remaining === null || Number(remaining) > 0;
-  return order?.enrollment_id && !['cancelled', 'expired'].includes(status) && hasRemaining;
-};
-
-const derivePaymentStatus = (order = {}) =>
-  normalizeStatus(order?.resolved_payment_status || order?.payment_status || order?.status);
 
 function MyCourses() {
   const navigate = useNavigate();
