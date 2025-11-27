@@ -34,19 +34,33 @@ function Courses() {
     }
 
     let active = true;
+    let timeoutId = null;
+
+    // Set a fallback timeout to prevent infinite loading (6 seconds)
+    timeoutId = setTimeout(() => {
+      if (active) {
+        console.warn('Ownership check timed out, allowing purchase anyway');
+        setOwnership({ checked: true, ownedIds: new Set() });
+      }
+    }, 6000);
+
     fetchOrdersForUser(user.id)
       .then((orders) => {
         if (!active) return;
+        if (timeoutId) clearTimeout(timeoutId);
         const ownedIds = collectOwnedCourseIds(Array.isArray(orders) ? orders : []);
         setOwnership({ checked: true, ownedIds });
       })
-      .catch(() => {
+      .catch((error) => {
         if (!active) return;
+        if (timeoutId) clearTimeout(timeoutId);
+        console.error('Failed to fetch orders:', error);
         setOwnership({ checked: true, ownedIds: new Set() });
       });
 
     return () => {
       active = false;
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, [user]);
 
