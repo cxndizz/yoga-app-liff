@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { apiBase } from '../config';
 
@@ -22,13 +22,17 @@ const RESOURCES = [
 
 const parseIds = (input) =>
   input
-    .split(/[,\s]+/)
+    .split(/[\s,\n\r]+/)
     .map((value) => Number(value))
     .filter((value) => Number.isInteger(value) && value > 0);
 
 function AdminDebug() {
   const [resource, setResource] = useState('orders');
   const [idInput, setIdInput] = useState('');
+  const [records, setRecords] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isLoadingRecords, setIsLoadingRecords] = useState(false);
+  const [listError, setListError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
@@ -38,9 +42,94 @@ function AdminDebug() {
     [resource],
   );
 
+  useEffect(() => {
+    fetchRecords();
+  }, [resource]);
+
+  const fetchRecords = async () => {
+    setIsLoadingRecords(true);
+    setListError('');
+    setRecords([]);
+    setSelectedIds([]);
+
+    const endpointConfig = {
+      orders: {
+        url: `${apiBase}/api/admin/customers/orders/list`,
+        payload: { limit: 50 },
+      },
+      payments: {
+        url: `${apiBase}/api/admin/customers/payments/list`,
+        payload: { limit: 50 },
+      },
+      enrollments: {
+        url: `${apiBase}/api/admin/enrollments/list`,
+        payload: {},
+      },
+    };
+
+    try {
+      const config = endpointConfig[resource];
+      const response = await axios.post(config.url, config.payload);
+      setRecords(response.data || []);
+    } catch (err) {
+      console.error('Failed to fetch records for debug cleanup', err);
+      setListError(err.response?.data?.message || 'ไม่สามารถโหลดรายการล่าสุดได้');
+    } finally {
+      setIsLoadingRecords(false);
+    }
+  };
+
+  const formatDateTime = (value) => (value ? new Date(value).toLocaleString('th-TH') : '-');
+
+  const renderRecordSummary = (record) => {
+    if (resource === 'orders') {
+      return (
+        <>
+          <div style={{ fontWeight: '600' }}>
+            ออเดอร์ #{record.id} — {record.course_title || 'ไม่ระบุคอร์ส'}
+          </div>
+          <div style={{ fontSize: '12px', color: '#6b7280' }}>
+            สถานะ: {record.status || '-'} · ลูกค้า: {record.customer_name || '-'} · วันที่สร้าง: {formatDateTime(record.created_at)}
+          </div>
+        </>
+      );
+    }
+
+    if (resource === 'payments') {
+      return (
+        <>
+          <div style={{ fontWeight: '600' }}>
+            การชำระเงิน #{record.id} — ออเดอร์ #{record.order_id || '-'}
+          </div>
+          <div style={{ fontSize: '12px', color: '#6b7280' }}>
+            สถานะ: {record.status || '-'} · คอร์ส: {record.course_title || '-'} · วันที่สร้าง: {formatDateTime(record.created_at)}
+          </div>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <div style={{ fontWeight: '600' }}>
+          การลงทะเบียน #{record.id} — {record.course_title || 'ไม่ระบุคอร์ส'}
+        </div>
+        <div style={{ fontSize: '12px', color: '#6b7280' }}>
+          ผู้ใช้: {record.user_name || '-'} · สถานะ: {record.status || '-'} · ลงทะเบียนเมื่อ: {formatDateTime(record.enrolled_at)}
+        </div>
+      </>
+    );
+  };
+
+  const toggleSelection = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const ids = parseIds(idInput);
+    const parsedIds = parseIds(idInput);
+    const ids = Array.from(new Set([...parsedIds, ...selectedIds]));
 
     if (ids.length === 0) {
       setError('กรุณาใส่ ID ที่ต้องการลบ (ตัวเลข)');
@@ -141,6 +230,75 @@ function AdminDebug() {
             </button>
           </div>
         </form>
+
+        <div className="page-card" style={{ marginTop: '16px', border: '1px solid #e5e7eb' }}>
+          <div className="page__header" style={{ padding: 0, marginBottom: '10px' }}>
+            <div>
+              <h3 className="page-card__title" style={{ marginBottom: '4px' }}>
+                เลือกจากรายการล่าสุด (ไม่ต้องพิมพ์เอง)
+              </h3>
+              <p style={{ color: '#6b7280', margin: 0 }}>
+                ระบบจะแสดงรายการล่าสุดไม่เกิน 50 รายการของ {selectedResource?.label || resource} เพื่อให้เลือกได้เลย
+              </p>
+            </div>
+            <div className="page__actions" style={{ gap: '8px' }}>
+              <span style={{ color: '#6b7280', fontSize: '14px' }}>
+                เลือกแล้ว {selectedIds.length} รายการ
+              </span>
+              <button type="button" className="btn btn--secondary" onClick={fetchRecords} disabled={isLoadingRecords}>
+                {isLoadingRecords ? 'กำลังโหลด...' : 'รีเฟรชรายการ'}
+              </button>
+            </div>
+          </div>
+
+          {listError && (
+            <div
+              style={{
+                marginBottom: '12px',
+                color: '#b91c1c',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '12px',
+                padding: '10px 12px',
+              }}
+            >
+              {listError}
+            </div>
+          )}
+
+          {isLoadingRecords ? (
+            <p style={{ color: '#6b7280' }}>กำลังโหลดรายการ...</p>
+          ) : records.length === 0 ? (
+            <p style={{ color: '#6b7280' }}>ไม่พบรายการล่าสุดสำหรับลบ</p>
+          ) : (
+            <div style={{ display: 'grid', gap: '8px', marginTop: '8px' }}>
+              {records.map((record) => (
+                <label
+                  key={`${resource}-${record.id}`}
+                  style={{
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '12px',
+                    padding: '10px 12px',
+                    display: 'grid',
+                    gridTemplateColumns: 'auto 1fr',
+                    gap: '10px',
+                    alignItems: 'flex-start',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(record.id)}
+                    onChange={() => toggleSelection(record.id)}
+                    disabled={isSubmitting}
+                    style={{ marginTop: '4px' }}
+                  />
+                  <div>{renderRecordSummary(record)}</div>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
 
         {error && (
           <div
