@@ -234,7 +234,7 @@ app.post('/courses/sessions', async (req, res) => {
 // Member self-check-in via QR code
 app.post('/courses/checkin', async (req, res) => {
   try {
-    const { user_id, code } = req.body || {};
+    const { user_id, code, course_id, enrollment_id } = req.body || {};
     if (!user_id || !code) {
       return res.status(400).json({ message: 'user_id and code are required' });
     }
@@ -258,14 +258,28 @@ app.post('/courses/checkin', async (req, res) => {
 
     const course = courseResult.rows[0];
 
-    const enrollmentResult = await db.query(
+    if (course_id && Number(course_id) !== Number(course.id)) {
+      return res.status(400).json({ message: 'คอร์สที่เลือกไม่ตรงกับ QR ที่สแกน' });
+    }
+
+    let enrollmentQuery =
       `SELECT *
        FROM course_enrollments
        WHERE user_id = $1 AND course_id = $2 AND status = 'active'
        ORDER BY enrolled_at DESC
-       LIMIT 1`,
-      [user_id, course.id]
-    );
+       LIMIT 1`;
+    const queryParams = [user_id, course.id];
+
+    if (enrollment_id) {
+      enrollmentQuery =
+        `SELECT *
+         FROM course_enrollments
+         WHERE id = $1 AND user_id = $2 AND course_id = $3 AND status = 'active'
+         LIMIT 1`;
+      queryParams.unshift(enrollment_id);
+    }
+
+    const enrollmentResult = await db.query(enrollmentQuery, queryParams);
 
     if (enrollmentResult.rows.length === 0) {
       return res.status(404).json({
@@ -302,6 +316,43 @@ app.post('/courses/checkin', async (req, res) => {
   } catch (err) {
     console.error('Error in course check-in:', err);
     res.status(500).json({ message: 'ไม่สามารถบันทึกการเข้าเรียนได้' });
+  }
+});
+
+app.post('/users/checkin/enrollments', async (req, res) => {
+  const { user_id } = req.body || {};
+  if (!user_id) {
+    return res.status(400).json({ message: 'user_id is required' });
+  }
+
+  try {
+    const result = await db.query(
+      `SELECT ce.*, c.title, c.cover_image_url, c.access_times, c.qr_checkin_code
+       FROM course_enrollments ce
+       JOIN courses c ON c.id = ce.course_id
+       WHERE ce.user_id = $1
+         AND ce.status = 'active'
+         AND (ce.remaining_access IS NULL OR ce.remaining_access > 0)
+       ORDER BY ce.enrolled_at DESC`,
+      [user_id]
+    );
+
+    const mapped = result.rows.map((row) => ({
+      enrollment_id: row.id,
+      course_id: row.course_id,
+      title: row.title,
+      cover_image_url: row.cover_image_url,
+      remaining_access: row.remaining_access,
+      total_access: row.access_times,
+      last_attended_at: row.last_attended_at,
+      qr_checkin_code: row.qr_checkin_code,
+      enrolled_at: row.enrolled_at,
+    }));
+
+    res.json(mapped);
+  } catch (err) {
+    console.error('Error fetching check-in enrollments', err);
+    res.status(500).json({ message: 'Error fetching enrollments for check-in' });
   }
 });
 
