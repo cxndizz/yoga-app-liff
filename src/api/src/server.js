@@ -447,6 +447,38 @@ app.post('/users/orders', async (req, res) => {
     return res.status(400).json({ message: 'user_id is required' });
   }
   try {
+    const normalizeStatus = (value) => String(value || '').trim().toLowerCase();
+    const paidStatuses = ['completed', 'paid', 'success', 'paysuccess'];
+
+    const isEnrollmentActive = (row) => {
+      const status = normalizeStatus(row?.enrollment_status);
+      const remaining = row?.remaining_access;
+      const hasRemaining = remaining === null || Number(remaining) > 0;
+      return row?.enrollment_id && !['cancelled', 'expired'].includes(status) && hasRemaining;
+    };
+
+    const withResolvedStatuses = (row) => {
+      const normalizedPayment = normalizeStatus(row?.payment_status || row?.status);
+      const normalizedOrder = normalizeStatus(row?.status);
+      const enrollmentActive = isEnrollmentActive(row);
+      const resolvedPaymentStatus = enrollmentActive
+        ? paidStatuses.includes(normalizedPayment)
+          ? normalizedPayment || 'completed'
+          : 'completed'
+        : normalizedPayment || (row?.is_free ? 'completed' : 'pending');
+
+      const resolvedOrderStatus = paidStatuses.includes(resolvedPaymentStatus)
+        ? 'completed'
+        : normalizedOrder || 'pending';
+
+      return {
+        ...row,
+        enrollment_active: enrollmentActive,
+        resolved_payment_status: resolvedPaymentStatus,
+        resolved_order_status: resolvedOrderStatus,
+      };
+    };
+
     const result = await db.query(
       `SELECT o.*, c.title AS course_title, c.cover_image_url, c.channel, c.is_free, c.price_cents, c.access_times,
               c.course_type, c.max_students, b.name AS branch_name, c.capacity,
@@ -515,7 +547,9 @@ app.post('/users/orders', async (req, res) => {
       return bDate - aDate;
     });
 
-    res.json(combined);
+    const normalized = combined.map(withResolvedStatuses);
+
+    res.json(normalized);
   } catch (err) {
     console.error('Error fetching orders', err);
     res.status(500).json({ message: 'Error fetching orders' });
