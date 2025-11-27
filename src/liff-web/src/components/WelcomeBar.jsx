@@ -99,6 +99,14 @@ function WelcomeBar({ liffState }) {
         <button
           type="button"
           className="btn btn-outline"
+          onClick={() => navigate('/checkin-history')}
+          disabled={!user?.id}
+        >
+          🗂️ ประวัติการเข้าเรียน
+        </button>
+        <button
+          type="button"
+          className="btn btn-outline"
           onClick={() => navigate('/cart')}
         >
           🛒 {t('cart.viewCart', { count: pendingOrders.length })}
@@ -109,6 +117,7 @@ function WelcomeBar({ liffState }) {
         userId={user?.id}
         open={scannerOpen}
         onClose={() => setScannerOpen(false)}
+        onSuccess={() => navigate('/checkin-history')}
       />
     </div>
   );

@@ -93,7 +93,7 @@ const scanWithBrowserCamera = async () => {
   });
 };
 
-function CheckInScanner({ userId, open, onClose }) {
+function CheckInScanner({ userId, open, onClose, onSuccess = () => {} }) {
   const [status, setStatus] = useState({ state: 'idle', message: '' });
   const [processing, setProcessing] = useState(false);
   const [loadingEnrollments, setLoadingEnrollments] = useState(false);
@@ -153,7 +153,7 @@ function CheckInScanner({ userId, open, onClose }) {
     }
 
     setProcessing(true);
-    setStatus({ state: 'idle', message: 'กำลังเปิดกล้อง...' });
+    setStatus({ state: 'scanning', message: 'กำลังเปิดกล้องและเตรียมสแกน...' });
 
     try {
       const hasLiffScanner = !!(window?.liff?.scanCodeV2 || window?.liff?.scanCode);
@@ -213,6 +213,10 @@ function CheckInScanner({ userId, open, onClose }) {
         enrollmentId: selectedEnrollment.enrollment_id,
       });
       setStatus({ state: 'success', message: response?.message || 'บันทึกการเข้าเรียนแล้ว' });
+      setTimeout(() => {
+        onClose?.();
+        onSuccess?.();
+      }, 650);
     } catch (err) {
       const message = err.response?.data?.message || err.message || 'ไม่สามารถบันทึกการเข้าเรียนได้';
       setStatus({ state: 'error', message });
@@ -242,6 +246,15 @@ function CheckInScanner({ userId, open, onClose }) {
             <p className="scanner-modal__subtitle">
               ระบบจะเรียกตัวสแกนของ LINE LIFF เพื่อบันทึกสิทธิ์ที่คุณซื้อไว้
             </p>
+          </div>
+        </div>
+
+        <div className={`scanner-viewport ${processing ? 'is-active' : ''}`}>
+          <div className="scanner-viewport__frame">
+            <div className="scanner-viewport__beam" data-state={status.state} />
+            <div className="scanner-viewport__hint">
+              {processing ? 'กำลังสแกน โปรดถือเครื่องให้นิ่ง' : 'จัด QR ให้อยู่กลางกรอบและกดเริ่มสแกน'}
+            </div>
           </div>
         </div>
 
@@ -303,15 +316,21 @@ function CheckInScanner({ userId, open, onClose }) {
           {status.state === 'success' && '✅'}
           {status.state === 'error' && '⚠️'}
           {status.state === 'idle' && 'ℹ️'}
+          {status.state === 'scanning' && '📸'}
           <span className="scanner-modal__status-text">
             {status.message || 'กดปุ่ม "เริ่มสแกน" เพื่อเปิดกล้องจาก LINE'}
           </span>
         </div>
 
         <div className="scanner-modal__actions">
-          <button type="button" className="btn btn-outline" onClick={onClose}>
-            ปิดหน้าต่าง
-          </button>
+          <div className="scanner-modal__action-group">
+            <button type="button" className="btn btn-outline" onClick={onClose}>
+              ปิดหน้าต่าง
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={onSuccess}>
+              🗂️ ประวัติการเข้าเรียน
+            </button>
+          </div>
           <button
             type="button"
             className="btn btn-primary"

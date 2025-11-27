@@ -31,3 +31,12 @@ export const fetchCheckinEnrollments = async (userId) => {
   const { data } = await api.post('/users/checkin/enrollments', { user_id: userId });
   return Array.isArray(data) ? data : [];
 };
+
+export const fetchCheckinHistory = async (userId, options = {}) => {
+  if (!userId) return [];
+  const params = {};
+  if (options.limit) params.limit = options.limit;
+  if (options.offset) params.offset = options.offset;
+  const { data } = await api.get(`/users/${userId}/checkins`, { params });
+  return Array.isArray(data) ? data : [];
+};
