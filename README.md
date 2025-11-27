@@ -106,8 +106,8 @@ project-root/
   JWT_REFRESH_SECRET=dev-refresh-secret
   ACCESS_TOKEN_TTL=15m
   REFRESH_TOKEN_TTL=7d
-  LINE_CHANNEL_ACCESS_TOKEN=your_line_channel_access_token_here
-  LINE_CHANNEL_SECRET=your_line_channel_secret_here
+  LINE_CHANNEL_ACCESS_TOKEN=
+  LINE_CHANNEL_SECRET=
   ```
 
   ภายหลัง คุณสามารถตั้งค่า `MONEYSPACE_WEBHOOK_SECRET` ให้ตรงกับ secret key ของ Money Space สำหรับตรวจสอบ webhook (และเก็บ OMISE keys ไว้เผื่อใช้งาน legacy ได้) รวมถึงตั้งค่า secret/token ttl ให้เหมาะกับ production. ค่าเริ่มต้นมีการ seed ผู้ใช้หลังบ้านเอาไว้คือ `admin@yoga.local / Admin123!` (role = `super_admin`) เพื่อให้ทดสอบ flow ได้ทันที
