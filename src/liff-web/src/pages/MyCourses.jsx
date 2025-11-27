@@ -119,6 +119,10 @@ function MyCourses() {
         const priceCents = Number(order?.total_price_cents ?? order?.price_cents ?? 0);
         const isFree = order?.is_free || priceCents === 0;
         const enrollmentActive = hasActiveEnrollment(order);
+        const expiresAt = order.enrollment_expires_at || null;
+        const firstAttendedAt = order.enrollment_first_attended || null;
+        const enrollmentExpired =
+          order.enrollment_expired || (expiresAt ? new Date(expiresAt) <= new Date() : false);
 
         return {
           id: order.id,
@@ -128,14 +132,18 @@ function MyCourses() {
           channel: order.channel || t('course.course'),
           status: order.status,
           paymentStatus:
-            normalizedPayment ||
-            (enrollmentActive || isFree ? 'completed' : 'pending'),
+            enrollmentExpired
+              ? 'expired'
+              : normalizedPayment || (enrollmentActive || isFree ? 'completed' : 'pending'),
           coverImage: order.cover_image_url || placeholderImage,
           priceCents,
           isFree,
           accessTimes: order.access_times,
           remainingAccess: order.remaining_access,
           enrollmentStatus: order.enrollment_status,
+          enrollmentExpired,
+          expiresAt,
+          firstAttendedAt,
           createdAt: order.created_at,
         };
       }),
@@ -177,6 +185,30 @@ function MyCourses() {
       unlimitedLabel: t('access.unlimited'),
       multipleTemplate: t('access.multiple', { count: '{count}' }),
     });
+  };
+
+  const renderExpiry = (order) => {
+    if (order.enrollmentExpired) {
+      return t('myCourses.expiredAt', {
+        date: order.expiresAt ? formatDate(order.expiresAt) : t('common.loading'),
+      });
+    }
+
+    if (!order.expiresAt) {
+      return t('myCourses.expiryPending');
+    }
+
+    const diffMs = new Date(order.expiresAt).getTime() - Date.now();
+    if (diffMs <= 0) {
+      return t('myCourses.expiredAt', { date: formatDate(order.expiresAt) });
+    }
+
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const msPerHour = 1000 * 60 * 60;
+    const days = Math.floor(diffMs / msPerDay);
+    const hours = Math.floor((diffMs % msPerDay) / msPerHour);
+
+    return t('myCourses.expiresIn', { days, hours });
   };
 
   return (
@@ -242,7 +274,7 @@ function MyCourses() {
                   style={{
                     background: ['completed', 'paid', 'paysuccess', 'success'].includes(course.paymentStatus)
                       ? 'rgba(16, 185, 129, 0.9)'
-                      : ['failed', 'cancelled'].includes(course.paymentStatus)
+                      : ['failed', 'cancelled', 'expired'].includes(course.paymentStatus)
                         ? 'rgba(239, 68, 68, 0.9)'
                         : 'rgba(245, 158, 11, 0.9)',
                     backdropFilter: 'blur(8px)',
@@ -255,7 +287,9 @@ function MyCourses() {
                     ? `✓ ${t('myCourses.statusPaid')}`
                     : ['failed', 'cancelled'].includes(course.paymentStatus)
                       ? `⚠️ ${t('myCourses.statusFailed')}`
-                      : `⏳ ${t('myCourses.statusPending')}`}
+                      : normalizeStatus(course.paymentStatus) === 'expired'
+                        ? `⚠️ ${t('myCourses.statusExpired')}`
+                        : `⏳ ${t('myCourses.statusPending')}`}
                 </div>
               </div>
             </div>
@@ -322,6 +356,28 @@ function MyCourses() {
                   </div>
                   <div className="helper-text" style={{ marginTop: 4 }}>
                     {t('myCourses.reference', { ref: course.id })}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: '12px',
+                    background: 'rgba(96, 165, 250, 0.05)',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(96, 165, 250, 0.15)',
+                    minWidth: 220,
+                  }}
+                >
+                  <div className="helper-text" style={{ marginBottom: 4 }}>
+                    ⏱️ {t('myCourses.expiryLabel')}
+                  </div>
+                  <div style={{ fontWeight: 800, color: course.enrollmentExpired ? '#f97316' : '#bfdbfe' }}>
+                    {renderExpiry(course)}
+                  </div>
+                  <div className="helper-text" style={{ marginTop: 4 }}>
+                    {course.firstAttendedAt
+                      ? `${t('myCourses.firstCheckIn')}: ${formatDate(course.firstAttendedAt)}`
+                      : t('myCourses.expiryHint')}
                   </div>
                 </div>
               </div>

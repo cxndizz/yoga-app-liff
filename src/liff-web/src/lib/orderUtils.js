@@ -22,10 +22,17 @@ const isPaidStatus = (value, isFree = false) => {
 
 const isCancelledStatus = (value) => cancelledStatusSet.has(normalizeStatus(value));
 
+const isEnrollmentExpired = (order = {}) => {
+  const expiresAt = order?.enrollment_expires_at || order?.expires_at;
+  if (!expiresAt) return false;
+  return new Date(expiresAt).getTime() <= Date.now();
+};
+
 const hasActiveEnrollment = (order = {}) => {
   const status = normalizeStatus(order?.enrollment_status);
   const remaining = order?.remaining_access;
   const hasRemaining = remaining === null || Number(remaining) > 0;
+  if (isEnrollmentExpired(order)) return false;
   return order?.enrollment_id && !['cancelled', 'expired'].includes(status) && hasRemaining;
 };
 
@@ -70,6 +77,7 @@ export {
   isPaidStatus,
   isCancelledStatus,
   hasActiveEnrollment,
+  isEnrollmentExpired,
   derivePaymentStatus,
   isOrderOwned,
   collectOwnedCourseIds,

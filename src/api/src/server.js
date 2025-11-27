@@ -296,9 +296,30 @@ app.post('/courses/checkin', async (req, res) => {
     }
 
     const enrollment = enrollmentResult.rows[0];
+    const now = new Date();
+
+    const hasExpiredByDate =
+      enrollment.expires_at && new Date(enrollment.expires_at).getTime() <= now.getTime();
+
+    if (hasExpiredByDate) {
+      await db.query(
+        `UPDATE course_enrollments
+         SET status = 'expired', updated_at = NOW()
+         WHERE id = $1`,
+        [enrollment.id]
+      );
+      return res.status(400).json({ message: 'สิทธิ์เข้าเรียนของคุณหมดแล้ว' });
+    }
+
     if (enrollment.remaining_access !== null && enrollment.remaining_access <= 0) {
       return res.status(400).json({ message: 'สิทธิ์เข้าเรียนของคุณหมดแล้ว' });
     }
+
+    const baseStart = enrollment.first_attended_at
+      ? new Date(enrollment.first_attended_at)
+      : now;
+    const resolvedExpiresAt =
+      enrollment.expires_at || new Date(baseStart.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     const newRemaining =
       enrollment.remaining_access !== null ? enrollment.remaining_access - 1 : null;
@@ -309,10 +330,12 @@ app.post('/courses/checkin', async (req, res) => {
        SET remaining_access = $1,
            status = $2,
            last_attended_at = NOW(),
+           first_attended_at = COALESCE(first_attended_at, $4),
+           expires_at = COALESCE(expires_at, $5),
            updated_at = NOW()
        WHERE id = $3
        RETURNING *`,
-      [newRemaining, newStatus, enrollment.id]
+      [newRemaining, newStatus, enrollment.id, baseStart, resolvedExpiresAt]
     );
 
     await db.query(
@@ -346,6 +369,7 @@ app.post('/users/checkin/enrollments', async (req, res) => {
        WHERE ce.user_id = $1
          AND ce.status = 'active'
          AND (ce.remaining_access IS NULL OR ce.remaining_access > 0)
+         AND (ce.expires_at IS NULL OR ce.expires_at > NOW())
        ORDER BY ce.enrolled_at DESC`,
       [user_id]
     );
@@ -358,6 +382,8 @@ app.post('/users/checkin/enrollments', async (req, res) => {
       remaining_access: row.remaining_access,
       total_access: row.access_times,
       last_attended_at: row.last_attended_at,
+      first_attended_at: row.first_attended_at,
+      expires_at: row.expires_at,
       qr_checkin_code: row.qr_checkin_code,
       enrolled_at: row.enrolled_at,
     }));
@@ -584,10 +610,17 @@ app.post('/users/orders', async (req, res) => {
       return paidStatuses.includes(normalizeStatus(value));
     };
 
+    const isEnrollmentExpired = (row) => {
+      const expiresAt = row?.enrollment_expires_at || row?.expires_at;
+      if (!expiresAt) return false;
+      return new Date(expiresAt).getTime() <= Date.now();
+    };
+
     const isEnrollmentActive = (row) => {
       const status = normalizeStatus(row?.enrollment_status);
       const remaining = row?.remaining_access;
       const hasRemaining = remaining === null || Number(remaining) > 0;
+      if (isEnrollmentExpired(row)) return false;
       return row?.enrollment_id && !['cancelled', 'expired'].includes(status) && hasRemaining;
     };
 
@@ -607,6 +640,7 @@ app.post('/users/orders', async (req, res) => {
       const normalizedPayment = normalizeStatus(row?.payment_status || row?.status);
       const normalizedOrder = normalizeStatus(row?.status);
       const enrollmentActive = isEnrollmentActive(row);
+      const enrollmentExpired = isEnrollmentExpired(row);
       const resolvedPaymentStatus = enrollmentActive
         ? paidStatuses.includes(normalizedPayment)
           ? normalizedPayment || 'completed'
@@ -619,7 +653,9 @@ app.post('/users/orders', async (req, res) => {
 
       return {
         ...row,
+        enrollment_status: enrollmentExpired ? 'expired' : row.enrollment_status,
         enrollment_active: enrollmentActive,
+        enrollment_expired: enrollmentExpired,
         resolved_payment_status: resolvedPaymentStatus,
         resolved_order_status: resolvedOrderStatus,
         is_owned: isOrderOwned(row),
@@ -634,6 +670,8 @@ app.post('/users/orders', async (req, res) => {
               ce.status AS enrollment_status,
               ce.remaining_access,
               ce.last_attended_at AS enrollment_last_attended,
+              ce.first_attended_at AS enrollment_first_attended,
+              ce.expires_at AS enrollment_expires_at,
               ce.notes AS enrollment_notes
        FROM orders o
        LEFT JOIN courses c ON o.course_id = c.id
@@ -646,7 +684,7 @@ app.post('/users/orders', async (req, res) => {
          LIMIT 1
        ) p ON TRUE
        LEFT JOIN LATERAL (
-         SELECT id, status, remaining_access, last_attended_at, notes
+          SELECT id, status, remaining_access, last_attended_at, first_attended_at, expires_at, notes
          FROM course_enrollments
          WHERE order_id = o.id
             OR (user_id = o.user_id AND course_id = o.course_id)
@@ -686,6 +724,8 @@ app.post('/users/orders', async (req, res) => {
       enrollment_id: row.id,
       enrollment_status: row.status,
       enrollment_last_attended: row.last_attended_at,
+      enrollment_first_attended: row.first_attended_at,
+      enrollment_expires_at: row.expires_at,
       enrollment_notes: row.notes,
       created_at: row.enrolled_at,
     }));
