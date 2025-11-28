@@ -24,6 +24,30 @@ const labelStyles = {
   },
 };
 
+const formatAmount = (value, locale = 'th-TH') => {
+  if (value === null || value === undefined) return null;
+
+  const numeric = typeof value === 'string' ? Number(value.replace(/,/g, '')) : Number(value);
+  if (Number.isNaN(numeric)) return value;
+
+  return numeric.toLocaleString(locale, {
+    style: 'currency',
+    currency: 'THB',
+    minimumFractionDigits: 2,
+  });
+};
+
+const formatDateTime = (value, locale = 'th-TH') => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat(locale, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+};
+
 function PaymentResult() {
   const { state } = useParams();
   const location = useLocation();
@@ -103,6 +127,33 @@ function PaymentResult() {
   const statusKey = ['success', 'fail', 'cancel'].includes(actualStatus) ? actualStatus : 'fail';
   const style = labelStyles[statusKey];
 
+  const friendlySummary = useMemo(() => {
+    const locale = summary.locale || 'th-TH';
+    const verifiedSummary = verifiedData?.summary || {};
+
+    const courseTitle = summary.description || verifiedSummary.courseTitle || t('payment.storePlaceholder');
+    const customerName = summary.customer || verifiedSummary.customerName;
+    const amount = formatAmount(verifiedSummary.amount ?? summary.amount, locale);
+    const paidAt =
+      formatDateTime(summary.datetime, locale) ||
+      formatDateTime(verifiedSummary.updatedAt || verifiedSummary.createdAt, locale);
+    const reference = summary.orderId || verifiedSummary.orderId || summary.transaction;
+
+    return {
+      locale,
+      courseTitle,
+      customerName,
+      amount,
+      paidAt,
+      reference,
+    };
+  }, [summary, verifiedData, t]);
+
+  const nextSteps = useMemo(() => {
+    const steps = t('payment.nextSteps', { returnObjects: true });
+    return Array.isArray(steps) ? steps : [];
+  }, [t]);
+
   return (
     <div className="card-surface" style={{ padding: 24, borderRadius: 20, display: 'grid', gap: 16 }}>
       {verificationStatus === 'verifying' && (
@@ -150,20 +201,26 @@ function PaymentResult() {
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div
-            className="badge"
-            style={{
-              background: style.bg,
-              borderColor: style.border,
-              color: style.color,
-              fontWeight: 700,
-            }}
-          >
-            {style.emoji} {t(`payment.status.${statusKey}`)}
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'grid', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              className="badge"
+              style={{
+                background: style.bg,
+                borderColor: style.border,
+                color: style.color,
+                fontWeight: 700,
+              }}
+            >
+              {style.emoji} {t(`payment.status.${statusKey}`)}
+            </div>
+            <div className="helper-text">{t(`payment.message.${statusKey}`)}</div>
           </div>
-          <div className="helper-text">{t(`payment.message.${statusKey}`)}</div>
+          <div style={{ color: '#fff', fontSize: 20, fontWeight: 800 }}>{t('payment.headline')}</div>
+          <div className="helper-text" style={{ color: '#cbd5e1' }}>
+            {t('payment.subheadline')}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button type="button" className="btn btn-outline" onClick={() => navigate('/courses')}>
@@ -179,43 +236,59 @@ function PaymentResult() {
         {t('payment.redirectReminder')}
       </div>
 
-      <div className="summary-card" style={{ alignItems: 'flex-start' }}>
-        <div style={{ display: 'grid', gap: 6 }}>
-          <div style={{ fontWeight: 800, color: '#fff' }}>{summary.store || t('payment.storePlaceholder')}</div>
-          <div className="helper-text">{summary.description || t('payment.noDescription')}</div>
-          {summary.amount && (
-            <div className="pill" style={{ background: style.bg, borderColor: style.border, color: style.color }}>
-              💳 {t('payment.amountLabel', { amount: summary.amount })}
+      <div className="summary-card" style={{ alignItems: 'stretch', gap: 18 }}>
+        <div style={{ display: 'grid', gap: 12, flex: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <div>
+              <div style={{ fontWeight: 800, color: '#fff' }}>{summary.store || t('payment.storePlaceholder')}</div>
+              <div className="helper-text">{friendlySummary.courseTitle}</div>
+            </div>
+            {friendlySummary.amount && (
+              <div className="pill" style={{ background: style.bg, borderColor: style.border, color: style.color }}>
+                💳 {t('payment.summary.amountPaid', { amount: friendlySummary.amount })}
+              </div>
+            )}
+          </div>
+
+          <div className="helper-text" style={{ color: '#cbd5e1' }}>
+            {t('payment.summarySubtitle')}
+          </div>
+
+          <div className="summary-line">
+            <span>{t('payment.summary.course')}</span>
+            <span>{friendlySummary.courseTitle}</span>
+          </div>
+          {friendlySummary.customerName && (
+            <div className="summary-line">
+              <span>{t('payment.summary.participant')}</span>
+              <span>{friendlySummary.customerName}</span>
             </div>
           )}
-        </div>
-        <div style={{ display: 'grid', gap: 6 }}>
-          {summary.customer && (
+          {friendlySummary.paidAt && (
             <div className="summary-line">
-              <span>{t('payment.customer')}</span>
-              <span>{summary.customer}</span>
+              <span>{t('payment.summary.paidAt')}</span>
+              <span>{friendlySummary.paidAt}</span>
             </div>
           )}
-          {summary.transaction && (
+          {friendlySummary.reference && (
             <div className="summary-line">
-              <span>{t('payment.transaction')}</span>
-              <span>{summary.transaction}</span>
-            </div>
-          )}
-          {summary.agreement && (
-            <div className="summary-line">
-              <span>{t('payment.agreement')}</span>
-              <span>{summary.agreement}</span>
-            </div>
-          )}
-          {summary.datetime && (
-            <div className="summary-line">
-              <span>{t('payment.datetime')}</span>
-              <span>{summary.datetime}</span>
+              <span>{t('payment.summary.reference')}</span>
+              <span>{friendlySummary.reference}</span>
             </div>
           )}
         </div>
       </div>
+
+      {nextSteps.length > 0 && (
+        <div className="summary-card" style={{ gap: 12 }}>
+          <div style={{ fontWeight: 700, color: '#fff' }}>{t('payment.nextStepsTitle')}</div>
+          <ul style={{ margin: 0, paddingLeft: 18, color: '#e2e8f0', display: 'grid', gap: 6 }}>
+            {nextSteps.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="helper-text" style={{ textAlign: 'center' }}>
         <Link to="/my-courses" className="btn btn-outline" style={{ marginRight: 8 }}>
