@@ -200,149 +200,149 @@ function Users() {
     resetPage();
   }, [searchTerm, resetPage]);
 
+  if (loading) {
+    return (
+      <div className="page">
+        <div className="grid grid--3" style={{ gap: '20px' }}>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="card">
+              <div className="skeleton skeleton--avatar" style={{ margin: '0 auto 16px' }} />
+              <div className="skeleton skeleton--title" />
+              <div className="skeleton skeleton--text" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="page">
       <div className="page__header">
-        <h1 className="page__title">จัดการผู้ใช้งาน</h1>
-        <p className="page__subtitle">ดูข้อมูลและจัดการสมาชิกทั้งหมดในระบบ</p>
+        <div>
+          <h1 className="page__title">จัดการผู้ใช้งาน</h1>
+          <p className="page__subtitle">ดูข้อมูลและจัดการสมาชิกทั้งหมดในระบบ ({filteredUsers.length} คน)</p>
+        </div>
+        <button
+          onClick={fetchUsers}
+          disabled={loading}
+          className="btn btn--primary"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          {loading && <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }} />}
+          {loading ? 'กำลังโหลด...' : 'รีเฟรช'}
+        </button>
       </div>
 
       {error && (
-        <div className="page-alert page-alert--error">
+        <div className="page-alert page-alert--error" style={{ marginBottom: '24px' }}>
           {error}
         </div>
       )}
 
-      <div className="page-card">
-        <div className="page-card__header">
-          <div>
-            <h2 className="page-card__title">สมาชิกทั้งหมด</h2>
-            <p style={{ color: '#6b7280', fontSize: '14px', margin: '4px 0 0' }}>
-              ทั้งหมด {filteredUsers.length} รายการ
-              {searchTerm && ` (จากทั้งหมด ${users.length} รายการ)`}
-            </p>
-          </div>
-          <div className="page__actions">
-            <input
-              type="text"
-              placeholder="ค้นหาชื่อ, อีเมล, เบอร์..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input"
-              style={{ width: '280px' }}
-            />
+      {/* Search Bar */}
+      <div className="card" style={{ marginBottom: '24px', background: 'var(--color-surface-muted)' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <span style={{ fontSize: '20px' }}>🔍</span>
+          <input
+            type="text"
+            placeholder="ค้นหาชื่อ, อีเมล, เบอร์โทร, LINE User ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="input"
+            style={{ flex: 1 }}
+          />
+          {searchTerm && (
             <button
-              onClick={fetchUsers}
-              disabled={loading}
-              className="btn btn--primary"
+              onClick={() => setSearchTerm('')}
+              className="btn btn--ghost btn--small"
             >
-              {loading ? 'กำลังโหลด...' : 'รีเฟรช'}
+              ล้าง
             </button>
-          </div>
+          )}
         </div>
+      </div>
 
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#6b7280' }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              border: '4px solid #e5e7eb',
-              borderTopColor: '#667eea',
-              borderRadius: '50%',
-              margin: '0 auto 16px',
-              animation: 'spin 1s linear infinite',
-            }} />
-            <p>กำลังโหลดข้อมูล...</p>
-            <style>{`
-              @keyframes spin {
-                to { transform: rotate(360deg); }
-              }
-            `}</style>
-          </div>
-        ) : filteredUsers.length === 0 ? (
-          <div className="empty-state">
-            <svg style={{ width: '64px', height: '64px', margin: '0 auto 16px', opacity: 0.3 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <p style={{ fontSize: '16px', marginBottom: '8px' }}>
+      {/* Users Grid */}
+      <div className="grid grid--auto-fit" style={{ gap: '20px', marginBottom: '24px' }}>
+        {visibleUsers.length === 0 ? (
+          <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>👥</div>
+            <h3 style={{ marginBottom: '8px' }}>
               {searchTerm ? 'ไม่พบผู้ใช้ที่ค้นหา' : 'ยังไม่มีสมาชิกในระบบ'}
+            </h3>
+            <p className="helper-text">
+              {searchTerm ? 'ลองค้นหาด้วยคำอื่น หรือล้างการค้นหา' : 'สมาชิกที่ลงทะเบียนจะแสดงที่นี่'}
             </p>
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="btn btn--ghost btn--small"
-              >
-                ล้างการค้นหา
-              </button>
-            )}
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Line User ID</th>
-                  <th>ชื่อใน LINE</th>
-                  <th>ชื่อ-นามสกุล</th>
-                  <th>อีเมล</th>
-                  <th>เบอร์โทร</th>
-                  <th>สมัครเมื่อ</th>
-                  <th style={{ textAlign: 'right' }}>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td style={{ color: '#6b7280' }}>#{user.id}</td>
-                    <td>
-                      <span style={{
-                        fontFamily: 'monospace',
-                        fontSize: '13px',
-                        background: '#f3f4f6',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                      }}>
-                        {user.line_user_id || '-'}
-                      </span>
-                    </td>
-                    <td style={{ fontWeight: '500' }}>
-                      {user.line_display_name || <span style={{ color: '#9ca3af' }}>ไม่ระบุ</span>}
-                    </td>
-                    <td style={{ fontWeight: '500' }}>
-                      {user.full_name || <span style={{ color: '#9ca3af' }}>ไม่ระบุ</span>}
-                    </td>
-                    <td style={{ color: '#6b7280' }}>
-                      {user.email || <span style={{ color: '#9ca3af' }}>ไม่ระบุ</span>}
-                    </td>
-                    <td style={{ color: '#6b7280' }}>
-                      {user.phone || <span style={{ color: '#9ca3af' }}>ไม่ระบุ</span>}
-                    </td>
-                    <td style={{ color: '#6b7280', fontSize: '13px' }}>
-                      {formatDate(user.created_at)}
-                    </td>
-                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap', gap: 8, display: 'flex', justifyContent: 'flex-end' }}>
-                      <button
-                        className="btn btn--ghost btn--small"
-                        onClick={() => openUserPanel(user, 'view')}
-                      >
-                        View
-                      </button>
-                      <button
-                        className="btn btn--primary btn--small"
-                        onClick={() => openUserPanel(user, 'edit')}
-                      >
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          visibleUsers.map((user) => (
+            <div key={user.id} className="card" style={{ textAlign: 'center' }}>
+              <div className="avatar avatar--large" style={{ margin: '0 auto 16px', fontSize: '32px' }}>
+                👤
+              </div>
+
+              <h3 className="card__title" style={{ marginBottom: '8px' }}>
+                {user.line_display_name || user.full_name || 'ไม่ระบุชื่อ'}
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px', textAlign: 'left' }}>
+                {user.full_name && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                    <span>👤</span>
+                    <span>{user.full_name}</span>
+                  </div>
+                )}
+                {user.email && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                    <span>📧</span>
+                    <span style={{ wordBreak: 'break-all' }}>{user.email}</span>
+                  </div>
+                )}
+                {user.phone && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                    <span>📞</span>
+                    <span>{user.phone}</span>
+                  </div>
+                )}
+                {user.line_user_id && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                    <span>💬</span>
+                    <span className="badge badge--primary" style={{ fontSize: '11px' }}>
+                      {user.line_user_id.substring(0, 12)}...
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <p className="helper-text" style={{ fontSize: '12px' }}>
+                  สมัครเมื่อ: {formatDate(user.created_at)}
+                </p>
+              </div>
+
+              <div className="card__footer" style={{ paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
+                <button
+                  className="btn btn--outline btn--small"
+                  onClick={() => openUserPanel(user, 'view')}
+                  style={{ flex: 1 }}
+                >
+                  ดูข้อมูล
+                </button>
+                <button
+                  className="btn btn--primary btn--small"
+                  onClick={() => openUserPanel(user, 'edit')}
+                  style={{ flex: 1 }}
+                >
+                  จัดการคอร์ส
+                </button>
+              </div>
+            </div>
+          ))
         )}
       </div>
-      {!loading && (
+
+      {!loading && filteredUsers.length > 0 && (
         <TablePagination
           page={page}
           pageSize={pageSize}
@@ -352,181 +352,255 @@ function Users() {
         />
       )}
 
+      {/* User Detail Modal */}
       {selectedUser && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(17, 24, 39, 0.45)',
+            background: 'rgba(17, 24, 39, 0.5)',
             backdropFilter: 'blur(4px)',
             zIndex: 50,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: '24px',
+            overflowY: 'auto',
           }}
           onClick={closePanel}
         >
           <div
-            className="page-card"
+            className="card"
             style={{
               width: '100%',
               maxWidth: '1100px',
-              maxHeight: 'calc(100vh - 80px)',
+              maxHeight: 'calc(100vh - 48px)',
               overflow: 'auto',
               position: 'relative',
-              padding: '24px',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="page-card__header" style={{ alignItems: 'flex-start' }}>
-              <div>
-                <h2 className="page-card__title">สมาชิก #{selectedUser.id}</h2>
-                <p style={{ color: '#6b7280', marginTop: 4 }}>
-                  ดูข้อมูลและคอร์สที่ {selectedUser.line_display_name || selectedUser.full_name || 'สมาชิก'} ถือครอง
-                </p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-                  <span className="badge">LINE: {selectedUser.line_user_id || 'ไม่ระบุ'}</span>
-                  {userDetail?.email && <span className="badge">Email: {userDetail.email}</span>}
-                  {userDetail?.phone && <span className="badge">Tel: {userDetail.phone}</span>}
+            {/* Modal Header */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: '24px',
+              paddingBottom: '16px',
+              borderBottom: '2px solid var(--color-border)'
+            }}>
+              <div style={{ flex: 1 }}>
+                <h2 className="card__title" style={{ marginBottom: '8px' }}>
+                  👤 {selectedUser.line_display_name || selectedUser.full_name || 'สมาชิก'} (ID: #{selectedUser.id})
+                </h2>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
+                  <span className="badge badge--primary">
+                    LINE: {selectedUser.line_user_id || 'ไม่ระบุ'}
+                  </span>
+                  {userDetail?.email && <span className="badge">📧 {userDetail.email}</span>}
+                  {userDetail?.phone && <span className="badge">📞 {userDetail.phone}</span>}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <button
-                  className={`btn btn--ghost ${panelMode === 'view' ? 'btn--primary' : ''}`}
+                  className={`btn btn--small ${panelMode === 'view' ? 'btn--primary' : 'btn--ghost'}`}
                   onClick={() => setPanelMode('view')}
                   disabled={panelLoading}
                 >
-                  View
+                  ดูข้อมูล
                 </button>
                 <button
-                  className={`btn btn--primary ${panelMode === 'edit' ? '' : 'btn--ghost'}`}
+                  className={`btn btn--small ${panelMode === 'edit' ? 'btn--primary' : 'btn--ghost'}`}
                   onClick={() => setPanelMode('edit')}
                   disabled={panelLoading}
                 >
-                  Edit
+                  แก้ไข
                 </button>
-                <button className="btn btn--ghost" onClick={closePanel}>ปิด</button>
+                <button className="btn btn--ghost btn--small" onClick={closePanel}>✕ ปิด</button>
               </div>
             </div>
 
             {panelError && (
-              <div className="page-alert page-alert--error" style={{ marginBottom: 16 }}>
+              <div className="page-alert page-alert--error" style={{ marginBottom: '16px' }}>
                 {panelError}
               </div>
             )}
 
             {panelLoading ? (
-              <div style={{ textAlign: 'center', padding: '60px 20px', color: '#6b7280' }}>
-                <div style={{
-                  width: '48px', height: '48px', border: '4px solid #e5e7eb', borderTopColor: '#667eea',
-                  borderRadius: '50%', margin: '0 auto 16px', animation: 'spin 1s linear infinite',
-                }} />
-                <p>กำลังโหลดข้อมูลสมาชิก...</p>
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+              <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                <div className="spinner" style={{ width: '48px', height: '48px', margin: '0 auto 16px' }} />
+                <p className="helper-text">กำลังโหลดข้อมูลสมาชิก...</p>
               </div>
             ) : (
-              <div style={{ display: 'grid', gap: 16 }}>
-                <div className="page-card" style={{ boxShadow: 'none', border: '1px solid #e5e7eb' }}>
-                  <h3 style={{ marginBottom: 8 }}>ข้อมูลสมาชิก</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* User Info Section */}
+                <div className="card" style={{ background: 'var(--color-surface-muted)' }}>
+                  <h3 className="card__title" style={{ marginBottom: '16px' }}>ข้อมูลส่วนตัว</h3>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '16px'
+                  }}>
                     <div>
-                      <div className="helper-text">ชื่อ-นามสกุล</div>
-                      <div style={{ fontWeight: 600 }}>{userDetail?.full_name || 'ไม่ระบุ'}</div>
+                      <p className="helper-text" style={{ marginBottom: '4px' }}>ชื่อ-นามสกุล</p>
+                      <p style={{ fontWeight: '600', color: 'var(--color-heading)' }}>
+                        {userDetail?.full_name || 'ไม่ระบุ'}
+                      </p>
                     </div>
                     <div>
-                      <div className="helper-text">ชื่อใน LINE</div>
-                      <div style={{ fontWeight: 600 }}>{userDetail?.line_display_name || 'ไม่ระบุ'}</div>
+                      <p className="helper-text" style={{ marginBottom: '4px' }}>ชื่อใน LINE</p>
+                      <p style={{ fontWeight: '600', color: 'var(--color-heading)' }}>
+                        {userDetail?.line_display_name || 'ไม่ระบุ'}
+                      </p>
                     </div>
                     <div>
-                      <div className="helper-text">อีเมล</div>
-                      <div style={{ fontWeight: 600 }}>{userDetail?.email || 'ไม่ระบุ'}</div>
+                      <p className="helper-text" style={{ marginBottom: '4px' }}>อีเมล</p>
+                      <p style={{ fontWeight: '600', color: 'var(--color-heading)' }}>
+                        {userDetail?.email || 'ไม่ระบุ'}
+                      </p>
                     </div>
                     <div>
-                      <div className="helper-text">เบอร์โทร</div>
-                      <div style={{ fontWeight: 600 }}>{userDetail?.phone || 'ไม่ระบุ'}</div>
+                      <p className="helper-text" style={{ marginBottom: '4px' }}>เบอร์โทร</p>
+                      <p style={{ fontWeight: '600', color: 'var(--color-heading)' }}>
+                        {userDetail?.phone || 'ไม่ระบุ'}
+                      </p>
                     </div>
                     <div>
-                      <div className="helper-text">สมัครเมื่อ</div>
-                      <div style={{ fontWeight: 600 }}>{formatDate(userDetail?.created_at)}</div>
+                      <p className="helper-text" style={{ marginBottom: '4px' }}>สมัครเมื่อ</p>
+                      <p style={{ fontWeight: '600', color: 'var(--color-heading)' }}>
+                        {formatDate(userDetail?.created_at)}
+                      </p>
                     </div>
                     <div>
-                      <div className="helper-text">จำนวนคำสั่งซื้อ</div>
-                      <div style={{ fontWeight: 600 }}>{userDetail?.total_orders ?? '-'}</div>
+                      <p className="helper-text" style={{ marginBottom: '4px' }}>จำนวนคำสั่งซื้อ</p>
+                      <p style={{ fontWeight: '600', color: 'var(--color-heading)' }}>
+                        {userDetail?.total_orders ?? '-'}
+                      </p>
                     </div>
                     <div>
-                      <div className="helper-text">คอร์สที่ลงทะเบียน</div>
-                      <div style={{ fontWeight: 600 }}>{userDetail?.total_enrollments ?? '-'}</div>
+                      <p className="helper-text" style={{ marginBottom: '4px' }}>คอร์สที่ลงทะเบียน</p>
+                      <p style={{ fontWeight: '600', color: 'var(--color-heading)' }}>
+                        {userDetail?.total_enrollments ?? '-'}
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="page-card" style={{ boxShadow: 'none', border: '1px solid #e5e7eb' }}>
-                  <div className="page-card__header" style={{ marginBottom: 12 }}>
+                {/* Enrollments Section */}
+                <div className="card" style={{ background: 'white' }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '16px'
+                  }}>
                     <div>
-                      <h3 style={{ margin: 0 }}>คอร์สที่ถือครอง</h3>
-                      <p className="helper-text" style={{ marginTop: 4 }}>
-                        ตรวจสอบสิทธิ์การเข้าเรียนและปรับจำนวนครั้งที่อนุญาตได้ทันที
+                      <h3 className="card__title">📚 คอร์สที่ถือครอง</h3>
+                      <p className="helper-text" style={{ marginTop: '4px' }}>
+                        ตรวจสอบและปรับจำนวนสิทธิ์การเข้าเรียนได้ทันที
                       </p>
                     </div>
-                    <div style={{ fontSize: 14, color: '#6b7280' }}>
-                      ทั้งหมด {userEnrollments.length} รายการ
-                    </div>
+                    <span className="badge badge--primary" style={{ fontSize: '14px' }}>
+                      {userEnrollments.length} คอร์ส
+                    </span>
                   </div>
 
                   {userEnrollments.length === 0 ? (
-                    <div className="empty-state" style={{ border: '1px dashed #e5e7eb', padding: 24 }}>
-                      <p>ยังไม่มีการซื้อคอร์สสำหรับสมาชิกคนนี้</p>
+                    <div style={{
+                      textAlign: 'center',
+                      padding: '40px 20px',
+                      border: '2px dashed var(--color-border)',
+                      borderRadius: 'var(--radius-md)'
+                    }}>
+                      <div style={{ fontSize: '48px', marginBottom: '8px' }}>📚</div>
+                      <p className="helper-text">ยังไม่มีการลงทะเบียนคอร์สสำหรับสมาชิกคนนี้</p>
                     </div>
                   ) : (
-                    <div style={{ display: 'grid', gap: 12 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       {userEnrollments.map((enrollment) => (
                         <div
                           key={enrollment.id}
+                          className="card"
                           style={{
-                            border: '1px solid #e5e7eb',
-                            borderRadius: 12,
-                            padding: 16,
-                            display: 'grid',
-                            gap: 8,
+                            background: 'var(--color-surface-muted)',
+                            padding: '16px',
                           }}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
-                            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                              {enrollment.course_image ? (
-                                <img
-                                  src={enrollment.course_image}
-                                  alt={enrollment.course_title}
-                                  style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover' }}
-                                />
-                              ) : (
-                                <div style={{ width: 64, height: 64, borderRadius: 8, background: '#f3f4f6' }} />
-                              )}
-                              <div>
-                                <div style={{ fontWeight: 700 }}>{enrollment.course_title || 'คอร์สไม่ระบุชื่อ'}</div>
-                                <div className="helper-text">สถานะ: {enrollment.status}</div>
+                          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                            {enrollment.course_image ? (
+                              <img
+                                src={enrollment.course_image}
+                                alt={enrollment.course_title}
+                                style={{
+                                  width: '80px',
+                                  height: '80px',
+                                  borderRadius: 'var(--radius-md)',
+                                  objectFit: 'cover',
+                                  flexShrink: 0
+                                }}
+                              />
+                            ) : (
+                              <div style={{
+                                width: '80px',
+                                height: '80px',
+                                borderRadius: 'var(--radius-md)',
+                                background: 'var(--color-border)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '32px',
+                                flexShrink: 0
+                              }}>
+                                📖
+                              </div>
+                            )}
+
+                            <div style={{ flex: 1 }}>
+                              <h4 style={{ margin: '0 0 8px', fontWeight: '700' }}>
+                                {enrollment.course_title || 'คอร์สไม่ระบุชื่อ'}
+                              </h4>
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                                <span className="badge">{enrollment.status}</span>
                                 {enrollment.session_name && (
-                                  <div className="helper-text">
-                                    รอบเรียน: {enrollment.session_name} ({formatDate(enrollment.start_date)})
-                                  </div>
+                                  <span className="badge badge--primary">
+                                    รอบ: {enrollment.session_name}
+                                  </span>
                                 )}
                               </div>
+                              {enrollment.session_name && (
+                                <p className="helper-text" style={{ fontSize: '12px', margin: '4px 0' }}>
+                                  วันเรียน: {formatDate(enrollment.start_date)}
+                                </p>
+                              )}
+                              {enrollment.notes && (
+                                <p className="helper-text" style={{ fontSize: '12px', margin: '4px 0' }}>
+                                  บันทึก: {enrollment.notes}
+                                </p>
+                              )}
                             </div>
-                            <div style={{ textAlign: 'right', minWidth: 200 }}>
-                              <div className="helper-text">สิทธิ์เข้าเรียนคงเหลือ</div>
-                              <div style={{ fontWeight: 700 }}>
+
+                            <div style={{
+                              textAlign: 'right',
+                              minWidth: '200px',
+                              flexShrink: 0
+                            }}>
+                              <p className="helper-text" style={{ marginBottom: '4px' }}>
+                                สิทธิ์เข้าเรียนคงเหลือ
+                              </p>
+                              <p style={{ fontWeight: '700', fontSize: '18px', color: 'var(--color-accent)' }}>
                                 {enrollment.remaining_access === null
-                                  ? 'ไม่จำกัด'
+                                  ? '∞ ไม่จำกัด'
                                   : `${enrollment.remaining_access} ครั้ง`}
                                 {typeof enrollment.course_access_times === 'number' &&
                                   enrollment.remaining_access !== null && (
-                                    <span style={{ color: '#6b7280', marginLeft: 6 }}>
-                                      / {enrollment.course_access_times} ครั้ง
+                                    <span style={{ fontSize: '14px', color: 'var(--color-muted)', marginLeft: '6px' }}>
+                                      / {enrollment.course_access_times}
                                     </span>
                                   )}
-                              </div>
+                              </p>
+
                               {panelMode === 'edit' && (
-                                <div style={{ marginTop: 8, display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
                                   <input
                                     type="number"
                                     min="0"
@@ -538,70 +612,85 @@ function Users() {
                                       })
                                     }
                                     className="input"
-                                    style={{ width: 120 }}
-                                    placeholder="ตั้งค่าใหม่"
+                                    style={{ width: '100px' }}
+                                    placeholder="ใหม่"
                                   />
                                   <button
                                     className="btn btn--primary btn--small"
                                     onClick={() => updateEnrollmentAccess(enrollment)}
                                     disabled={savingEnrollmentId === enrollment.id}
                                   >
-                                    {savingEnrollmentId === enrollment.id ? 'กำลังบันทึก...' : 'บันทึก'}
+                                    {savingEnrollmentId === enrollment.id ? (
+                                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span className="spinner" style={{ width: '12px', height: '12px', borderWidth: '2px' }} />
+                                        บันทึก...
+                                      </span>
+                                    ) : 'บันทึก'}
                                   </button>
                                 </div>
                               )}
                             </div>
                           </div>
-                          {enrollment.notes && (
-                            <div className="helper-text">บันทึก: {enrollment.notes}</div>
-                          )}
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
 
+                {/* Add Course Section (Edit Mode Only) */}
                 {panelMode === 'edit' && (
-                  <div className="page-card" style={{ boxShadow: 'none', border: '1px solid #e5e7eb' }}>
-                    <h3 style={{ marginBottom: 12 }}>เพิ่มคอร์สให้สมาชิก</h3>
-                    <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '2fr 1fr auto' }}>
-                      <select
-                        className="input"
-                        value={addCourseForm.course_id}
-                        onChange={(e) => setAddCourseForm({ ...addCourseForm, course_id: e.target.value })}
-                      >
-                        <option value="">เลือกคอร์ส</option>
-                        {availableCourses.map((course) => (
-                          <option key={course.id} value={course.id}>
-                            #{course.id} - {course.title}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        className="input"
-                        placeholder="จำนวนสิทธิ์ (เว้นว่าง=ตามค่าเริ่มต้น)"
-                        value={addCourseForm.remaining_access}
-                        onChange={(e) => setAddCourseForm({ ...addCourseForm, remaining_access: e.target.value })}
-                      />
+                  <div className="card" style={{ background: 'linear-gradient(135deg, #eff6ff, #dbeafe)' }}>
+                    <h3 className="card__title" style={{ marginBottom: '16px' }}>➕ เพิ่มคอร์สให้สมาชิก</h3>
+                    <div style={{
+                      display: 'grid',
+                      gap: '12px',
+                      gridTemplateColumns: '2fr 1fr auto',
+                      alignItems: 'end'
+                    }}>
+                      <div className="field">
+                        <label className="field__label">เลือกคอร์ส</label>
+                        <select
+                          className="input"
+                          value={addCourseForm.course_id}
+                          onChange={(e) => setAddCourseForm({ ...addCourseForm, course_id: e.target.value })}
+                        >
+                          <option value="">-- เลือกคอร์ส --</option>
+                          {availableCourses.map((course) => (
+                            <option key={course.id} value={course.id}>
+                              #{course.id} - {course.title}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="field">
+                        <label className="field__label">จำนวนสิทธิ์</label>
+                        <input
+                          type="number"
+                          className="input"
+                          placeholder="ค่าเริ่มต้น"
+                          value={addCourseForm.remaining_access}
+                          onChange={(e) => setAddCourseForm({ ...addCourseForm, remaining_access: e.target.value })}
+                        />
+                      </div>
                       <button
                         className="btn btn--primary"
                         onClick={handleAddCourse}
                         disabled={addCourseStatus.state === 'saving'}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                       >
+                        {addCourseStatus.state === 'saving' && (
+                          <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }} />
+                        )}
                         {addCourseStatus.state === 'saving' ? 'กำลังเพิ่ม...' : 'เพิ่มคอร์ส'}
                       </button>
                     </div>
                     {addCourseStatus.message && (
-                      <p
-                        className="helper-text"
-                        style={{
-                          color: addCourseStatus.state === 'error' ? '#ef4444' : '#10b981',
-                          marginTop: 8,
-                        }}
+                      <div
+                        className={`page-alert ${addCourseStatus.state === 'error' ? 'page-alert--error' : 'page-alert--success'}`}
+                        style={{ marginTop: '12px' }}
                       >
                         {addCourseStatus.message}
-                      </p>
+                      </div>
                     )}
                   </div>
                 )}

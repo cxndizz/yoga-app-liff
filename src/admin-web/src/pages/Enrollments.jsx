@@ -72,128 +72,269 @@ function Enrollments() {
   }, [filter, resetFilteredPage]);
 
   if (loading) {
-    return <div className="page">กำลังโหลด...</div>;
+    return (
+      <div className="page">
+        <div className="grid grid--4" style={{ gap: '16px', marginBottom: '24px' }}>
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="card">
+              <div className="skeleton skeleton--title" />
+              <div className="skeleton skeleton--text" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid--2" style={{ gap: '20px' }}>
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="card">
+              <div className="skeleton skeleton--title" />
+              <div className="skeleton skeleton--text" />
+              <div className="skeleton skeleton--text" style={{ width: '60%' }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
+
+  const activeCount = enrollments.filter((e) => e.status === 'active').length;
+  const expiredCount = enrollments.filter((e) => e.status === 'expired').length;
+  const cancelledCount = enrollments.filter((e) => e.status === 'cancelled').length;
 
   return (
     <div className="page">
       <div className="page__header">
-        <h1 className="page__title">การลงทะเบียนเรียน (Enrollments)</h1>
-        <div className="page__actions">
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="select"
-          >
-            <option value="all">ทั้งหมด</option>
-            <option value="active">ใช้งานอยู่</option>
-            <option value="expired">หมดอายุ</option>
-            <option value="cancelled">ยกเลิก</option>
-          </select>
+        <div>
+          <h1 className="page__title">การลงทะเบียนเรียน</h1>
+          <p className="page__subtitle">จัดการและติดตามสถานะการลงทะเบียนของสมาชิกทั้งหมด</p>
+        </div>
+        <button
+          onClick={fetchEnrollments}
+          disabled={loading}
+          className="btn btn--primary"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          {loading && <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }} />}
+          {loading ? 'กำลังโหลด...' : 'รีเฟรช'}
+        </button>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid--4" style={{ gap: '16px', marginBottom: '24px' }}>
+        <div className="card" style={{ background: 'linear-gradient(135deg, #f3f4f6, #e5e7eb)' }}>
+          <div className="metric">
+            <span className="metric__label">ทั้งหมด</span>
+            <div className="metric__value" style={{ color: '#374151' }}>
+              {enrollments.length}
+            </div>
+          </div>
+        </div>
+        <div className="card" style={{ background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)' }}>
+          <div className="metric">
+            <span className="metric__label">ใช้งานอยู่</span>
+            <div className="metric__value" style={{ color: '#059669' }}>
+              {activeCount}
+            </div>
+          </div>
+        </div>
+        <div className="card" style={{ background: 'linear-gradient(135deg, #fef3c7, #fde68a)' }}>
+          <div className="metric">
+            <span className="metric__label">หมดอายุ</span>
+            <div className="metric__value" style={{ color: '#d97706' }}>
+              {expiredCount}
+            </div>
+          </div>
+        </div>
+        <div className="card" style={{ background: 'linear-gradient(135deg, #fee2e2, #fecaca)' }}>
+          <div className="metric">
+            <span className="metric__label">ยกเลิก</span>
+            <div className="metric__value" style={{ color: '#dc2626' }}>
+              {cancelledCount}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="table-wrapper">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>ผู้ใช้</th>
-              <th>คอร์ส</th>
-              <th>รอบเรียน</th>
-              <th style={{ textAlign: 'center' }}>วันที่ลงทะเบียน</th>
-              <th style={{ textAlign: 'center' }}>สิทธิ์เหลือ</th>
-              <th style={{ textAlign: 'center' }}>เริ่มใช้งาน / หมดอายุ</th>
-              <th style={{ textAlign: 'center' }}>เข้าร่วมล่าสุด</th>
-              <th style={{ textAlign: 'center' }}>สถานะ</th>
-              <th style={{ textAlign: 'center' }}>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleFilteredEnrollments.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="empty-state">
-                  ไม่มีข้อมูลการลงทะเบียน
-                </td>
-              </tr>
-            ) : (
-              visibleFilteredEnrollments.map((enrollment) => (
-                <tr key={enrollment.id}>
-                  <td>
+      {/* Filter Section */}
+      <div className="card" style={{ marginBottom: '24px', background: 'var(--color-surface-muted)' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '16px', fontWeight: '600' }}>🔍 กรอง:</span>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setFilter('all')}
+              className={`btn btn--small ${filter === 'all' ? 'btn--primary' : 'btn--ghost'}`}
+            >
+              ทั้งหมด ({enrollments.length})
+            </button>
+            <button
+              onClick={() => setFilter('active')}
+              className={`btn btn--small ${filter === 'active' ? 'btn--primary' : 'btn--ghost'}`}
+            >
+              ใช้งานอยู่ ({activeCount})
+            </button>
+            <button
+              onClick={() => setFilter('expired')}
+              className={`btn btn--small ${filter === 'expired' ? 'btn--primary' : 'btn--ghost'}`}
+            >
+              หมดอายุ ({expiredCount})
+            </button>
+            <button
+              onClick={() => setFilter('cancelled')}
+              className={`btn btn--small ${filter === 'cancelled' ? 'btn--primary' : 'btn--ghost'}`}
+            >
+              ยกเลิก ({cancelledCount})
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Enrollments Grid */}
+      <div className="grid grid--2" style={{ gap: '20px', marginBottom: '24px' }}>
+        {visibleFilteredEnrollments.length === 0 ? (
+          <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📝</div>
+            <h3 style={{ marginBottom: '8px' }}>ไม่มีข้อมูลการลงทะเบียน</h3>
+            <p className="helper-text">
+              {filter === 'all' ? 'ยังไม่มีการลงทะเบียนในระบบ' : `ไม่มีการลงทะเบียนที่มีสถานะ "${filter}"`}
+            </p>
+          </div>
+        ) : (
+          visibleFilteredEnrollments.map((enrollment) => {
+            const statusColors = {
+              active: { bg: '#ecfdf5', border: '#059669', text: '#059669' },
+              expired: { bg: '#fef3c7', border: '#d97706', text: '#d97706' },
+              cancelled: { bg: '#fee2e2', border: '#dc2626', text: '#dc2626' },
+            };
+            const statusConfig = statusColors[enrollment.status] || statusColors.active;
+
+            return (
+              <div
+                key={enrollment.id}
+                className="card"
+                style={{
+                  borderLeft: `4px solid ${statusConfig.border}`,
+                  background: statusConfig.bg,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                  <div style={{ flex: 1 }}>
+                    <h3 className="card__title" style={{ marginBottom: '4px' }}>
+                      {enrollment.user_name || 'ไม่ระบุชื่อ'}
+                    </h3>
+                    <p className="helper-text" style={{ fontSize: '12px' }}>
+                      {enrollment.user_email || '-'}
+                    </p>
+                  </div>
+                  <span
+                    className="badge"
+                    style={{
+                      background: statusConfig.bg,
+                      color: statusConfig.text,
+                      border: `1px solid ${statusConfig.border}`,
+                      fontWeight: '700',
+                    }}
+                  >
+                    {enrollment.status === 'active'
+                      ? '✓ ใช้งาน'
+                      : enrollment.status === 'expired'
+                      ? '⏱ หมดอายุ'
+                      : '✕ ยกเลิก'}
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gap: '12px', marginBottom: '16px' }}>
+                  <div>
+                    <p className="helper-text" style={{ marginBottom: '4px' }}>คอร์ส</p>
+                    <p style={{ fontWeight: '600', color: 'var(--color-heading)' }}>
+                      {enrollment.course_title || '-'}
+                    </p>
+                  </div>
+
+                  {enrollment.session_name && (
                     <div>
-                      <div style={{ fontWeight: '500' }}>{enrollment.user_name || 'N/A'}</div>
-                      <div style={{ fontSize: '12px', color: '#6b7280' }}>{enrollment.user_email || '-'}</div>
+                      <p className="helper-text" style={{ marginBottom: '4px' }}>รอบเรียน</p>
+                      <p style={{ fontWeight: '600', color: 'var(--color-heading)' }}>
+                        {enrollment.session_name}
+                      </p>
                     </div>
-                  </td>
-                  <td>
-                    {enrollment.course_title || '-'}
-                  </td>
-                  <td>
-                    {enrollment.session_name || '-'}
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    {enrollment.enrolled_at
-                      ? new Date(enrollment.enrolled_at).toLocaleDateString('th-TH')
-                      : '-'}
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    {enrollment.remaining_access !== null && enrollment.remaining_access !== undefined
-                      ? enrollment.remaining_access
-                      : '∞'}
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <div>{formatDateTime(enrollment.first_attended_at)}</div>
-                    <div className="helper-text">
+                  )}
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px'
+                  }}>
+                    <div>
+                      <p className="helper-text" style={{ marginBottom: '4px' }}>วันที่ลงทะเบียน</p>
+                      <p style={{ fontSize: '13px', fontWeight: '600' }}>
+                        {enrollment.enrolled_at
+                          ? new Date(enrollment.enrolled_at).toLocaleDateString('th-TH')
+                          : '-'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="helper-text" style={{ marginBottom: '4px' }}>สิทธิ์เหลือ</p>
+                      <p style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-accent)' }}>
+                        {enrollment.remaining_access !== null && enrollment.remaining_access !== undefined
+                          ? `${enrollment.remaining_access} ครั้ง`
+                          : '∞ ไม่จำกัด'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '12px'
+                  }}>
+                    <div>
+                      <p className="helper-text" style={{ marginBottom: '4px' }}>เริ่มใช้งาน</p>
+                      <p style={{ fontSize: '12px' }}>
+                        {formatDateTime(enrollment.first_attended_at)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="helper-text" style={{ marginBottom: '4px' }}>เข้าร่วมล่าสุด</p>
+                      <p style={{ fontSize: '12px' }}>
+                        {formatDateTime(enrollment.last_attended_at)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="helper-text" style={{ marginBottom: '4px' }}>สถานะหมดอายุ</p>
+                    <p style={{
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: enrollment.expires_at && new Date(enrollment.expires_at) < new Date()
+                        ? '#dc2626'
+                        : '#059669'
+                    }}>
                       {formatCountdown(enrollment.expires_at)}
-                    </div>
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    {formatDateTime(enrollment.last_attended_at)}
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <span
-                      style={{
-                        padding: '4px 12px',
-                        borderRadius: '12px',
-                        fontSize: '12px',
-                        background:
-                          enrollment.status === 'active'
-                            ? '#dcfce7'
-                            : enrollment.status === 'expired'
-                            ? '#fed7aa'
-                            : '#fee2e2',
-                        color:
-                          enrollment.status === 'active'
-                            ? '#166534'
-                            : enrollment.status === 'expired'
-                            ? '#9a3412'
-                            : '#991b1b',
-                      }}
-                    >
-                      {enrollment.status === 'active'
-                        ? 'ใช้งาน'
-                        : enrollment.status === 'expired'
-                        ? 'หมดอายุ'
-                        : 'ยกเลิก'}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
+                  <div className="field">
+                    <label className="field__label">เปลี่ยนสถานะ</label>
                     <select
                       value={enrollment.status}
                       onChange={(e) => handleStatusChange(enrollment.id, e.target.value)}
-                      className="select btn--small"
+                      className="input"
+                      style={{ fontSize: '14px' }}
                     >
                       <option value="active">ใช้งาน</option>
                       <option value="expired">หมดอายุ</option>
                       <option value="cancelled">ยกเลิก</option>
                     </select>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
-      {!loading && (
+
+      {!loading && filteredEnrollments.length > 0 && (
         <TablePagination
           page={page}
           pageSize={pageSize}
@@ -202,34 +343,6 @@ function Enrollments() {
           onPageSizeChange={setFilteredPageSize}
         />
       )}
-
-      <div className="page-card" style={{ marginTop: '20px' }}>
-        <h3 className="page-card__title">สรุปข้อมูล</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-          <div>
-            <div style={{ fontSize: '12px', color: '#6b7280' }}>ทั้งหมด</div>
-            <div style={{ fontSize: '24px', fontWeight: '600' }}>{enrollments.length}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '12px', color: '#6b7280' }}>ใช้งานอยู่</div>
-            <div style={{ fontSize: '24px', fontWeight: '600', color: '#166534' }}>
-              {enrollments.filter((e) => e.status === 'active').length}
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '12px', color: '#6b7280' }}>หมดอายุ</div>
-            <div style={{ fontSize: '24px', fontWeight: '600', color: '#9a3412' }}>
-              {enrollments.filter((e) => e.status === 'expired').length}
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '12px', color: '#6b7280' }}>ยกเลิก</div>
-            <div style={{ fontSize: '24px', fontWeight: '600', color: '#991b1b' }}>
-              {enrollments.filter((e) => e.status === 'cancelled').length}
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
