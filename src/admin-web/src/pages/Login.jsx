@@ -45,7 +45,6 @@ function Login() {
 
   const handleChange = (field) => (event) => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }));
     }
@@ -86,12 +85,17 @@ function Login() {
   return (
     <div className="login-screen">
       <div className="login-panel">
-        <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-          <p className="page__eyebrow" style={{ marginBottom: '6px' }}>Namaste Yoga</p>
-          <h1 style={{ margin: 0, fontSize: '28px' }}>Admin Center</h1>
-          <p style={{ margin: '8px 0 0', color: 'var(--color-muted)' }}>เข้าสู่ระบบเพื่อจัดการคอร์สและสมาชิก</p>
+        <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+          <p className="page__eyebrow" style={{ marginBottom: '8px', letterSpacing: '0.15em' }}>Namaste Yoga</p>
+          <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '800', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            Admin Center
+          </h1>
+          <p style={{ margin: '12px 0 0', color: 'var(--color-muted)', fontSize: '15px' }}>
+            เข้าสู่ระบบเพื่อจัดการคอร์สและสมาชิก
+          </p>
         </div>
-        <form onSubmit={handleSubmit} className="form-grid">
+
+        <form onSubmit={handleSubmit} className="form-grid" style={{ gap: '20px' }}>
           <div className="field">
             <label className="field__label">อีเมล</label>
             <input
@@ -100,11 +104,20 @@ function Login() {
               onChange={handleChange('email')}
               placeholder="admin@example.com"
               className="input"
-              style={{ borderColor: errors.email ? '#dc2626' : undefined }}
+              style={{
+                borderColor: errors.email ? '#dc2626' : undefined,
+                fontSize: '15px',
+                padding: '12px 16px'
+              }}
               disabled={isSubmitting}
             />
-            {errors.email && <span style={{ color: '#dc2626', fontSize: '13px' }}>{errors.email}</span>}
+            {errors.email && (
+              <span style={{ color: '#dc2626', fontSize: '13px', marginTop: '6px', display: 'block' }}>
+                {errors.email}
+              </span>
+            )}
           </div>
+
           <div className="field">
             <label className="field__label">รหัสผ่าน</label>
             <input
@@ -113,22 +126,70 @@ function Login() {
               onChange={handleChange('password')}
               placeholder="••••••••"
               className="input"
-              style={{ borderColor: errors.password ? '#dc2626' : undefined }}
+              style={{
+                borderColor: errors.password ? '#dc2626' : undefined,
+                fontSize: '15px',
+                padding: '12px 16px'
+              }}
               disabled={isSubmitting}
             />
-            {errors.password && <span style={{ color: '#dc2626', fontSize: '13px' }}>{errors.password}</span>}
+            {errors.password && (
+              <span style={{ color: '#dc2626', fontSize: '13px', marginTop: '6px', display: 'block' }}>
+                {errors.password}
+              </span>
+            )}
           </div>
-          {serverError && <div className="page-alert page-alert--error">{serverError}</div>}
-          <button type="submit" disabled={isSubmitting} className="btn btn--primary" style={{ width: '100%' }}>
+
+          {serverError && (
+            <div className="page-alert page-alert--error" style={{ marginTop: '8px' }}>
+              {serverError}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="btn btn--primary"
+            style={{
+              width: '100%',
+              padding: '14px',
+              fontSize: '16px',
+              fontWeight: '700',
+              marginTop: '8px',
+              background: isSubmitting
+                ? '#94a3b8'
+                : 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px'
+            }}
+          >
+            {isSubmitting && <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />}
             {isSubmitting ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
           </button>
         </form>
-        <div style={{ marginTop: '20px', textAlign: 'center', padding: '16px', background: 'var(--color-surface-muted)', borderRadius: '12px' }}>
-          <p style={{ margin: '0 0 6px', fontSize: '13px', color: 'var(--color-muted)' }}>บัญชีทดสอบ (Demo Account)</p>
-          <p style={{ margin: 0, fontSize: '13px', fontFamily: 'monospace', color: 'var(--color-heading)' }}>
-            <strong>admin@yoga.local</strong> / <strong>Admin123!</strong>
+
+        <div className="divider" style={{ margin: '28px 0' }} />
+
+        <div className="info-box info-box--info" style={{ borderRadius: '14px' }}>
+          <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            บัญชีทดสอบ (Demo Account)
           </p>
+          <div style={{ display: 'grid', gap: '6px' }}>
+            <p style={{ margin: 0, fontSize: '14px', fontFamily: 'monospace', fontWeight: '600' }}>
+              📧 <strong>admin@yoga.local</strong>
+            </p>
+            <p style={{ margin: 0, fontSize: '14px', fontFamily: 'monospace', fontWeight: '600' }}>
+              🔑 <strong>Admin123!</strong>
+            </p>
+          </div>
         </div>
+
+        <p style={{ marginTop: '24px', textAlign: 'center', fontSize: '13px', color: 'var(--color-muted)' }}>
+          © 2025 Namaste Yoga. All rights reserved.
+        </p>
       </div>
     </div>
   );
