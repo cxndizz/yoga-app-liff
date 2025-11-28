@@ -190,5 +190,52 @@
     "expiryLabel": "到期日",
     "expiryHint": "首次扫码后开始计算 30 天",
     "firstCheckIn": "首次扫码"
+  },
+  "payment": {
+    "redirectReminder": "请稍候，我们正在与 Money Space 确认付款。",
+    "verifying": "正在再次核对付款...",
+    "verificationError": "暂时无法确认付款，请联系工作人员。",
+    "verified": "已验证付款",
+    "headline": "感谢您的付款",
+    "subheadline": "我们将尽快确认席位并开启课程权限。",
+    "storePlaceholder": "Yoga Luxe",
+    "noDescription": "暂无额外说明",
+    "amountLabel": "金额: {{amount}}",
+    "goToMyCourses": "前往我的课程",
+    "browseMore": "继续浏览课程",
+    "summarySubtitle": "请保留此摘要以备查询。",
+    "summary": {
+      "course": "课程",
+      "participant": "学员",
+      "paidAt": "付款时间",
+      "reference": "付款参考码",
+      "amountPaid": "已支付 {{amount}}"
+    },
+    "status": {
+      "success": "付款成功",
+      "fail": "付款失败",
+      "cancel": "已取消付款"
+    },
+    "message": {
+      "success": "已收到您的付款，稍后确认席位。",
+      "fail": "未能确认付款，请重试或联系支持。",
+      "cancel": "您已取消付款，可随时再试。"
+    },
+    "nextStepsTitle": "接下来",
+    "nextSteps": [
+      "席位与权限将很快出现在“我的课程”中。",
+      "如需联系客服，请备好此参考码。",
+      "等待期间可继续挑选其它课程。"
+    ],
+    "options": {
+      "qr": "二维码",
+      "qrDesc": "使用银行 App 扫描泰国 PromptPay",
+      "debit": "借记卡",
+      "debitDesc": "使用 3-D Secure 借记卡",
+      "credit": "信用卡",
+      "creditDesc": "支持 Visa、Mastercard、JCB",
+      "instant": "即时确认",
+      "cardGateway": "Money Space 支付网关"
+    }
   }
 }

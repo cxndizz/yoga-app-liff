@@ -185,15 +185,24 @@
   },
   "payment": {
     "redirectReminder": "Please wait while we confirm your payment with Money Space.",
+    "verifying": "We are double-checking your payment...",
+    "verificationError": "We could not verify this payment. Please contact support.",
+    "verified": "Payment verified",
+    "headline": "Thank you for your payment",
+    "subheadline": "We will confirm your seat and update your access shortly.",
     "storePlaceholder": "Yoga Luxe",
     "noDescription": "No description from gateway",
     "amountLabel": "Amount: {{amount}}",
-    "customer": "Customer",
-    "transaction": "Transaction",
-    "agreement": "Agreement",
-    "datetime": "Date & time",
     "goToMyCourses": "Go to My courses",
     "browseMore": "Browse more courses",
+    "summarySubtitle": "Keep this summary for your records.",
+    "summary": {
+      "course": "Course",
+      "participant": "Learner",
+      "paidAt": "Paid at",
+      "reference": "Receipt reference",
+      "amountPaid": "Paid {{amount}}"
+    },
     "status": {
       "success": "Payment successful",
       "fail": "Payment failed",
@@ -204,6 +213,12 @@
       "fail": "We could not confirm this payment. Please retry or contact support.",
       "cancel": "You cancelled the payment. You can try again anytime."
     },
+    "nextStepsTitle": "What happens next",
+    "nextSteps": [
+      "Your seat and access will appear under \"My courses\" shortly.",
+      "Keep this receipt reference if you need to contact support.",
+      "You can browse more courses while we finalize your booking."
+    ],
     "options": {
       "qr": "QR code",
       "qrDesc": "Scan Thai QR PromptPay via your banking app",

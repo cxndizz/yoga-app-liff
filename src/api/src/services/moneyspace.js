@@ -176,6 +176,47 @@ const extractEmbedHtml = (payload = {}) => {
   return source.iframe || source.embed_html || source.embedHtml || null;
 };
 
+const buildOrderSummary = async (orderId) => {
+  if (!orderId) return null;
+
+  const result = await db.query(
+    `SELECT o.id,
+            o.status,
+            o.total_price_cents,
+            o.updated_at,
+            o.created_at,
+            c.title AS course_title,
+            c.cover_image_url AS course_cover,
+            u.full_name AS customer_name,
+            u.line_display_name,
+            u.phone AS customer_phone
+     FROM orders o
+     LEFT JOIN courses c ON o.course_id = c.id
+     LEFT JOIN users u ON o.user_id = u.id
+     WHERE o.id = $1
+     LIMIT 1`,
+    [orderId]
+  );
+
+  if (!result.rows[0]) return null;
+
+  const row = result.rows[0];
+  const priceCents = Number(row.total_price_cents || 0);
+  const amount = Number.isFinite(priceCents) ? priceCents / 100 : null;
+
+  return {
+    orderId: row.id,
+    status: row.status,
+    courseTitle: row.course_title,
+    courseCover: row.course_cover,
+    customerName: row.customer_name || row.line_display_name,
+    customerPhone: row.customer_phone,
+    amount,
+    updatedAt: row.updated_at,
+    createdAt: row.created_at,
+  };
+};
+
 const createTransaction = async ({
   orderCode,
   amount,
@@ -576,6 +617,7 @@ const checkOrderStatus = async ({ orderId, orderCode }) => {
     mappedStatus,
     orderId: finalOrderId,
     order: orderUpdate,
+    summary: await buildOrderSummary(finalOrderId),
     payload,
   };
 };
@@ -621,6 +663,7 @@ const checkTransactionStatus = async ({ transactionId, orderId }) => {
     mappedStatus,
     orderId: resolvedOrderId,
     order: orderUpdate,
+    summary: await buildOrderSummary(resolvedOrderId),
     payload,
   };
 };
