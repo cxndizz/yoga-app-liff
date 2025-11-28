@@ -109,25 +109,42 @@ function Branches() {
   };
 
   if (loading) {
-    return <div className="page">กำลังโหลด...</div>;
+    return (
+      <div className="page">
+        <div className="grid grid--3" style={{ gap: '20px' }}>
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card">
+              <div className="skeleton skeleton--title" />
+              <div className="skeleton skeleton--text" />
+              <div className="skeleton skeleton--text" style={{ width: '70%' }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="page">
       <div className="page__header">
-        <h1 className="page__title">จัดการสาขา</h1>
+        <div>
+          <h1 className="page__title">จัดการสาขา</h1>
+          <p className="page__subtitle">ข้อมูลสาขาทั้งหมดของ Namaste Yoga</p>
+        </div>
         <button
           onClick={() => setShowForm(true)}
           className="btn btn--primary"
         >
-          เพิ่มสาขาใหม่
+          + เพิ่มสาขาใหม่
         </button>
       </div>
 
       {showForm && (
-        <div className="page-card">
-          <h2 className="page-card__title">{editingBranch ? 'แก้ไขสาขา' : 'เพิ่มสาขาใหม่'}</h2>
-          <form onSubmit={handleSubmit}>
+        <div className="card" style={{ marginBottom: '32px', background: 'var(--color-surface-muted)' }}>
+          <div className="card__header">
+            <h2 className="card__title">{editingBranch ? 'แก้ไขสาขา' : 'เพิ่มสาขาใหม่'}</h2>
+          </div>
+          <form onSubmit={handleSubmit} className="form-grid" style={{ gap: '20px' }}>
             <div className="field">
               <label className="field__label">ชื่อสาขา *</label>
               <input
@@ -136,6 +153,7 @@ function Branches() {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
                 className="input"
+                placeholder="เช่น Namaste Yoga Silom"
               />
             </div>
 
@@ -146,38 +164,43 @@ function Branches() {
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 rows={3}
                 className="textarea"
+                placeholder="ที่อยู่สาขา"
               />
             </div>
 
-            <div className="field">
-              <label className="field__label">เบอร์โทร</label>
-              <input
-                type="text"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="input"
-              />
+            <div className="form-grid form-grid--two">
+              <div className="field">
+                <label className="field__label">เบอร์โทร</label>
+                <input
+                  type="text"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="input"
+                  placeholder="02-123-4567"
+                />
+              </div>
+
+              <div className="field">
+                <label className="field__label">ลิงก์แผนที่</label>
+                <input
+                  type="url"
+                  value={formData.map_url}
+                  onChange={(e) => setFormData({ ...formData, map_url: e.target.value })}
+                  placeholder="https://maps.google.com/..."
+                  className="input"
+                />
+              </div>
             </div>
 
             <div className="field">
-              <label className="field__label">ลิงก์แผนที่</label>
-              <input
-                type="url"
-                value={formData.map_url}
-                onChange={(e) => setFormData({ ...formData, map_url: e.target.value })}
-                placeholder="https://maps.google.com/..."
-                className="input"
-              />
-            </div>
-
-            <div className="field">
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={formData.is_active}
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                 />
-                เปิดใช้งาน
+                <span>เปิดใช้งาน</span>
               </label>
             </div>
 
@@ -200,72 +223,102 @@ function Branches() {
         </div>
       )}
 
-      <div className="table-wrapper">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>ชื่อสาขา</th>
-              <th>ที่อยู่</th>
-              <th>เบอร์โทร</th>
-              <th>สถานะ</th>
-              <th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleBranches.length === 0 ? (
-              <tr>
-                <td colSpan={5}>
-                  <div className="empty-state">ไม่มีข้อมูลสาขา</div>
-                </td>
-              </tr>
-            ) : (
-              visibleBranches.map((branch) => (
-                <tr key={branch.id}>
-                  <td>{branch.name}</td>
-                  <td>
-                    {branch.address || '-'}
-                  </td>
-                  <td>
-                    {branch.phone || '-'}
-                  </td>
-                  <td>
-                    <span style={{
-                      padding: '4px 12px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      background: branch.is_active ? '#dcfce7' : '#fee2e2',
-                      color: branch.is_active ? '#166534' : '#991b1b'
-                    }}>
-                      {branch.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleEdit(branch)}
-                      className="btn btn--small"
-                    >
-                      แก้ไข
-                    </button>
-                    <button
-                      onClick={() => handleDelete(branch.id)}
-                      className="btn btn--small btn--danger"
-                    >
-                      ปิดใช้งาน
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      <div className="grid grid--auto-fit" style={{ gap: '20px', marginBottom: '24px' }}>
+        {visibleBranches.length === 0 ? (
+          <div className="card" style={{ gridColumn: '1 / -1' }}>
+            <p className="helper-text" style={{ textAlign: 'center', padding: '40px 0', margin: 0 }}>
+              ไม่มีข้อมูลสาขา
+            </p>
+          </div>
+        ) : (
+          visibleBranches.map((branch) => (
+            <div
+              key={branch.id}
+              className="card"
+              style={{
+                borderColor: branch.is_active ? 'var(--color-border)' : '#fee2e2',
+                background: branch.is_active ? 'white' : '#fef2f2',
+              }}
+            >
+              <div className="card__header" style={{ marginBottom: '16px' }}>
+                <div style={{ flex: 1 }}>
+                  <h3 className="card__title" style={{ marginBottom: '8px' }}>
+                    {branch.name}
+                  </h3>
+                  <span className={`badge ${branch.is_active ? 'badge--success' : 'badge--danger'}`}>
+                    {branch.is_active ? '🟢 เปิดใช้งาน' : '🔴 ปิดใช้งาน'}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+                {branch.address && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                    <span style={{ fontSize: '18px' }}>📍</span>
+                    <div style={{ flex: 1 }}>
+                      <p className="helper-text" style={{ margin: 0 }}>ที่อยู่</p>
+                      <p style={{ margin: '4px 0 0', fontSize: '14px', color: 'var(--color-heading)' }}>
+                        {branch.address}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {branch.phone && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '18px' }}>📞</span>
+                    <div style={{ flex: 1 }}>
+                      <p className="helper-text" style={{ margin: 0 }}>เบอร์โทร</p>
+                      <p style={{ margin: '4px 0 0', fontSize: '14px', color: 'var(--color-heading)', fontWeight: '600' }}>
+                        {branch.phone}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {branch.map_url && (
+                  <a
+                    href={branch.map_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn btn--outline btn--small"
+                    style={{ textDecoration: 'none', textAlign: 'center' }}
+                  >
+                    🗺️ ดูแผนที่
+                  </a>
+                )}
+              </div>
+
+              <div className="card__footer" style={{ paddingTop: '16px', borderTop: '1px solid var(--color-border)' }}>
+                <button
+                  onClick={() => handleEdit(branch)}
+                  className="btn btn--outline btn--small"
+                  style={{ flex: 1 }}
+                >
+                  แก้ไข
+                </button>
+                <button
+                  onClick={() => handleDelete(branch.id)}
+                  className="btn btn--danger btn--small"
+                  style={{ flex: 1 }}
+                >
+                  ปิดใช้งาน
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
-      <TablePagination
-        page={page}
-        pageSize={pageSize}
-        totalItems={totalBranches}
-        onPageChange={goToPage}
-        onPageSizeChange={changePageSize}
-      />
+
+      {!loading && branches.length > 0 && (
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          totalItems={totalBranches}
+          onPageChange={goToPage}
+          onPageSizeChange={changePageSize}
+        />
+      )}
     </div>
   );
 }

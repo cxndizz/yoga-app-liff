@@ -156,27 +156,113 @@ function Instructors() {
   };
 
   if (loading) {
-    return <div className="page">กำลังโหลด...</div>;
+    return (
+      <div className="page">
+        <div className="grid grid--3" style={{ gap: '20px' }}>
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="card">
+              <div className="skeleton skeleton--avatar" style={{ margin: '0 auto 16px' }} />
+              <div className="skeleton skeleton--title" />
+              <div className="skeleton skeleton--text" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="page">
       <div className="page__header">
-        <h1 className="page__title">จัดการผู้สอน</h1>
+        <div>
+          <h1 className="page__title">จัดการผู้สอน</h1>
+          <p className="page__subtitle">ข้อมูลผู้สอนและครูโยคะทั้งหมด</p>
+        </div>
         <button
           onClick={() => setShowForm(true)}
           className="btn btn--primary"
         >
-          เพิ่มผู้สอนใหม่
+          + เพิ่มผู้สอนใหม่
         </button>
       </div>
 
       {showForm && (
-        <div className="page-card">
-          <div className="page-card__header">
-            <h2 className="page-card__title">{editingInstructor ? 'แก้ไขผู้สอน' : 'เพิ่มผู้สอนใหม่'}</h2>
+        <div className="card" style={{ marginBottom: '32px', background: 'var(--color-surface-muted)' }}>
+          <div className="card__header">
+            <h2 className="card__title">{editingInstructor ? 'แก้ไขผู้สอน' : 'เพิ่มผู้สอนใหม่'}</h2>
           </div>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="form-grid" style={{ gap: '20px' }}>
+            {/* Avatar Upload */}
+            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+              <div style={{ flex: '1 1 300px' }}>
+                <label className="field__label">รูปผู้สอน</label>
+                <div style={{
+                  border: '2px dashed var(--color-border)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '16px',
+                  background: 'white',
+                  marginTop: '8px',
+                }}>
+                  <input
+                    key={avatarInputKey}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    disabled={avatarProcessing}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'white',
+                    }}
+                  />
+                  <p className="helper-text" style={{ marginTop: '8px' }}>
+                    ระบบจะบีบอัดและแปลงเป็น .webp ให้อัตโนมัติ (สูงสุด 5MB)
+                  </p>
+                  {avatarProcessing && (
+                    <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-accent)' }}>
+                      <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+                      <span style={{ fontSize: '13px' }}>กำลังแปลงรูป...</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {avatarPreview && (
+                <div style={{ flex: '0 0 180px' }}>
+                  <label className="field__label">ตัวอย่าง</label>
+                  <div style={{
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '12px',
+                    background: 'white',
+                    marginTop: '8px',
+                  }}>
+                    <img
+                      src={avatarPreview}
+                      alt="ตัวอย่างรูปผู้สอน"
+                      style={{
+                        width: '100%',
+                        height: '180px',
+                        objectFit: 'cover',
+                        borderRadius: 'var(--radius-md)',
+                        marginBottom: '12px',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      className="btn btn--danger btn--small"
+                      style={{ width: '100%' }}
+                    >
+                      ลบรูป
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="field">
               <label className="field__label">ชื่อผู้สอน *</label>
               <input
@@ -185,62 +271,8 @@ function Instructors() {
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
                 className="input"
+                placeholder="เช่น คุณสมชาย ใจดี"
               />
-            </div>
-
-            <div style={{ display: 'flex', gap: '16px', marginBottom: '15px', flexWrap: 'wrap' }}>
-              <label style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <span>รูปผู้สอน</span>
-                <div style={{
-                  border: '1px dashed #cbd5f5',
-                  borderRadius: '10px',
-                  padding: '12px',
-                  background: '#f9fafb',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px'
-                }}>
-                  <input
-                    key={avatarInputKey}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    disabled={avatarProcessing}
-                    style={{ border: '1px solid #d1d5db', borderRadius: '6px', padding: '8px', background: '#fff' }}
-                  />
-                  <span style={{ fontSize: '12px', color: '#6b7280' }}>
-                    ระบบจะบีบอัดและแปลงเป็น .webp ให้อัตโนมัติ (สูงสุด 5MB)
-                  </span>
-                  {avatarProcessing && (
-                    <span style={{ fontSize: '12px', color: '#2563eb' }}>กำลังแปลงรูป...</span>
-                  )}
-                </div>
-              </label>
-
-              {avatarPreview && (
-                <div style={{
-                  flex: '0 0 160px',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '10px',
-                  padding: '10px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
-                }}>
-                  <img
-                    src={avatarPreview}
-                    alt="ตัวอย่างรูปผู้สอน"
-                    style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '8px' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRemoveAvatar}
-                    className="btn btn--danger btn--small"
-                  >
-                    ลบรูป
-                  </button>
-                </div>
-              )}
             </div>
 
             <div className="field">
@@ -250,27 +282,32 @@ function Instructors() {
                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                 rows={3}
                 className="textarea"
+                placeholder="ประสบการณ์และความเชี่ยวชาญของผู้สอน"
               />
             </div>
 
-            <div className="field">
-              <label className="field__label">อีเมล</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="input"
-              />
-            </div>
+            <div className="form-grid form-grid--two">
+              <div className="field">
+                <label className="field__label">อีเมล</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="input"
+                  placeholder="instructor@example.com"
+                />
+              </div>
 
-            <div className="field">
-              <label className="field__label">เบอร์โทร</label>
-              <input
-                type="text"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="input"
-              />
+              <div className="field">
+                <label className="field__label">เบอร์โทร</label>
+                <input
+                  type="text"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="input"
+                  placeholder="08X-XXX-XXXX"
+                />
+              </div>
             </div>
 
             <div className="field">
@@ -285,13 +322,14 @@ function Instructors() {
             </div>
 
             <div className="field">
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={formData.is_active}
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                 />
-                เปิดใช้งาน
+                <span>เปิดใช้งาน</span>
               </label>
             </div>
 
@@ -316,102 +354,114 @@ function Instructors() {
         </div>
       )}
 
-      <div className="table-wrapper">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>รูป</th>
-              <th>ชื่อผู้สอน</th>
-              <th>อีเมล</th>
-              <th>เบอร์โทร</th>
-              <th>ความเชี่ยวชาญ</th>
-              <th style={{ textAlign: 'center' }}>สถานะ</th>
-              <th style={{ textAlign: 'center' }}>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visibleInstructors.length === 0 ? (
-              <tr>
-                <td colSpan={7}>
-                  <div className="empty-state">ไม่มีข้อมูลผู้สอน</div>
-                </td>
-              </tr>
-            ) : (
-              visibleInstructors.map((instructor) => (
-                <tr key={instructor.id}>
-                  <td>
-                    {instructor.avatar_url ? (
-                      <img
-                        src={instructor.avatar_url}
-                        alt={instructor.name}
-                        style={{ width: '48px', height: '48px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e5e7eb' }}
-                      />
-                    ) : (
-                      <div style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '999px',
-                        background: '#f3f4f6',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#9ca3af'
-                      }}>
-                        N/A
-                      </div>
-                    )}
-                  </td>
-                  <td>{instructor.name}</td>
-                  <td>
-                    {instructor.email || '-'}
-                  </td>
-                  <td>
-                    {instructor.phone || '-'}
-                  </td>
-                  <td>
-                    {instructor.specialties && instructor.specialties.length > 0
-                      ? instructor.specialties.join(', ')
-                      : '-'}
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <span style={{
-                      padding: '4px 12px',
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      background: instructor.is_active ? '#dcfce7' : '#fee2e2',
-                      color: instructor.is_active ? '#166534' : '#991b1b'
-                    }}>
-                      {instructor.is_active ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+      <div className="grid grid--auto-fit" style={{ gap: '20px', marginBottom: '24px' }}>
+        {visibleInstructors.length === 0 ? (
+          <div className="card" style={{ gridColumn: '1 / -1' }}>
+            <p className="helper-text" style={{ textAlign: 'center', padding: '40px 0', margin: 0 }}>
+              ไม่มีข้อมูลผู้สอน
+            </p>
+          </div>
+        ) : (
+          visibleInstructors.map((instructor) => (
+            <div
+              key={instructor.id}
+              className="card"
+              style={{
+                borderColor: instructor.is_active ? 'var(--color-border)' : '#fee2e2',
+                background: instructor.is_active ? 'white' : '#fef2f2',
+                textAlign: 'center',
+              }}
+            >
+              {instructor.avatar_url ? (
+                <img
+                  src={instructor.avatar_url}
+                  alt={instructor.name}
+                  className="avatar avatar--large"
+                  style={{ margin: '0 auto 16px', width: '96px', height: '96px' }}
+                />
+              ) : (
+                <div
+                  className="avatar avatar--large"
+                  style={{
+                    margin: '0 auto 16px',
+                    width: '96px',
+                    height: '96px',
+                    fontSize: '32px',
+                  }}
+                >
+                  👤
+                </div>
+              )}
+
+              <h3 className="card__title" style={{ marginBottom: '8px' }}>
+                {instructor.name}
+              </h3>
+
+              <span className={`badge ${instructor.is_active ? 'badge--success' : 'badge--danger'}`} style={{ marginBottom: '16px' }}>
+                {instructor.is_active ? '🟢 เปิดใช้งาน' : '🔴 ปิดใช้งาน'}
+              </span>
+
+              {instructor.bio && (
+                <p className="helper-text" style={{ margin: '16px 0', textAlign: 'left' }}>
+                  {instructor.bio}
+                </p>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', margin: '16px 0', textAlign: 'left' }}>
+                {instructor.email && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                    <span>📧</span>
+                    <span>{instructor.email}</span>
+                  </div>
+                )}
+                {instructor.phone && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
+                    <span>📞</span>
+                    <span>{instructor.phone}</span>
+                  </div>
+                )}
+              </div>
+
+              {instructor.specialties && instructor.specialties.length > 0 && (
+                <div style={{ margin: '16px 0', display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center' }}>
+                  {instructor.specialties.map((specialty, idx) => (
+                    <span key={idx} className="chip" style={{ fontSize: '11px' }}>
+                      {specialty}
                     </span>
-                  </td>
-                  <td style={{ textAlign: 'center' }}>
-                    <button
-                      onClick={() => handleEdit(instructor)}
-                      className="btn btn--primary btn--small"
-                      style={{ marginRight: '8px' }}
-                    >
-                      แก้ไข
-                    </button>
-                    <button
-                      onClick={() => handleDelete(instructor.id)}
-                      className="btn btn--danger btn--small"
-                    >
-                      ปิดใช้งาน
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+                  ))}
+                </div>
+              )}
+
+              <div className="card__footer" style={{ paddingTop: '16px', borderTop: '1px solid var(--color-border)', marginTop: '16px' }}>
+                <button
+                  onClick={() => handleEdit(instructor)}
+                  className="btn btn--outline btn--small"
+                  style={{ flex: 1 }}
+                >
+                  แก้ไข
+                </button>
+                <button
+                  onClick={() => handleDelete(instructor.id)}
+                  className="btn btn--danger btn--small"
+                  style={{ flex: 1 }}
+                >
+                  ปิดใช้งาน
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
-      <TablePagination
-        page={page}
-        pageSize={pageSize}
-        totalItems={totalInstructors}
-        onPageChange={goToPage}
-        onPageSizeChange={changePageSize}
-      />
+
+      {!loading && instructors.length > 0 && (
+        <TablePagination
+          page={page}
+          pageSize={pageSize}
+          totalItems={totalInstructors}
+          onPageChange={goToPage}
+          onPageSizeChange={changePageSize}
+        />
+      )}
     </div>
   );
 }
