@@ -46,7 +46,14 @@
     "errorLoad": "目前无法加载课程",
     "errorFetch": "无法获取课程",
     "noCoursesBooking": "尚无课程开放预订",
-    "noCoursesMatch": "没有符合搜索的课程"
+    "noCoursesMatch": "没有符合搜索的课程",
+    "standalone": {
+      "title": "无固定课次课程",
+      "immediate": "报名后立即使用权限",
+      "flexible": "无需预订课次，随时学习",
+      "access": "可使用{{count}}次",
+      "deadline": "报名截止日期"
+    }
   },
   "session": {
     "timetable": "适用于现场 / 在线 / 混合的灵活课表",

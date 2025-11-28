@@ -46,7 +46,14 @@
     "errorLoad": "Unable to load courses right now",
     "errorFetch": "Unable to fetch courses",
     "noCoursesBooking": "No courses are open for booking yet",
-    "noCoursesMatch": "No courses match your search"
+    "noCoursesMatch": "No courses match your search",
+    "standalone": {
+      "title": "Flexible Access Course",
+      "immediate": "Start immediately after registration",
+      "flexible": "No session booking required - learn at your convenience",
+      "access": "Access {{count}} times",
+      "deadline": "Registration deadline"
+    }
   },
   "session": {
     "timetable": "Responsive timetable for Onsite / Online / Hybrid",

@@ -432,19 +432,19 @@ function CourseDetail() {
             border: '1px solid rgba(251, 191, 36, 0.2)',
           }}
         >
-          <h3 style={{ 
-            marginTop: 0, 
+          <h3 style={{
+            marginTop: 0,
             marginBottom: 20,
             color: '#fbbf24',
             fontFamily: 'var(--font-heading)',
             fontSize: '1.3rem',
           }}>
-            ⚡ {t('course.standalone.title') || 'เรียนได้ทันที'}
+            ⚡ {t('course.standalone.title')}
           </h3>
           <div style={{ display: 'grid', gap: 14 }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
               gap: 12,
               padding: '12px 16px',
               background: 'rgba(16, 185, 129, 0.1)',
@@ -453,12 +453,12 @@ function CourseDetail() {
             }}>
               <span style={{ fontSize: '1.3rem' }}>✓</span>
               <span style={{ color: '#6ee7b7' }}>
-                {t('course.standalone.immediate') || 'เข้าเรียนได้ทันทีหลังลงทะเบียน'}
+                {t('course.standalone.immediate')}
               </span>
             </div>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
               gap: 12,
               padding: '12px 16px',
               background: 'rgba(196, 181, 253, 0.1)',
@@ -467,12 +467,12 @@ function CourseDetail() {
             }}>
               <span style={{ fontSize: '1.3rem' }}>✓</span>
               <span style={{ color: 'var(--secondary-200)' }}>
-                {t('course.standalone.flexible') || 'ไม่ต้องจองรอบเรียน เรียนได้ตามสะดวก'}
+                {t('course.standalone.flexible')}
               </span>
             </div>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
               gap: 12,
               padding: '12px 16px',
               background: 'rgba(251, 191, 36, 0.1)',
@@ -481,13 +481,13 @@ function CourseDetail() {
             }}>
               <span style={{ fontSize: '1.3rem' }}>✓</span>
               <span style={{ color: '#fbbf24' }}>
-                {t('course.standalone.access') || `เข้าเรียนได้ ${course.accessTimes} ครั้ง`}
+                {t('course.standalone.access', { count: course.accessTimes })}
               </span>
             </div>
             {course.enrollmentDeadline && (
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: 12,
                 padding: '12px 16px',
                 background: 'rgba(245, 158, 11, 0.1)',
@@ -496,7 +496,7 @@ function CourseDetail() {
               }}>
                 <span style={{ fontSize: '1.3rem' }}>⏰</span>
                 <span style={{ color: '#fcd34d' }}>
-                  {t('course.standalone.deadline') || 'ปิดรับสมัคร'}: {new Date(course.enrollmentDeadline).toLocaleDateString('th-TH', {
+                  {t('course.standalone.deadline')}: {new Date(course.enrollmentDeadline).toLocaleDateString('th-TH', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
