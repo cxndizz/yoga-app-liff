@@ -34,7 +34,7 @@ function Footer() {
           {t('nav.brand')}
         </div>
         <div style={{ color: 'var(--secondary-300)', marginTop: 6, lineHeight: 1.5 }}>
-          Boutique LIFF Studio • Luxury movement and mindfulness experiences
+          Boutique wellness studio • Luxury movement and mindfulness experiences
         </div>
       </div>
       

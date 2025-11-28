@@ -75,7 +75,7 @@
     "startBrowsing": "Start browsing",
     "hybridTypes": "Hybrid / Onsite / Online",
     "omisePayment": "Pay with Money Space",
-    "omiseDescription": "Seamless booking and payments with Money Space and shared SchemaDB — works with LINE LIFF login and real-time access control."
+    "omiseDescription": "Seamless booking and secure payments with instant access updates—no extra steps."
   },
   "nav": {
     "home": "Home",
@@ -106,15 +106,15 @@
   "checkout": {
     "title": "Checkout & payment",
     "subtitle": "Fill in your name and phone before paying.",
-    "subtitleLive": "Money Space gateway is connected. Please confirm your details and choose QR or card.",
+    "subtitleLive": "Money Space is ready. Please confirm your details and choose QR or card.",
     "stepInfo": "Information & course details",
     "stepInfoDesc": "Confirm learner profile before moving forward.",
     "stepPayment": "Payment channel",
     "stepPaymentDesc": "Choose how you want to pay via Money Space.",
     "stepPay": "Pay",
     "stepPayDesc": "Review details then start the payment session.",
-    "stepRedirect": "Redirect / response",
-    "stepRedirectDesc": "Complete the redirect or scan the QR to finish.",
+    "stepRedirect": "Payment confirmation",
+    "stepRedirectDesc": "We'll bring you back to confirm the result, or finish by scanning the QR.",
     "viewMyCourses": "View my courses",
     "studentInfo": "Student information",
     "contactHint": "We use this to confirm bookings and send reminders via Line and SMS.",
@@ -150,7 +150,7 @@
     "total": "Total",
     "nextStep": "Next step",
     "reviewAndPay": "Continue to payment",
-    "resultPlaceholder": "Start payment to see Money Space status here.",
+    "resultPlaceholder": "Start payment to see your status here.",
     "backToPayment": "Back to payment",
     "required": "Required",
     "errorPayment": "Unable to create payment session, please try again.",
@@ -173,7 +173,7 @@
     "goToCourse": "Open course",
     "streaming": "Streaming access",
     "homeCta": "Open my courses",
-    "loginHint": "We need your LINE account to fetch your bookings.",
+    "loginHint": "Sign in with LINE so we can show your bookings securely.",
     "empty": "You have no bookings yet",
     "createdAt": "Created at",
     "expiresIn": "Expires in {{days}}d {{hours}}h",
@@ -191,7 +191,7 @@
     "headline": "Thank you for your payment",
     "subheadline": "We will confirm your seat and update your access shortly.",
     "storePlaceholder": "Yoga Luxe",
-    "noDescription": "No description from gateway",
+    "noDescription": "No additional notes",
     "amountLabel": "Amount: {{amount}}",
     "goToMyCourses": "Go to My courses",
     "browseMore": "Browse more courses",
@@ -227,7 +227,7 @@
       "credit": "Credit card",
       "creditDesc": "Pay with Visa, Mastercard, JCB",
       "instant": "Instant confirmation",
-      "cardGateway": "Money Space gateway"
+      "cardGateway": "Money Space"
     }
   }
 }
