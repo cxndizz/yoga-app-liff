@@ -10,7 +10,7 @@
     "registerFree": "Register for free",
     "buyCourse": "Buy course",
     "bookCourse": "Book this course",
-    "payOmise": "Pay via Money Space",
+    "payOmise": "Pay online",
     "myCourses": "My courses",
     "language": "Language",
     "search": "Search",
@@ -74,7 +74,7 @@
     "findCourse": "Find the right course",
     "startBrowsing": "Start browsing",
     "hybridTypes": "Hybrid / Onsite / Online",
-    "omisePayment": "Pay with Money Space",
+    "omisePayment": "Secure online payment",
     "omiseDescription": "Seamless booking and secure payments with instant access updates—no extra steps."
   },
   "nav": {
@@ -106,11 +106,11 @@
   "checkout": {
     "title": "Checkout & payment",
     "subtitle": "Fill in your name and phone before paying.",
-    "subtitleLive": "Money Space is ready. Please confirm your details and choose QR or card.",
+    "subtitleLive": "Confirm your details, then choose QR or card.",
     "stepInfo": "Information & course details",
     "stepInfoDesc": "Confirm learner profile before moving forward.",
     "stepPayment": "Payment channel",
-    "stepPaymentDesc": "Choose how you want to pay via Money Space.",
+    "stepPaymentDesc": "Choose how you want to pay.",
     "stepPay": "Pay",
     "stepPayDesc": "Review details then start the payment session.",
     "stepRedirect": "Payment confirmation",
@@ -125,17 +125,17 @@
     "note": "Note to instructor (optional)",
     "notePlaceholder": "Allergic to nuts, prefer front row, need parking...",
     "paymentMethod": "Payment method",
-    "paymentHint": "Bank transfer is available now while Money Space card payments are being wired up.",
-    "paymentHintLive": "Pay securely via Money Space (QR code or card).",
+    "paymentHint": "Bank transfer is available now while card payments are being wired up.",
+    "paymentHintLive": "Pay securely via QR code or card.",
     "recommended": "Recommended",
     "processing": "Processing...",
-    "payNow": "Pay with Money Space",
+    "payNow": "Pay now",
     "terms": "By proceeding you agree to our studio terms.",
-    "redirecting": "Redirecting to Money Space...",
+    "redirecting": "Redirecting to payment...",
     "intentCreated": "Payment session created",
     "intentCreatedHint": "If you are not redirected automatically, tap pay again.",
     "qrTitle": "PromptPay QR is ready",
-    "qrSubtitle": "Scan with your banking app or mobile camera, then confirm in Money Space.",
+    "qrSubtitle": "Scan with your banking app or mobile camera, then confirm your payment.",
     "qrAmount": "Amount:",
     "qrRef": "Reference",
     "qrFallback": "If the QR does not load, open the payment link instead.",
@@ -184,7 +184,7 @@
     "firstCheckIn": "First check-in"
   },
   "payment": {
-    "redirectReminder": "Please wait while we confirm your payment with Money Space.",
+    "redirectReminder": "Please wait while we confirm your payment.",
     "verifying": "We are double-checking your payment...",
     "verificationError": "We could not verify this payment. Please contact support.",
     "verified": "Payment verified",
@@ -227,7 +227,8 @@
       "credit": "Credit card",
       "creditDesc": "Pay with Visa, Mastercard, JCB",
       "instant": "Instant confirmation",
-      "cardGateway": "Money Space"
+      "cardGateway": "Card gateway"
     }
   }
 }
+
