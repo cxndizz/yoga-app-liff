@@ -5,6 +5,9 @@ import HeroCarousel from '../components/HeroCarousel';
 import CourseCard from '../components/CourseCard';
 import { fetchFeaturedCourses } from '../lib/courseApi';
 import { useAutoTranslate } from '../lib/autoTranslate';
+import useOwnedCourses from '../hooks/useOwnedCourses';
+import useLiffUser from '../hooks/useLiffUser';
+import { getCachedLiffUser } from '../lib/liffAuth';
 
 function Home() {
   const navigate = useNavigate();
@@ -12,6 +15,13 @@ function Home() {
   const [status, setStatus] = useState('idle');
   const { language } = useAutoTranslate();
   const { t } = useTranslation();
+  const { user: liveUser } = useLiffUser();
+  const [user, setUser] = useState(getCachedLiffUser()?.user || null);
+  const ownership = useOwnedCourses(user?.id);
+
+  useEffect(() => {
+    if (liveUser) setUser(liveUser);
+  }, [liveUser]);
 
   useEffect(() => {
     let active = true;
@@ -111,7 +121,12 @@ function Home() {
 
         <div className="grid">
           {featured.map((course) => (
-            <CourseCard key={course.id} course={course} />
+            <CourseCard
+              key={course.id}
+              course={course}
+              owned={ownership.ownedIds.has(String(course.id))}
+              ownershipChecked={ownership.checked}
+            />
           ))}
           {status === 'ready' && featured.length === 0 && (
             <div 
