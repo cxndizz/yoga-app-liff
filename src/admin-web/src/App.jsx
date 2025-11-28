@@ -85,7 +85,7 @@ const AdminLayout = () => {
       />
       <aside className="admin-sidebar" aria-label="เมนูผู้ดูแลระบบ">
         <div className="admin-sidebar__brand">
-          <p className="admin-sidebar__eyebrow">Yoga Flow</p>
+          <p className="admin-sidebar__eyebrow">Namaste Yoga</p>
           <h2 className="admin-sidebar__title">Admin Center</h2>
           {adminUser && (
             <p className="admin-sidebar__welcome">

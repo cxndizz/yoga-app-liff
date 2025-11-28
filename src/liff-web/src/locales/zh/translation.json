@@ -81,7 +81,7 @@
     "home": "首页",
     "courses": "课程",
     "myCourses": "我的课程",
-    "brand": "Yoga Luxe"
+    "brand": "Namaste Yoga"
   },
   "cart": {
     "title": "购物车",
@@ -101,7 +101,7 @@
     "contact": "联系",
     "terms": "条款",
     "privacy": "隐私",
-    "copyright": "© {{year}} Yoga Luxe. 保留所有权利。"
+    "copyright": "© {{year}} Namaste Yoga. 保留所有权利。"
   },
   "checkout": {
     "title": "结账与付款",
@@ -198,7 +198,7 @@
     "verified": "已验证付款",
     "headline": "感谢您的付款",
     "subheadline": "我们将尽快确认席位并开启课程权限。",
-    "storePlaceholder": "Yoga Luxe",
+    "storePlaceholder": "Namaste Yoga",
     "noDescription": "暂无额外说明",
     "amountLabel": "金额: {{amount}}",
     "goToMyCourses": "前往我的课程",

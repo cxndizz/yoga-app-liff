@@ -122,10 +122,10 @@ router.post('/moneyspace/create', async (req, res) => {
         phone: phone || user.phone || '0000000000',
         message: note || '',
       },
-      description: course.title || 'Yoga course',
+      description: course.title || 'Namaste Yoga course',
       paymentMethod: payment_method,
       returnUrls: { success: success_url, fail: fail_url, cancel: cancel_url },
-      branch: course.branch_name || course.channel || 'Yoga Luxe',
+      branch: course.branch_name || course.channel || 'Namaste Yoga',
       references: {
         ref1: String(order.id),
         ref2: String(user_id),

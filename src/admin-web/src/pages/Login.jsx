@@ -87,7 +87,7 @@ function Login() {
     <div className="login-screen">
       <div className="login-panel">
         <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-          <p className="page__eyebrow" style={{ marginBottom: '6px' }}>Yoga Flow</p>
+          <p className="page__eyebrow" style={{ marginBottom: '6px' }}>Namaste Yoga</p>
           <h1 style={{ margin: 0, fontSize: '28px' }}>Admin Center</h1>
           <p style={{ margin: '8px 0 0', color: 'var(--color-muted)' }}>เข้าสู่ระบบเพื่อจัดการคอร์สและสมาชิก</p>
         </div>
