@@ -1,8 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import KpiCard from '../components/dashboard/KpiCard';
-import TrendChart from '../components/dashboard/TrendChart';
 import useDashboardData from '../hooks/useDashboardData';
-import styles from './AdminDashboard.module.css';
 
 const formatCurrency = (cents) => {
   if (typeof cents !== 'number') return '—';
@@ -43,115 +40,12 @@ const formatSessionTimeRange = (startTime, endTime) => {
   return `${start || end} น.`;
 };
 
-function TrendList({ title, subtitle, data = [], metricKey, formatter }) {
-  const safeFormatter = typeof formatter === 'function' ? formatter : (value) => value ?? '—';
-  return (
-    <article className={styles.chartCard}>
-      <header className={styles.cardHeader}>
-        <div>
-          <p className={styles.cardEyebrow}>{subtitle}</p>
-          <h3 className={styles.cardTitle}>{title}</h3>
-        </div>
-      </header>
-      <div className={styles.trendList}>
-        {data.length === 0 && <p className={styles.emptyState}>ยังไม่มีข้อมูล</p>}
-        {data.map((item) => (
-          <div key={item.date || item.courseId} className={styles.trendRow}>
-            <div>
-              <p className={styles.trendLabel}>{item.title || formatDateLabel(item.date)}</p>
-              {item.ordersCount !== undefined && (
-                <span className={styles.trendSubLabel}>{item.ordersCount} orders</span>
-              )}
-            </div>
-            <span className={styles.trendValue}>{safeFormatter(item[metricKey])}</span>
-          </div>
-        ))}
-      </div>
-    </article>
-  );
-}
-
-function RecentActivity({ events = [] }) {
-  return (
-    <article className={styles.card}>
-      <header className={styles.cardHeader}>
-        <div>
-          <p className={styles.cardEyebrow}>กิจกรรมล่าสุด</p>
-          <h3 className={styles.cardTitle}>Transactions</h3>
-        </div>
-      </header>
-      <ul className={styles.activityList}>
-        {events.length === 0 && <li className={styles.emptyState}>ยังไม่มีคำสั่งซื้อใหม่</li>}
-        {events.map((event) => (
-          <li key={event.id} className={styles.activityItem}>
-            <div>
-              <p className={styles.activityTitle}>{event.title}</p>
-              <p className={styles.activityMeta}>{event.meta}</p>
-            </div>
-            <span className={styles.activityAmount}>{event.amount}</span>
-          </li>
-        ))}
-      </ul>
-    </article>
-  );
-}
-
-function UpcomingSessionsCard({ sessions = [] }) {
-  return (
-    <article className={styles.card}>
-      <header className={styles.cardHeader}>
-        <div>
-          <p className={styles.cardEyebrow}>รอบเรียนที่กำลังจะถึง</p>
-          <h3 className={styles.cardTitle}>Upcoming Sessions</h3>
-        </div>
-      </header>
-      <ul className={styles.sessionList}>
-        {sessions.length === 0 && <li className={styles.emptyState}>ยังไม่มีคลาสที่จะถึง</li>}
-        {sessions.map((session) => {
-          const maxCapacity = session.maxCapacity || 0;
-          const enrolled = session.currentEnrollments || 0;
-          const rawAvailable = session.availableSpots ?? (maxCapacity ? maxCapacity - enrolled : 0);
-          const available = Math.max(rawAvailable ?? 0, 0);
-          const occupancyPercent = maxCapacity > 0
-            ? Math.min(100, Math.round((enrolled / maxCapacity) * 100))
-            : 0;
-          return (
-            <li key={session.sessionId} className={styles.sessionItem}>
-              <div className={styles.sessionInfo}>
-                <p className={styles.sessionTitle}>{session.courseTitle || 'ไม่ระบุคอร์ส'}</p>
-                <p className={styles.sessionMeta}>
-                  {session.sessionName || 'รอบเรียน'} · {session.branchName || 'ไม่ระบุสาขา'}
-                </p>
-                <p className={styles.sessionMeta}>
-                  {formatSessionDay(session.startDate)} · {formatSessionTimeRange(session.startTime, session.endTime)}
-                </p>
-                <p className={styles.sessionMeta}>
-                  ผู้สอน: {session.instructorName || 'รอจัดสรร'} · เหลือ {available} ที่นั่ง
-                </p>
-                <div className={styles.sessionCapacityRow}>
-                  <div className={styles.sessionCapacityTrack}>
-                    <div
-                      className={styles.sessionCapacityFill}
-                      style={{ width: `${occupancyPercent}%` }}
-                    />
-                  </div>
-                  <span className={styles.sessionCapacityLabel}>
-                    {enrolled}/{maxCapacity || '∞'} คน
-                  </span>
-                </div>
-              </div>
-              <span className={styles.sessionTimeTag}>{formatSessionDay(session.startDate)}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </article>
-  );
-}
-
 function AdminDashboard() {
   const { data, loading, error, refresh, lastUpdated } = useDashboardData();
   const [trendRange, setTrendRange] = useState('weekly');
+  const [showDetailedMetrics, setShowDetailedMetrics] = useState(false);
+  const [showTopCourses, setShowTopCourses] = useState(false);
+  const [showUpcomingSessions, setShowUpcomingSessions] = useState(true);
   const [toastMessage, setToastMessage] = useState(null);
 
   useEffect(() => {
@@ -185,26 +79,36 @@ function AdminDashboard() {
         title: 'ยอดขายรวม',
         value: formatCurrency(kpis.totalSalesCents),
         diff: '+12.4% QoQ',
+        icon: '💰',
+        color: '#2563eb',
       },
       {
         title: 'จำนวนออเดอร์ทั้งหมด',
         value: kpis.totalOrders?.toLocaleString('th-TH') ?? '—',
         diff: '+4.2% MoM',
+        icon: '📦',
+        color: '#7c3aed',
       },
       {
         title: 'ออเดอร์ที่ชำระวันนี้',
         value: kpis.paidOrdersToday?.toLocaleString('th-TH') ?? '0',
         diff: `${kpis.paidOrdersToday || 0} คำสั่งซื้อ`,
+        icon: '✅',
+        color: '#059669',
       },
       {
         title: 'สมาชิกใหม่ 30 วัน',
         value: kpis.newMembers30d?.toLocaleString('th-TH') ?? '0',
         diff: `${kpis.newMembers30d || 0} รายการ`,
+        icon: '👥',
+        color: '#dc2626',
       },
       {
         title: 'มูลค่าเฉลี่ยต่อคำสั่งซื้อ',
         value: formatCurrency(kpis.averageOrderValueCents),
         diff: '+2.1% WoW',
+        icon: '📊',
+        color: '#ea580c',
       },
     ],
     [kpis]
@@ -269,6 +173,11 @@ function AdminDashboard() {
   const activeTrendDataset = trendRange === 'weekly' ? weeklyTrend : monthlyTrend;
   const trendSubtitle = trendRange === 'weekly' ? 'ยอดขาย 7 วันล่าสุด' : 'ยอดขาย 6 เดือนล่าสุด';
 
+  const maxRevenue = useMemo(
+    () => activeTrendDataset.reduce((max, item) => Math.max(max, item.revenue || 0), 0),
+    [activeTrendDataset]
+  );
+
   const maxNewMembers = useMemo(
     () => membersTrend.reduce((max, day) => Math.max(max, day.newMembers || 0), 0),
     [membersTrend]
@@ -286,137 +195,439 @@ function AdminDashboard() {
       }));
   }, [sortedOrdersTrend]);
 
-  const trendToggleClass = (value) =>
-    [styles.toggleButton, trendRange === value ? styles.toggleButtonActive : '']
-      .filter(Boolean)
-      .join(' ');
+  if (loading && !data) {
+    return (
+      <div className="page">
+        <div className="grid grid--4" style={{ gap: '20px' }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="card">
+              <div className="skeleton skeleton--title" />
+              <div className="skeleton skeleton--text" style={{ width: '60%', height: '40px', marginTop: '12px' }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <section className={styles.page}>
-      <header className={styles.header}>
+    <div className="page">
+      {/* Page Header */}
+      <div className="page__header" style={{ marginBottom: '32px' }}>
         <div>
-          <p className={styles.pageEyebrow}>ภาพรวมธุรกิจ</p>
-          <h1 className={styles.pageTitle}>Admin Dashboard</h1>
-          <p className={styles.pageSubtitle}>ติดตามยอดขายและสมาชิกแบบเรียลไทม์</p>
+          <p className="page__eyebrow">ภาพรวมธุรกิจ</p>
+          <h1 className="page__title" style={{ marginBottom: '8px' }}>Admin Dashboard</h1>
+          <p className="page__subtitle">ติดตามยอดขายและสมาชิกแบบเรียลไทม์</p>
         </div>
-        <div className={styles.refreshMeta}>
-          <p className={styles.lastUpdated}>อัปเดตล่าสุดเมื่อ {lastUpdatedLabel}</p>
-          <button type="button" className={styles.refreshButton} onClick={refresh} disabled={loading}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+          <p className="helper-text" style={{ margin: 0 }}>
+            อัปเดตล่าสุดเมื่อ {lastUpdatedLabel}
+          </p>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={refresh}
+            disabled={loading}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            {loading && <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }} />}
             {loading ? 'กำลังรีเฟรช…' : 'Refresh now'}
           </button>
         </div>
-      </header>
+      </div>
 
-      {error && <div className={styles.errorBanner}>เกิดข้อผิดพลาด: {error}</div>}
-
-      <div className={styles.noticeCard}>
-        <div>
-          <p className={styles.noticeBadge}>PromptPay QR</p>
-          <p className={styles.noticeTitle}>ฝั่งลูกค้าแสดง QR แบบฝังตัวแล้ว</p>
-          <p className={styles.noticeText}>
-            ตรวจสอบหน้า Checkout ใหม่ที่โชว์ QR พร้อมเพย์ฝังในหน้า โดยไม่ต้องเด้งออกจาก LIFF
-            รองรับปุ่มบันทึกภาพและเปิดลิงก์สำรอง ช่วยลดปัญหาลูกค้ากดกลับกลางทางได้
-          </p>
+      {/* Error Banner */}
+      {error && (
+        <div className="info-box info-box--danger" style={{ marginBottom: '24px' }}>
+          เกิดข้อผิดพลาด: {error}
         </div>
-        <div className={styles.noticeActions}>
-          <a className="btn btn-outline" href="https://fortestonlyme.online/courses/3/checkout" target="_blank" rel="noreferrer">
+      )}
+
+      {/* Notice Card */}
+      <div className="card card--highlighted" style={{ marginBottom: '32px' }}>
+        <div className="card__header">
+          <div>
+            <span className="badge badge--primary">PromptPay QR</span>
+            <h3 className="card__title" style={{ marginTop: '8px', marginBottom: '4px' }}>
+              ฝั่งลูกค้าแสดง QR แบบฝังตัวแล้ว
+            </h3>
+            <p className="card__subtitle" style={{ marginTop: '8px' }}>
+              ตรวจสอบหน้า Checkout ใหม่ที่โชว์ QR พร้อมเพย์ฝังในหน้า โดยไม่ต้องเด้งออกจาก LIFF
+              รองรับปุ่มบันทึกภาพและเปิดลิงก์สำรอง ช่วยลดปัญหาลูกค้ากดกลับกลางทางได้
+            </p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+          <a
+            className="btn btn--outline"
+            href="https://fortestonlyme.online/courses/3/checkout"
+            target="_blank"
+            rel="noreferrer"
+            style={{ textDecoration: 'none' }}
+          >
             เปิดหน้า Checkout
           </a>
-          <button type="button" className="btn btn-primary" onClick={refresh} disabled={loading}>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={refresh}
+            disabled={loading}
+          >
             รีเฟรชข้อมูลแดชบอร์ด
           </button>
         </div>
       </div>
 
-      <div className={styles.kpiGrid}>
-        {kpiCards.map((card) => (
-          <KpiCard key={card.title} {...card} />
+      {/* KPI Cards */}
+      <div className="grid grid--auto-fit" style={{ gap: '20px', marginBottom: '32px' }}>
+        {kpiCards.map((card, index) => (
+          <div
+            key={index}
+            className="card"
+            style={{
+              background: `linear-gradient(135deg, ${card.color}08, ${card.color}15)`,
+              borderColor: `${card.color}30`,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <div style={{
+              position: 'absolute',
+              top: '-30px',
+              right: '-30px',
+              fontSize: '120px',
+              opacity: 0.06,
+              userSelect: 'none',
+            }}>
+              {card.icon}
+            </div>
+            <div className="metric" style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '28px' }}>{card.icon}</span>
+                <span className="metric__label" style={{ margin: 0, fontSize: '12px' }}>
+                  {card.title}
+                </span>
+              </div>
+              <div className="metric__value" style={{ color: card.color, fontSize: '36px', marginBottom: '8px' }}>
+                {card.value}
+              </div>
+              <span className="badge badge--primary" style={{ fontSize: '11px' }}>
+                {card.diff}
+              </span>
+            </div>
+          </div>
         ))}
       </div>
 
-      <div className={styles.chartGrid}>
-        <TrendChart
-          title="Orders Trend"
-          subtitle={trendSubtitle}
-          dataset={activeTrendDataset}
-          loading={loading}
-          emptyText="ยังไม่มีข้อมูลคำสั่งซื้อ"
-          actions={
-            <div className={styles.toggleGroup} role="group" aria-label="ช่วงเวลา">
-              <button
-                type="button"
-                className={trendToggleClass('weekly')}
-                onClick={() => setTrendRange('weekly')}
-                disabled={loading}
-              >
-                7 วัน
-              </button>
-              <button
-                type="button"
-                className={trendToggleClass('monthly')}
-                onClick={() => setTrendRange('monthly')}
-                disabled={loading}
-              >
-                6 เดือน
-              </button>
-            </div>
-          }
-        />
+      {/* Orders Trend Chart */}
+      <div className="card" style={{ marginBottom: '24px' }}>
+        <div className="card__header">
+          <div>
+            <p className="helper-text" style={{ margin: '0 0 4px' }}>{trendSubtitle}</p>
+            <h3 className="card__title">Orders Trend</h3>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              className={trendRange === 'weekly' ? 'btn btn--primary btn--small' : 'btn btn--outline btn--small'}
+              onClick={() => setTrendRange('weekly')}
+              disabled={loading}
+            >
+              7 วัน
+            </button>
+            <button
+              type="button"
+              className={trendRange === 'monthly' ? 'btn btn--primary btn--small' : 'btn btn--outline btn--small'}
+              onClick={() => setTrendRange('monthly')}
+              disabled={loading}
+            >
+              6 เดือน
+            </button>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {activeTrendDataset.length === 0 ? (
+            <p className="helper-text" style={{ textAlign: 'center', padding: '40px 0' }}>
+              ยังไม่มีข้อมูลคำสั่งซื้อ
+            </p>
+          ) : (
+            activeTrendDataset.map((item, index) => {
+              const revenuePercent = maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0;
+              return (
+                <div key={index} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 120px', gap: '12px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--color-muted)' }}>{item.dateLabel}</span>
+                  <div className="progress" style={{ height: '12px' }}>
+                    <div
+                      className="progress__bar"
+                      style={{ width: `${revenuePercent}%` }}
+                    />
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-heading)' }}>
+                      {formatCurrency(item.revenue * 100)}
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--color-muted)' }}>
+                      {item.orders} orders
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
 
-        <article className={styles.chartCard}>
-          <header className={styles.cardHeader}>
-            <div>
-              <p className={styles.cardEyebrow}>สมาชิกใหม่ 7 วันล่าสุด</p>
-              <h3 className={styles.cardTitle}>New Members</h3>
-            </div>
-          </header>
-          <div className={styles.trendChart}>
-            {membersTrend.length === 0 && <p className={styles.emptyState}>ยังไม่มีข้อมูลสมาชิกใหม่</p>}
-            {membersTrend.map((day) => {
+      {/* New Members Chart */}
+      <div className="card" style={{ marginBottom: '24px' }}>
+        <div className="card__header">
+          <div>
+            <p className="helper-text" style={{ margin: '0 0 4px' }}>สมาชิกใหม่ 7 วันล่าสุด</p>
+            <h3 className="card__title">New Members</h3>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {membersTrend.length === 0 ? (
+            <p className="helper-text" style={{ textAlign: 'center', padding: '40px 0' }}>
+              ยังไม่มีข้อมูลสมาชิกใหม่
+            </p>
+          ) : (
+            membersTrend.map((day) => {
               const memberPercent = maxNewMembers > 0 ? ((day.newMembers || 0) / maxNewMembers) * 100 : 0;
               return (
-                <div key={day.date} className={styles.barRow}>
-                  <span className={styles.barLabel}>{formatDateLabel(day.date)}</span>
-                  <div className={styles.barTrack}>
+                <div key={day.date} style={{ display: 'grid', gridTemplateColumns: '100px 1fr 80px', gap: '12px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--color-muted)' }}>{formatDateLabel(day.date)}</span>
+                  <div className="progress" style={{ height: '12px' }}>
                     <div
-                      className={styles.barFillSecondary}
+                      className="progress__bar progress__bar--success"
                       style={{ width: `${memberPercent}%` }}
                     />
                   </div>
-                  <span className={styles.barValue}>{day.newMembers?.toLocaleString('th-TH') ?? 0} คน</span>
+                  <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-heading)', textAlign: 'right' }}>
+                    {day.newMembers?.toLocaleString('th-TH') ?? 0} คน
+                  </span>
                 </div>
               );
-            })}
-          </div>
-        </article>
-
-        <TrendList
-          title="Top Courses"
-          subtitle="5 คอร์สยอดนิยม"
-          data={topCourses}
-          metricKey="revenueCents"
-          formatter={formatCurrency}
-        />
-
-        <UpcomingSessionsCard sessions={upcomingSessions} />
-
-        <RecentActivity events={recentEvents} />
+            })
+          )}
+        </div>
       </div>
 
+      {/* Top Courses - Toggle Section */}
+      <div className={`toggle-section ${showTopCourses ? 'is-open' : ''}`} style={{ marginBottom: '24px' }}>
+        <div className="toggle-header" onClick={() => setShowTopCourses(!showTopCourses)}>
+          <div>
+            <h3 className="toggle-header__title">📚 Top Courses</h3>
+            <p className="toggle-header__subtitle">5 คอร์สยอดนิยม</p>
+          </div>
+          <span className="toggle-icon">{showTopCourses ? '▼' : '▶'}</span>
+        </div>
+        <div className="toggle-content">
+          <div className="toggle-content__inner">
+            {topCourses.length === 0 ? (
+              <p className="helper-text" style={{ textAlign: 'center', padding: '20px 0' }}>
+                ยังไม่มีข้อมูลคอร์ส
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {topCourses.map((course) => (
+                  <div
+                    key={course.courseId}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '16px',
+                      background: 'white',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--color-border)',
+                    }}
+                  >
+                    <div>
+                      <p style={{ margin: 0, fontWeight: '600', color: 'var(--color-heading)', fontSize: '15px' }}>
+                        {course.title || 'ไม่ระบุชื่อ'}
+                      </p>
+                      {course.ordersCount !== undefined && (
+                        <p className="helper-text" style={{ marginTop: '4px' }}>
+                          {course.ordersCount} orders
+                        </p>
+                      )}
+                    </div>
+                    <span style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-accent)' }}>
+                      {formatCurrency(course.revenueCents)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Upcoming Sessions - Toggle Section */}
+      <div className={`toggle-section ${showUpcomingSessions ? 'is-open' : ''}`} style={{ marginBottom: '24px' }}>
+        <div className="toggle-header" onClick={() => setShowUpcomingSessions(!showUpcomingSessions)}>
+          <div>
+            <h3 className="toggle-header__title">📅 Upcoming Sessions</h3>
+            <p className="toggle-header__subtitle">รอบเรียนที่กำลังจะถึง</p>
+          </div>
+          <span className="toggle-icon">{showUpcomingSessions ? '▼' : '▶'}</span>
+        </div>
+        <div className="toggle-content">
+          <div className="toggle-content__inner">
+            {upcomingSessions.length === 0 ? (
+              <p className="helper-text" style={{ textAlign: 'center', padding: '20px 0' }}>
+                ยังไม่มีคลาสที่จะถึง
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {upcomingSessions.map((session) => {
+                  const maxCapacity = session.maxCapacity || 0;
+                  const enrolled = session.currentEnrollments || 0;
+                  const rawAvailable = session.availableSpots ?? (maxCapacity ? maxCapacity - enrolled : 0);
+                  const available = Math.max(rawAvailable ?? 0, 0);
+                  const occupancyPercent = maxCapacity > 0
+                    ? Math.min(100, Math.round((enrolled / maxCapacity) * 100))
+                    : 0;
+                  return (
+                    <div
+                      key={session.sessionId}
+                      className="card"
+                      style={{
+                        padding: '20px',
+                        background: 'white',
+                        borderRadius: 'var(--radius-md)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                        <div style={{ flex: 1 }}>
+                          <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: '700', color: 'var(--color-heading)' }}>
+                            {session.courseTitle || 'ไม่ระบุคอร์ส'}
+                          </h4>
+                          <p className="helper-text" style={{ margin: '4px 0' }}>
+                            {session.sessionName || 'รอบเรียน'} · {session.branchName || 'ไม่ระบุสาขา'}
+                          </p>
+                          <p className="helper-text" style={{ margin: '4px 0' }}>
+                            {formatSessionDay(session.startDate)} · {formatSessionTimeRange(session.startTime, session.endTime)}
+                          </p>
+                          <p className="helper-text" style={{ margin: '4px 0' }}>
+                            ผู้สอน: {session.instructorName || 'รอจัดสรร'} · เหลือ {available} ที่นั่ง
+                          </p>
+                        </div>
+                        <span className="badge badge--primary">
+                          {formatSessionDay(session.startDate)}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div className="progress" style={{ flex: 1 }}>
+                          <div
+                            className="progress__bar"
+                            style={{
+                              width: `${occupancyPercent}%`,
+                              background: occupancyPercent >= 90 ? 'var(--color-danger)' : 'var(--color-accent)',
+                            }}
+                          />
+                        </div>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-muted)', minWidth: '70px', textAlign: 'right' }}>
+                          {enrolled}/{maxCapacity || '∞'} คน
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Activity - Toggle Section */}
+      <div className={`toggle-section ${showDetailedMetrics ? 'is-open' : ''}`} style={{ marginBottom: '24px' }}>
+        <div className="toggle-header" onClick={() => setShowDetailedMetrics(!showDetailedMetrics)}>
+          <div>
+            <h3 className="toggle-header__title">🔔 กิจกรรมล่าสุด</h3>
+            <p className="toggle-header__subtitle">Transactions</p>
+          </div>
+          <span className="toggle-icon">{showDetailedMetrics ? '▼' : '▶'}</span>
+        </div>
+        <div className="toggle-content">
+          <div className="toggle-content__inner">
+            {recentEvents.length === 0 ? (
+              <p className="helper-text" style={{ textAlign: 'center', padding: '20px 0' }}>
+                ยังไม่มีคำสั่งซื้อใหม่
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {recentEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '16px',
+                      background: 'white',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--color-border)',
+                    }}
+                  >
+                    <div>
+                      <p style={{ margin: 0, fontWeight: '600', color: 'var(--color-heading)', fontSize: '14px' }}>
+                        {event.title}
+                      </p>
+                      <p className="helper-text" style={{ marginTop: '4px' }}>
+                        {event.meta}
+                      </p>
+                    </div>
+                    <span style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-accent)' }}>
+                      {event.amount}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Toast Notification */}
       {toastMessage && (
-        <div className={styles.toast} role="status" aria-live="polite">
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            background: 'var(--color-heading)',
+            color: 'white',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-card)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '16px',
+            zIndex: 1000,
+          }}
+        >
           <span>{toastMessage}</span>
           <button
             type="button"
-            className={styles.toastDismiss}
             onClick={() => setToastMessage(null)}
-            aria-label="ปิดการแจ้งเตือน"
+            style={{
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: 'none',
+              color: 'white',
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              fontSize: '18px',
+              lineHeight: 1,
+            }}
           >
             ×
           </button>
         </div>
       )}
-    </section>
+    </div>
   );
 }
 
