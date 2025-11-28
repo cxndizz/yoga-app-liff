@@ -5,10 +5,9 @@ import CourseCard from '../components/CourseCard';
 import FilterBar from '../components/FilterBar';
 import { fetchCourses } from '../lib/courseApi';
 import { useAutoTranslate } from '../lib/autoTranslate';
-import { fetchOrdersForUser } from '../lib/orderApi';
-import { collectOwnedCourseIds } from '../lib/orderUtils';
 import useLiffUser from '../hooks/useLiffUser';
 import { getCachedLiffUser } from '../lib/liffAuth';
+import useOwnedCourses from '../hooks/useOwnedCourses';
 
 function Courses() {
   const location = useLocation();
@@ -17,52 +16,15 @@ function Courses() {
   const [branch, setBranch] = useState('');
   const [instructor, setInstructor] = useState('');
   const [status, setStatus] = useState('idle');
-  const [ownership, setOwnership] = useState({ checked: false, ownedIds: new Set() });
   const { user: liveUser } = useLiffUser();
   const [user, setUser] = useState(getCachedLiffUser()?.user || null);
   const { language } = useAutoTranslate();
   const { t } = useTranslation();
+  const ownership = useOwnedCourses(user?.id);
 
   useEffect(() => {
     if (liveUser) setUser(liveUser);
   }, [liveUser]);
-
-  useEffect(() => {
-    if (!user?.id) {
-      setOwnership({ checked: true, ownedIds: new Set() });
-      return undefined;
-    }
-
-    let active = true;
-    let timeoutId = null;
-
-    // Set a fallback timeout to prevent infinite loading (6 seconds)
-    timeoutId = setTimeout(() => {
-      if (active) {
-        console.warn('Ownership check timed out, allowing purchase anyway');
-        setOwnership({ checked: true, ownedIds: new Set() });
-      }
-    }, 6000);
-
-    fetchOrdersForUser(user.id)
-      .then((orders) => {
-        if (!active) return;
-        if (timeoutId) clearTimeout(timeoutId);
-        const ownedIds = collectOwnedCourseIds(Array.isArray(orders) ? orders : []);
-        setOwnership({ checked: true, ownedIds });
-      })
-      .catch((error) => {
-        if (!active) return;
-        if (timeoutId) clearTimeout(timeoutId);
-        console.error('Failed to fetch orders:', error);
-        setOwnership({ checked: true, ownedIds: new Set() });
-      });
-
-    return () => {
-      active = false;
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [user]);
 
   useEffect(() => {
     let active = true;
