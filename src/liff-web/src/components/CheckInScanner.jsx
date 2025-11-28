@@ -160,7 +160,7 @@ function CheckInScanner({ userId, open, onClose, onSuccess = () => {} }) {
 
       const openScanner = async () => {
         const liff = window?.liff;
-        if (!liff) throw new Error('ไม่พบ LIFF');
+        if (!liff) throw new Error('ไม่พบการเชื่อมต่อ LINE');
 
         if (typeof liff.scanCodeV2 === 'function') {
           try {
@@ -178,7 +178,7 @@ function CheckInScanner({ userId, open, onClose, onSuccess = () => {} }) {
           return await liff.scanCode();
         }
 
-        throw new Error('ไม่พบความสามารถสแกนจาก LIFF');
+        throw new Error('ไม่พบความสามารถสแกนจากแอป LINE');
       };
 
       let result;
@@ -188,14 +188,14 @@ function CheckInScanner({ userId, open, onClose, onSuccess = () => {} }) {
         } catch (liffErr) {
           const errMessage = String(liffErr?.message || '').toLowerCase();
           if (errMessage.includes('not allowed')) {
-            setStatus({ state: 'idle', message: 'LIFF ไม่อนุญาตสแกน ใช้กล้องในเครื่องแทน...' });
+            setStatus({ state: 'idle', message: 'LINE ไม่อนุญาตสแกน ใช้กล้องในเครื่องแทน...' });
             result = await scanWithBrowserCamera();
           } else {
             throw liffErr;
           }
         }
       } else {
-        setStatus({ state: 'idle', message: 'LIFF ไม่รองรับสแกน ใช้กล้องในเครื่องแทน...' });
+        setStatus({ state: 'idle', message: 'LINE ไม่รองรับสแกน ใช้กล้องในเครื่องแทน...' });
         result = await scanWithBrowserCamera();
       }
 
@@ -244,7 +244,7 @@ function CheckInScanner({ userId, open, onClose, onSuccess = () => {} }) {
           <div>
             <h3 className="scanner-modal__title">สแกน QR เพื่อตัดสิทธิ์เข้าเรียน</h3>
             <p className="scanner-modal__subtitle">
-              ระบบจะเรียกตัวสแกนของ LINE LIFF เพื่อบันทึกสิทธิ์ที่คุณซื้อไว้
+              ระบบจะเปิดการสแกนจาก LINE เพื่อบันทึกสิทธิ์ที่คุณซื้อไว้
             </p>
           </div>
         </div>

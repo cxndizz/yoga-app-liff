@@ -77,7 +77,7 @@ function Navbar() {
             {t('nav.brand')}
           </div>
           <div style={{ color: 'var(--secondary-300)', fontSize: '0.85rem' }}>
-            Boutique LIFF Studio
+            Boutique wellness studio
           </div>
         </div>
       </Link>
