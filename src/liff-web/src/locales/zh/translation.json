@@ -10,7 +10,7 @@
     "registerFree": "免费注册",
     "buyCourse": "购买课程",
     "bookCourse": "预订此课程",
-    "payOmise": "使用 Money Space 支付",
+    "payOmise": "线上付款",
     "myCourses": "我的课程",
     "language": "语言",
     "search": "搜索",
@@ -74,8 +74,8 @@
     "findCourse": "找到适合你的课程",
     "startBrowsing": "开始浏览",
     "hybridTypes": "混合 / 现场 / 在线",
-    "omisePayment": "Money Space 支付",
-    "omiseDescription": "通过 Money Space 轻松预约与支付，付款后课程权限即时更新。"
+    "omisePayment": "安全线上付款",
+    "omiseDescription": "轻松预约与支付，付款后课程权限即时更新。"
   },
   "nav": {
     "home": "首页",
@@ -105,12 +105,12 @@
   },
   "checkout": {
     "title": "结账与付款",
-    "subtitle": "付款前请填写姓名和电话，系统会安全跳转至 Money Space 完成付款。",
-    "subtitleLive": "确认信息后付款，Money Space 已准备好（QR / 刷卡）",
+    "subtitle": "付款前请填写姓名和电话，系统会安全带您到付款页面。",
+    "subtitleLive": "确认信息后付款，可选择 QR 或刷卡",
     "stepInfo": "学员信息 / 课程详情",
     "stepInfoDesc": "先确认姓名与电话，再继续下一步",
     "stepPayment": "选择付款方式",
-    "stepPaymentDesc": "通过 Money Space 选择扫码或刷卡",
+    "stepPaymentDesc": "选择扫码或刷卡",
     "stepPay": "付款",
     "stepPayDesc": "检查资料后创建支付请求",
     "stepRedirect": "确认付款结果",
@@ -125,21 +125,21 @@
     "note": "给教练的备注（可选）",
     "notePlaceholder": "例如 过敏、需要车位、想坐前排",
     "paymentMethod": "支付方式",
-    "paymentHint": "目前支持转账/PromptPay，Money Space 刷卡稍后开放。",
-    "paymentHintLive": "通过 Money Space 安全支付，可选择 QR 或信用卡。",
+    "paymentHint": "目前支持转账/PromptPay，刷卡稍后开放。",
+    "paymentHintLive": "安全支付，可选择 QR 或信用卡。",
     "recommended": "推荐",
     "mockOnly": "模拟",
     "bankInstruction": "银行转账 / PromptPay",
     "bankInstructionDetail": "转账后把凭证发给管理员，审核后开通席位。",
     "processing": "处理中...",
-    "payNow": "通过 Money Space 付款",
+    "payNow": "立即付款",
     "redirecting": "正在跳转到支付页面...",
     "intentCreated": "已建立支付会话",
     "intentCreatedHint": "若未自动跳转，请再次点击付款。",
     "errorPayment": "创建支付会话失败，请重试。",
     "loginRequired": "请先用 LINE 登录",
     "qrTitle": "PromptPay QR 已就绪",
-    "qrSubtitle": "使用手机银行或相机扫描，然后在 Money Space 确认。",
+    "qrSubtitle": "使用手机银行或相机扫描，然后确认付款。",
     "qrAmount": "金额:",
     "qrRef": "参考号",
     "qrFallback": "若二维码未显示，请改用下方支付链接。",
@@ -192,7 +192,7 @@
     "firstCheckIn": "首次扫码"
   },
   "payment": {
-    "redirectReminder": "请稍候，我们正在与 Money Space 确认付款。",
+    "redirectReminder": "请稍候，我们正在确认付款。",
     "verifying": "正在再次核对付款...",
     "verificationError": "暂时无法确认付款，请联系工作人员。",
     "verified": "已验证付款",
@@ -235,7 +235,7 @@
       "credit": "信用卡",
       "creditDesc": "支持 Visa、Mastercard、JCB",
       "instant": "即时确认",
-      "cardGateway": "Money Space 支付网关"
+      "cardGateway": "信用卡网关"
     }
   }
 }

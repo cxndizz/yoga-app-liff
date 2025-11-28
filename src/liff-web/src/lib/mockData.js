@@ -73,8 +73,8 @@ export const mockPaymentChannels = [
   },
   {
     id: 'card',
-    label: 'Credit / Debit (Money Space)',
-    description: 'เปิดใช้งานเมื่อเชื่อมต่อ Money Space แล้ว — หน้านี้จำลองการชำระเงิน',
+    label: 'Credit / Debit (Gateway)',
+    description: 'เปิดใช้งานเมื่อเชื่อมต่อเกตเวย์บัตรแล้ว — หน้านี้จำลองการชำระเงิน',
     eta: 'ชำระแล้วเปิดสิทธิ์อัตโนมัติ',
     disabled: true,
   },
