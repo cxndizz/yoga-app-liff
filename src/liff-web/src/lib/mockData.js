@@ -83,7 +83,7 @@ export const mockPaymentChannels = [
 export const mockTransferAccounts = [
   {
     bank: 'Kasikorn Bank',
-    accountName: 'Yoga Luxe Studio',
+    accountName: 'Namaste Yoga Studio',
     accountNumber: '123-4-56789-0',
     promptPay: '0123456789012',
   },

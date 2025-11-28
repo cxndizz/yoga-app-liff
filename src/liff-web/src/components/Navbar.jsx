@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
+import namasteLogo from '../images/logo/namaste.png';
 
 const NavLink = ({ to, label, onClick }) => (
   <Link
@@ -55,18 +56,18 @@ function Navbar() {
             display: 'grid',
             placeItems: 'center',
             background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(251, 191, 36, 0.05) 100%)',
-            color: '#fbbf24',
-            fontWeight: 800,
-            fontSize: '1.1rem',
-            letterSpacing: '-0.02em',
             boxShadow: '0 0 20px rgba(251, 191, 36, 0.15)',
           }}
         >
-          YL
+          <img
+            src={namasteLogo}
+            alt="Namaste Yoga"
+            style={{ width: '70%', height: '70%', objectFit: 'contain', filter: 'drop-shadow(0 0 6px rgba(251, 191, 36, 0.35))' }}
+          />
         </div>
         <div>
-          <div style={{ 
-            fontFamily: 'var(--font-heading)', 
+          <div style={{
+            fontFamily: 'var(--font-heading)',
             fontSize: '1.3rem', 
             letterSpacing: '0.01em',
             background: 'linear-gradient(135deg, #fff 0%, #c4b5fd 100%)',

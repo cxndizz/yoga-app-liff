@@ -81,7 +81,7 @@
     "home": "หน้าหลัก",
     "courses": "คอร์สเรียน",
     "myCourses": "คอร์สของฉัน",
-    "brand": "Yoga Luxe"
+    "brand": "Namaste Yoga"
   },
   "cart": {
     "title": "ตะกร้าคอร์ส",
@@ -101,7 +101,7 @@
     "contact": "ติดต่อ",
     "terms": "ข้อกำหนด",
     "privacy": "นโยบายความเป็นส่วนตัว",
-    "copyright": "© {{year}} Yoga Luxe. สงวนลิขสิทธิ์."
+    "copyright": "© {{year}} Namaste Yoga. สงวนลิขสิทธิ์."
   },
   "checkout": {
     "title": "ชำระเงิน / จองคอร์ส",
@@ -198,7 +198,7 @@
     "verified": "ยืนยันการชำระเงินแล้ว",
     "headline": "ขอบคุณสำหรับการชำระเงิน",
     "subheadline": "ระบบจะยืนยันที่นั่งและอัปเดตสิทธิ์เข้าเรียนให้ในไม่ช้า",
-    "storePlaceholder": "Yoga Luxe",
+    "storePlaceholder": "Namaste Yoga",
     "noDescription": "ไม่มีรายละเอียดเพิ่มเติม",
     "amountLabel": "ยอดชำระ: {{amount}}",
     "goToMyCourses": "ไปที่คอร์สของฉัน",

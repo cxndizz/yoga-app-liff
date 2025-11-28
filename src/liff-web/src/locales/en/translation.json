@@ -81,7 +81,7 @@
     "home": "Home",
     "courses": "Courses",
     "myCourses": "My courses",
-    "brand": "Yoga Luxe"
+    "brand": "Namaste Yoga"
   },
   "cart": {
     "title": "Shopping cart",
@@ -101,7 +101,7 @@
     "contact": "Contact",
     "terms": "Terms",
     "privacy": "Privacy",
-    "copyright": "© {{year}} Yoga Luxe. All rights reserved."
+    "copyright": "© {{year}} Namaste Yoga. All rights reserved."
   },
   "checkout": {
     "title": "Checkout & payment",
@@ -190,7 +190,7 @@
     "verified": "Payment verified",
     "headline": "Thank you for your payment",
     "subheadline": "We will confirm your seat and update your access shortly.",
-    "storePlaceholder": "Yoga Luxe",
+    "storePlaceholder": "Namaste Yoga",
     "noDescription": "No additional notes",
     "amountLabel": "Amount: {{amount}}",
     "goToMyCourses": "Go to My courses",
